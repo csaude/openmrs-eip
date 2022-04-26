@@ -1,6 +1,8 @@
 package org.openmrs.eip.app;
 
+import static org.openmrs.eip.app.SyncConstants.DEFAULT_SITE_PARALLEL_SIZE;
 import static org.openmrs.eip.app.SyncConstants.MAX_COUNT;
+import static org.openmrs.eip.app.SyncConstants.PROP_SITE_PARALLEL_SIZE;
 import static org.openmrs.eip.app.SyncConstants.WAIT_IN_SECONDS;
 
 import java.util.Collection;
@@ -25,6 +27,7 @@ import org.openmrs.eip.component.repository.UserRepository;
 import org.openmrs.eip.component.repository.light.UserLightRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Example;
@@ -38,7 +41,10 @@ public class CamelListener extends EventNotifierSupport {
 	protected static final Logger log = LoggerFactory.getLogger(CamelListener.class);
 	
 	private static ExecutorService executor;
-
+	
+	@Value("${" + PROP_SITE_PARALLEL_SIZE + ":" + DEFAULT_SITE_PARALLEL_SIZE + "}")
+	private int parallelSiteSize;
+	
 	@Override
 	public void notify(CamelEvent event) {
 		
@@ -77,7 +83,7 @@ public class CamelListener extends EventNotifierSupport {
 			log.info("Starting sync message consumer threads, one per site");
 			
 			Collection<SiteInfo> sites = ReceiverContext.getSites();
-			executor = Executors.newFixedThreadPool(sites.size());
+			executor = Executors.newFixedThreadPool(parallelSiteSize);
 			ProducerTemplate producerTemplate = SyncContext.getBean(ProducerTemplate.class);
 			sites.parallelStream().forEach((site) -> {
 				log.info("Starting sync message consumer for site: " + site + ", batch size: " + MAX_COUNT);
