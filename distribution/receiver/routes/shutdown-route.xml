@@ -2,8 +2,8 @@
     <route id="shutdown-route">
         <from uri="direct:shutdown-route" />
 
-        <!-- TODO Send a notification to the configured emails -->
-
+      	<toD uri="direct:send-notification-email-route" />
+		
         <choice>
             <when>
                 <method beanType="org.openmrs.eip.app.ReceiverContext" method="isStopSignalReceived()" />

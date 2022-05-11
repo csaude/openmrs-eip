@@ -7,7 +7,8 @@ import java.util.Arrays;
 
 public enum SyncActionEnum {
     EXTRACT(OpenmrsExtractProducer.class),
-    LOAD(OpenmrsLoadProducer.class);
+    LOAD(OpenmrsLoadProducer.class),
+    ATTACHMENT(OpenmrsAttachmentProducer.class);
 
     private Class<? extends Producer> producerClass;
 
