@@ -2,7 +2,13 @@
     <route id="shutdown-route">
         <from uri="direct:shutdown-route" />
 
-      	<toD uri="direct:send-notification-email-route" />
+      	<doTry>
+        	<toD uri="direct:send-notification-email-route" />
+        	<doCatch>
+				<exception>java.lang.Exception</exception>
+				<log message="An error ocurred trying to notify to email ${exception.message}" loggingLevel="INFO" />
+			</doCatch>
+		</doTry>
 		
         <choice>
             <when>

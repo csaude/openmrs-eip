@@ -1,20 +1,7 @@
 <routes xmlns="http://camel.apache.org/schema/spring">
     <route id="send-notification-email-route">
-       <!-- <from uri="scheduler:send-notification-email-route?initialDelay=1000&amp;delay=60000" /> -->
-	   <from uri="direct:send-notification-email-route"/>
+        <from uri="direct:send-notification-email-route"/>
 		
-		<setBody>
-             <simple>The application on Site {{db-sync.senderId}} has just stopped due exception. Please refere to the attached log file.</simple>
-         </setBody>
-
-		<toD uri="openmrs:attachment" />
-		  
-		<to uri="smtp://{{smtp.host.name}}:{{smtp.host.port}}?username={{smtp.auth.user}}&amp;password={{smtp.auth.pass}}&amp;to={{spring.email.send-to}}&amp;subject=EIP Notification - Application Has Stopped&amp;mail.smtp.auth=true&amp;mail.smtp.starttls.enable=true"/>
-	
-		<onException>
-			<exception>java.lang.Exception</exception>
-			 
-			<log message="An error ocurred trying to notify to email ${exception.message}" loggingLevel="INFO" />
-		</onException>
+		<process ref="sendShutdownNotificationEmailProcessor" />		
 	</route>
 </routes>
