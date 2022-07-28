@@ -99,7 +99,7 @@ public abstract class BaseCamelTest {
 		ListAppender<LoggingEvent> app = (ListAppender) loggerContext.getLogger(ROOT_LOGGER_NAME).getAppender("test");
 		List<LoggingEvent> list = app.list;
 		for (LoggingEvent e : list) {
-			if (e.getLevel().equals(level) && e.getMessage().equalsIgnoreCase(message)) {
+			if (e.getLevel().equals(level) && e.getFormattedMessage().equalsIgnoreCase(message)) {
 				log.info("Log event satisfied -> [" + level + "] " + message);
 				return;
 			}

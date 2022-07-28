@@ -60,4 +60,8 @@ public class SenderConstants {
 	
 	public static final String ERROR_HANDLER_REF = "outBoundErrorHandler";
 	
+	public static final String PROP_ENCRYPTION_ENABLED = "openmrs.eip.dbsync.encryption.enabled";
+	
+	public static final String PROP_CAMEL_OUTPUT_ENDPOINT = "camel.output.endpoint";
+	
 }
