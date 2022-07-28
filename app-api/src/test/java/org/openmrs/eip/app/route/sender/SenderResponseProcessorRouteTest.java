@@ -6,7 +6,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.openmrs.eip.app.SyncConstants.MGT_DATASOURCE_NAME;
 import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
+import static org.openmrs.eip.app.route.sender.SenderActiveMqPublisherRouteTest.SENDER_ID;
+import static org.openmrs.eip.app.route.sender.SenderActiveMqPublisherRouteTest.URI_ACTIVEMQ_SYNC;
 import static org.openmrs.eip.app.route.sender.SenderTestUtils.getEntities;
+import static org.openmrs.eip.app.sender.SenderConstants.PROP_CAMEL_OUTPUT_ENDPOINT;
+import static org.openmrs.eip.app.sender.SenderConstants.PROP_SENDER_ID;
 import static org.openmrs.eip.app.sender.SenderConstants.ROUTE_ID_RESPONSE_PROCESSOR;
 import static org.openmrs.eip.app.sender.SenderConstants.URI_RESPONSE_PROCESSOR;
 
@@ -25,6 +29,8 @@ import org.springframework.test.context.jdbc.SqlConfig;
 import ch.qos.logback.classic.Level;
 
 @TestPropertySource(properties = "logging.level." + ROUTE_ID_RESPONSE_PROCESSOR + "=DEBUG")
+@TestPropertySource(properties = PROP_SENDER_ID + "=" + SENDER_ID)
+@TestPropertySource(properties = PROP_CAMEL_OUTPUT_ENDPOINT + "=" + URI_ACTIVEMQ_SYNC)
 public class SenderResponseProcessorRouteTest extends BaseSenderRouteTest {
 	
 	@Override
