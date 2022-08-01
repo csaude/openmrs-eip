@@ -22,11 +22,13 @@ import java.util.List;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.model.ProcessDefinition;
 import org.apache.camel.model.ToDynamicDefinition;
 import org.apache.camel.support.DefaultExchange;
 import org.junit.Test;
 import org.openmrs.eip.app.management.entity.SenderSyncMessage;
 import org.openmrs.eip.app.management.entity.SenderSyncResponse;
+import org.openmrs.eip.app.sender.SenderConstants;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
@@ -80,25 +82,25 @@ public class SenderResponseProcessorRouteTest extends BaseSenderRouteTest {
 			
 			@Override
 			public void configure() {
-				weaveByType(ToDynamicDefinition.class).selectLast().after().to(TEST_LISTENER);
+				weaveByType(ProcessDefinition.class).selectLast().after().to(TEST_LISTENER);
 			}
 			
 		});
 		
-		List<SenderSyncResponse> processedResponses = new ArrayList();
+		List<String> processedResponsesUUIDs = new ArrayList();
 		mockListener.whenAnyExchangeReceived(e -> {
-			processedResponses.add(e.getProperty(EX_PROP_SYNC_RESP, SenderSyncResponse.class));
+			processedResponsesUUIDs.addAll(e.getProperty(SenderConstants.EX_PROP_PROCESSED_RESPONSES_UUIDS, List.class));
 		});
 		DefaultExchange exchange = new DefaultExchange(camelContext);
 		
 		producerTemplate.send(URI_RESPONSE_PROCESSOR, exchange);
 		
 		assertMessageLogged(Level.INFO, "Fetched " + responses.size() + " sender sync response(s)");
-		assertEquals(messageCount, processedResponses.size());
-		assertEquals(3, processedResponses.get(0).getId().intValue());
-		assertEquals(4, processedResponses.get(1).getId().intValue());
-		assertEquals(1, processedResponses.get(2).getId().intValue());
-		assertEquals(2, processedResponses.get(3).getId().intValue());
+		assertEquals(messageCount, processedResponsesUUIDs.size());
+		assertEquals("36beb8bd-287c-47f2-9786-a7b98c933c04", processedResponsesUUIDs.get(0));
+		assertEquals("46beb8bd-287c-47f2-9786-a7b98c933c04", processedResponsesUUIDs.get(1));
+		assertEquals("16beb8bd-287c-47f2-9786-a7b98c933c04", processedResponsesUUIDs.get(2));
+		assertEquals("26beb8bd-287c-47f2-9786-a7b98c933c04", processedResponsesUUIDs.get(3));
 		assertTrue(getEntities(SenderSyncResponse.class).isEmpty());
 		assertTrue(getEntities(SenderSyncMessage.class).isEmpty());
 	}

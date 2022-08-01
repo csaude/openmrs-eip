@@ -26,6 +26,8 @@ import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.SenderSyncMessage;
 import org.openmrs.eip.component.model.PatientModel;
 import org.openmrs.eip.component.model.PersonModel;
+import org.openmrs.eip.component.model.SyncModel;
+import org.openmrs.eip.component.utils.JsonUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
@@ -43,8 +45,6 @@ public class SenderActiveMqPublisherRouteTest extends BaseSenderRouteTest {
 	
 	public static final String SENDER_ID = "test-sender-id";
 	
-	private static final String EX_PROP_SYNC_MSG = "senderSyncMessage";
-	
 	@EndpointInject(URI_ACTIVEMQ_SYNC)
 	private MockEndpoint mockActiveMqEndpoint;
 	
@@ -59,7 +59,7 @@ public class SenderActiveMqPublisherRouteTest extends BaseSenderRouteTest {
 	}
 	
 	private SenderSyncMessage createSyncMessage(String table, String identifier, String msgUuid, String op,
-	                                            String requestUuid) {
+	        String requestUuid) {
 		SenderSyncMessage msg = new SenderSyncMessage();
 		msg.setTableName(table);
 		msg.setIdentifier(identifier);
@@ -93,19 +93,20 @@ public class SenderActiveMqPublisherRouteTest extends BaseSenderRouteTest {
 		assertTrue(msgs.get(0).getDateCreated().getTime() > (msgs.get(2).getDateCreated().getTime()));
 		assertTrue(msgs.get(1).getDateCreated().getTime() > (msgs.get(2).getDateCreated().getTime()));
 		mockActiveMqEndpoint.expectedMessageCount(messageCount);
-		List<SenderSyncMessage> syncMessages = new ArrayList();
+		List<SyncModel> syncModels = new ArrayList<>();
 		mockActiveMqEndpoint
-		        .whenAnyExchangeReceived(e -> syncMessages.add(e.getProperty(EX_PROP_SYNC_MSG, SenderSyncMessage.class)));
+		        .whenAnyExchangeReceived(e -> syncModels.add(JsonUtils.unmarshalSyncModel(e.getIn().getBody(String.class))));
+		
 		DefaultExchange exchange = new DefaultExchange(camelContext);
 		
 		producerTemplate.send(URI_ACTIVEMQ_PUBLISHER, exchange);
 		
 		mockActiveMqEndpoint.assertIsSatisfied();
 		assertMessageLogged(Level.INFO, "Fetched " + msgs.size() + " sender sync message(s)");
-		assertEquals(messageCount, syncMessages.size());
-		assertEquals(3, syncMessages.get(0).getId().intValue());
-		assertEquals(1, syncMessages.get(1).getId().intValue());
-		assertEquals(2, syncMessages.get(2).getId().intValue());
+		assertEquals(messageCount, syncModels.size());
+		assertEquals("36beb8bd-287c-47f2-9786-a7b98c933c04", syncModels.get(0).getMetadata().getMessageUuid());
+		assertEquals("16beb8bd-287c-47f2-9786-a7b98c933c04", syncModels.get(1).getMetadata().getMessageUuid());
+		assertEquals("26beb8bd-287c-47f2-9786-a7b98c933c04", syncModels.get(2).getMetadata().getMessageUuid());
 		assertEquals(0,
 		    SenderTestUtils.getEntities(SenderSyncMessage.class).stream().filter(m -> m.getStatus() == NEW).count());
 	}

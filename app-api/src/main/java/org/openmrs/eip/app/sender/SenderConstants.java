@@ -20,6 +20,8 @@ public class SenderConstants {
 	
 	public static final String EX_PROP_FAILED_ENTITIES = "failed-entities";
 	
+	public static final String EX_PROP_PROCESSED_RESPONSES_UUIDS = "processedResponsesUUIDs";
+	
 	public static final String ROUTE_ID_DB_EVENT_PROCESSOR = "db-event-processor";
 	
 	public static final String URI_DB_EVENT_PROCESSOR = "direct:" + ROUTE_ID_DB_EVENT_PROCESSOR;

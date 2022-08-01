@@ -3,6 +3,7 @@ package org.openmrs.eip.app.sender;
 import static java.util.Collections.singletonMap;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.camel.Exchange;
@@ -48,6 +49,8 @@ public class SyncResponseProcessor implements Processor {
 	@Override
 	public void process(Exchange exchange) throws Exception {
 		List<SenderSyncResponse> responses = exchange.getIn().getBody(List.class);
+		List<String> processedResponsesUUIDs = new ArrayList<>(responses.size());
+		exchange.setProperty(SenderConstants.EX_PROP_PROCESSED_RESPONSES_UUIDS, processedResponsesUUIDs);
 		
 		for (SenderSyncResponse response : responses) {
 			log.info("Processing sender sync response: {}", response);
@@ -83,8 +86,7 @@ public class SyncResponseProcessor implements Processor {
 				log.debug("Successfully removed sender sync response with uuid  {}", response.getMessageUuid());
 			}
 			
+			processedResponsesUUIDs.add(response.getMessageUuid());
 		}
-		
-	}
-	
+	}	
 }
