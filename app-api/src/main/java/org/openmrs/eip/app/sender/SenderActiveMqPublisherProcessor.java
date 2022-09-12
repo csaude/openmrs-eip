@@ -1,7 +1,5 @@
 package org.openmrs.eip.app.sender;
 
-import static java.util.Collections.singletonMap;
-
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
@@ -10,8 +8,9 @@ import java.util.List;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.component.jpa.JpaConstants;
+import org.openmrs.eip.app.config.JMSApplicationContextInitializer;
 import org.openmrs.eip.app.management.entity.SenderSyncMessage;
+import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
 import org.openmrs.eip.component.DatabaseOperation;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.model.BaseModel;
@@ -33,22 +32,16 @@ public class SenderActiveMqPublisherProcessor implements Processor {
 	
 	private static final Logger log = LoggerFactory.getLogger(SenderActiveMqPublisherProcessor.class);
 	
-	private static final String ENTITY = SenderSyncMessage.class.getSimpleName();
-	
-	private static final String PARAM_ID = "id";
-	
 	private static final String OPENMRS_EXTRACT_ENDPOINT = "openmrs:extract?tableToSync={0}&uuid={1}";
-	
-	private static final String JPA_SENDER_SYNC_MESSAGE = MessageFormat.format("jpa:{0}", ENTITY);
-	
-	private static final String JPA_SENDER_SYNC_MESSAGE_DELETE_QUERY = MessageFormat
-	        .format("jpa:{0}?query=DELETE FROM {0} WHERE id = :{1}", ENTITY, PARAM_ID);
 	
 	@Autowired
 	private ProducerTemplate producerTemplate;
 	
 	@Autowired
 	private PGPEncryptService pgpEncryptService;
+	
+	@Autowired
+	private SenderSyncMessageRepository senderSyncMessageRepository;
 	
 	@Value("${" + SenderConstants.PROP_SENDER_ID + "}")
 	private String senderId;
@@ -77,12 +70,13 @@ public class SenderActiveMqPublisherProcessor implements Processor {
 					syncModel.setMetadata(new SyncMetadata());
 				}
 				
-				syncModel.getMetadata().setSourceIdentifier(senderId);
-				syncModel.getMetadata().setDateSent(LocalDateTime.now());
-				syncModel.getMetadata().setOperation(message.getOperation());
-				syncModel.getMetadata().setRequestUuid(message.getRequestUuid());
-				syncModel.getMetadata().setMessageUuid(message.getMessageUuid());
-				syncModel.getMetadata().setSnapshot(message.isSnapshot());
+				SyncMetadata metadata = syncModel.getMetadata();
+				metadata.setSourceIdentifier(senderId);
+				metadata.setDateSent(LocalDateTime.now());
+				metadata.setOperation(message.getOperation());
+				metadata.setRequestUuid(message.getRequestUuid());
+				metadata.setMessageUuid(message.getMessageUuid());
+				metadata.setSnapshot(message.isSnapshot());
 				
 				String syncModelPayload = JsonUtils.marshall(syncModel);
 				
@@ -99,8 +93,10 @@ public class SenderActiveMqPublisherProcessor implements Processor {
 					}
 				}
 				
-				log.info("Sending entity to sync destination: {}", camelOutputEndpoint);
-				producerTemplate.sendBody(camelOutputEndpoint, syncModelPayload);
+				String camelOutputEndpointForReceiver = String.format(camelOutputEndpoint,
+				    JMSApplicationContextInitializer.getConnectionFactoryId(message.getBroker()));
+				log.info("Sending sender sync message to: {}.", camelOutputEndpointForReceiver);
+				producerTemplate.sendBody(camelOutputEndpointForReceiver, syncModelPayload);
 				
 				if (log.isDebugEnabled()) {
 					log.debug("Entity sent!");
@@ -113,7 +109,7 @@ public class SenderActiveMqPublisherProcessor implements Processor {
 					    message.getStatus());
 				}
 				
-				producerTemplate.sendBody(JPA_SENDER_SYNC_MESSAGE, message);
+				senderSyncMessageRepository.save(message);
 				log.debug("Successfully updated sender sync message with identifier {} to {}", message.getIdentifier(),
 				    message.getStatus());
 				
@@ -126,8 +122,7 @@ public class SenderActiveMqPublisherProcessor implements Processor {
 					    message.getTableName());
 				}
 				
-				producerTemplate.sendBodyAndHeader(JPA_SENDER_SYNC_MESSAGE_DELETE_QUERY, null,
-				    JpaConstants.JPA_PARAMETERS_HEADER, singletonMap(PARAM_ID, message.getId()));
+				senderSyncMessageRepository.delete(message);
 				
 				if (log.isDebugEnabled()) {
 					log.debug("Successfully removed sender sync message with identifier {}", message.getIdentifier(),

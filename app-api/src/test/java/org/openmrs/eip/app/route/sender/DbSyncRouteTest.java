@@ -9,6 +9,7 @@ import static org.openmrs.eip.app.sender.SenderConstants.URI_DBSYNC;
 import java.util.List;
 
 import org.apache.camel.support.DefaultExchange;
+import org.junit.Before;
 import org.junit.Test;
 import org.openmrs.eip.app.management.entity.SenderSyncMessage;
 import org.openmrs.eip.app.route.TestUtils;
@@ -21,6 +22,11 @@ public class DbSyncRouteTest extends BaseSenderRouteTest {
 	@Override
 	public String getTestRouteFilename() {
 		return "db-sync-route";
+	}
+	
+	@Before
+	public void before() {
+		createJMSBroker("default", "localhost", 1234, "user", "user1234");
 	}
 	
 	@Test

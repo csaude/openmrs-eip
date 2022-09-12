@@ -12,6 +12,7 @@ import liquibase.integration.spring.SpringLiquibase;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.app.SyncConstants;
+import org.openmrs.eip.app.management.LiquibasePropertiesHelper;
 import org.openmrs.eip.component.SyncProfiles;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,7 +73,8 @@ public class ManagementDataSourceConfig {
 		return new JpaTransactionManager(entityManagerFactory);
 	}
 	
-	@Bean(name = "liquibase")
+	@Bean(name = SyncConstants.LIQUIBASE_BEAN_NAME)
+	@DependsOn(LiquibasePropertiesHelper.NAME)
 	public SpringLiquibase getSpringLiquibaseForMgtDB(@Qualifier("mngtDataSource") DataSource dataSource, Environment env) {
 		SpringLiquibase liquibase = new SpringLiquibase();
 		liquibase.setContexts(StringUtils.join(env.getActiveProfiles(), ","));

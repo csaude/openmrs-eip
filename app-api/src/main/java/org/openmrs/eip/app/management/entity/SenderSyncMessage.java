@@ -8,6 +8,9 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -54,6 +57,10 @@ public class SenderSyncMessage extends AbstractEntity {
 	@Column(name = "date_changed")
 	@Access(AccessType.FIELD)
 	private Date dateChanged;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "jms_broker_id", updatable = false)
+	private JMSBroker broker;
 	
 	public String getTableName() {
 		return tableName;
@@ -109,6 +116,14 @@ public class SenderSyncMessage extends AbstractEntity {
 	
 	public Date getDateChanged() {
 		return dateChanged;
+	}
+	
+	public JMSBroker getBroker() {
+		return broker;
+	}
+	
+	public void setBroker(JMSBroker broker) {
+		this.broker = broker;
 	}
 	
 	public void markAsSent() {

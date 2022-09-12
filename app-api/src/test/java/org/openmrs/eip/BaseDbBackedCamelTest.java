@@ -20,6 +20,8 @@ import org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.lifecycle.Startables;
 
+import com.mysql.jdbc.Driver;
+
 /**
  * Base class for tests for routes that require access to the management and OpenMRS databases.
  */
@@ -35,8 +37,6 @@ import org.testcontainers.lifecycle.Startables;
 public abstract class BaseDbBackedCamelTest extends BaseCamelTest {
 	
 	protected static MySQLContainer mysqlContainer = new MySQLContainer("mysql:5.7.31");
-	
-	protected static Integer mysqlPort;
 	
 	protected static final String SCRIPT_DIR = "/test_scripts/";
 	
@@ -55,7 +55,7 @@ public abstract class BaseDbBackedCamelTest extends BaseCamelTest {
 		mysqlContainer.withEnv("MYSQL_ROOT_PASSWORD", "test");
 		mysqlContainer.withDatabaseName("openmrs");
 		mysqlContainer.withCopyFileToContainer(forClasspathResource("my.cnf"), "/etc/mysql/my.cnf");
-
+		
 		Resource[] scripts = RESOURCE_RESOLVER.getResources("classpath*:" + SCRIPT_DIR + "*.sql");
 		
 		for (Resource script : scripts) {
@@ -66,7 +66,17 @@ public abstract class BaseDbBackedCamelTest extends BaseCamelTest {
 		}
 		
 		Startables.deepStart(Stream.of(mysqlContainer)).join();
-		mysqlPort = mysqlContainer.getMappedPort(3306);
+		addConfigs();
+	}
+	
+	private static void addConfigs() {
+		addDynamicConfig("openmrs.db.port", mysqlContainer.getMappedPort(3306));
+		addDynamicConfig("openmrs.db.host", "localhost");
+		addDynamicConfig("openmrs.db.name", mysqlContainer.getDatabaseName());
+		addDynamicConfig("spring.openmrs-datasource.jdbcUrl", mysqlContainer.getJdbcUrl() + "?useSSL=false");
+		addDynamicConfig("spring.openmrs-datasource.driverClassName", Driver.class.getName());
+		addDynamicConfig("spring.openmrs-datasource.username", "root");
+		addDynamicConfig("spring.openmrs-datasource.password", mysqlContainer.getPassword());
 	}
 	
 	@AfterClass

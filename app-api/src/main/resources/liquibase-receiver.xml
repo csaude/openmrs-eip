@@ -1155,4 +1155,50 @@
         <modifyDataType tableName="receiver_sync_msg" columnName="date_created" newDataType="DATETIME(3)" />
     </changeSet>
 
+    <changeSet author="lpinto" id="20220826-1234">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="jms_broker" />
+            </not>
+        </preConditions>
+        <comment>Adding jms_broker table</comment>
+
+        <createTable tableName="jms_broker">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="identifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="host" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="port" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="disabled" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    
+    <changeSet author="lpinto" id="20220829-1630">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="jms_broker" />
+        </preConditions>
+        <comment>Migrating default Artemis MQ broker properties to jms_broker table</comment>
+        <customChange class="org.openmrs.eip.app.management.MigrateArtemisMQPropertiesToJMSBroker" />
+    </changeSet>
 </databaseChangeLog>

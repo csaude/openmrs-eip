@@ -2,6 +2,7 @@ package org.openmrs.eip.app;
 
 import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.jms.MessageListenerContainerFactory;
+import org.openmrs.eip.app.sender.ActiveMqConsumerAcknowledgementProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.listener.AbstractMessageListenerContainer;
@@ -21,7 +22,10 @@ public class CustomMessageListenerContainerFactory implements MessageListenerCon
 			log.debug("Creating CustomMessageListenerContainerFactory");
 		}
 		
-		return new CustomMessageListenerContainer(endpoint);
+		CustomMessageListenerContainer customMessageListenerContainer = new CustomMessageListenerContainer(endpoint);
+		ActiveMqConsumerAcknowledgementProcessor.registerListener(endpoint, customMessageListenerContainer);
+		
+		return customMessageListenerContainer;
 	}
 	
 }

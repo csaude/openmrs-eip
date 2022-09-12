@@ -6,9 +6,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.openmrs.eip.app.management.entity.SenderSyncMessage.SenderSyncMessageStatus.NEW;
 import static org.openmrs.eip.app.management.entity.SenderSyncMessage.SenderSyncMessageStatus.SENT;
-import static org.openmrs.eip.app.route.sender.SenderActiveMqPublisherRouteTest.SENDER_ID;
-import static org.openmrs.eip.app.route.sender.SenderActiveMqPublisherRouteTest.URI_ACTIVEMQ_SYNC;
-import static org.openmrs.eip.app.sender.SenderConstants.PROP_SENDER_ID;
 import static org.openmrs.eip.app.sender.SenderConstants.ROUTE_ID_ACTIVEMQ_PUBLISHER;
 import static org.openmrs.eip.app.sender.SenderConstants.URI_ACTIVEMQ_PUBLISHER;
 
@@ -17,19 +14,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.camel.EndpointInject;
-import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.DefaultExchange;
-import org.junit.Before;
 import org.junit.Test;
 import org.openmrs.eip.app.SyncConstants;
+import org.openmrs.eip.app.management.entity.JMSBroker;
 import org.openmrs.eip.app.management.entity.SenderSyncMessage;
+import org.openmrs.eip.app.management.repository.JMSBrokerRepository;
 import org.openmrs.eip.app.route.TestUtils;
 import org.openmrs.eip.component.model.PatientModel;
 import org.openmrs.eip.component.model.PersonModel;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 
@@ -37,26 +33,14 @@ import com.jayway.jsonpath.JsonPath;
 
 import ch.qos.logback.classic.Level;
 
-@TestPropertySource(properties = PROP_SENDER_ID + "=" + SENDER_ID)
-@TestPropertySource(properties = "camel.output.endpoint=" + URI_ACTIVEMQ_SYNC)
-@TestPropertySource(properties = "logging.level." + ROUTE_ID_ACTIVEMQ_PUBLISHER + "=DEBUG")
 public class SenderActiveMqPublisherRouteTest extends BaseSenderRouteTest {
 	
-	public static final String URI_ACTIVEMQ_SYNC = "mock:activemq.openmrs.sync";
-	
-	public static final String SENDER_ID = "test-sender-id";
-	
-	@EndpointInject(URI_ACTIVEMQ_SYNC)
-	private MockEndpoint mockActiveMqEndpoint;
+	@Autowired
+	private JMSBrokerRepository jmsBrokerRepository;
 	
 	@Override
 	public String getTestRouteFilename() {
 		return ROUTE_ID_ACTIVEMQ_PUBLISHER;
-	}
-	
-	@Before
-	public void setup() {
-		mockActiveMqEndpoint.reset();
 	}
 	
 	private SenderSyncMessage createSyncMessage(String table, String identifier, String msgUuid, String op,
@@ -69,8 +53,13 @@ public class SenderActiveMqPublisherRouteTest extends BaseSenderRouteTest {
 		msg.setSnapshot(false);
 		msg.setDateCreated(new Date());
 		msg.setRequestUuid(requestUuid);
+		msg.setBroker(findOrCreateBroker());
 		TestUtils.saveEntity(msg);
 		return msg;
+	}
+	
+	private JMSBroker findOrCreateBroker() {
+		return jmsBrokerRepository.findById(1L).orElse(createJMSBroker("default", "localhost", 1234, "user", "pass123"));
 	}
 	
 	@Test
@@ -108,8 +97,7 @@ public class SenderActiveMqPublisherRouteTest extends BaseSenderRouteTest {
 		assertEquals("36beb8bd-287c-47f2-9786-a7b98c933c04", syncModels.get(0).getMetadata().getMessageUuid());
 		assertEquals("16beb8bd-287c-47f2-9786-a7b98c933c04", syncModels.get(1).getMetadata().getMessageUuid());
 		assertEquals("26beb8bd-287c-47f2-9786-a7b98c933c04", syncModels.get(2).getMetadata().getMessageUuid());
-		assertEquals(0,
-			TestUtils.getEntities(SenderSyncMessage.class).stream().filter(m -> m.getStatus() == NEW).count());
+		assertEquals(0, TestUtils.getEntities(SenderSyncMessage.class).stream().filter(m -> m.getStatus() == NEW).count());
 	}
 	
 	@Test

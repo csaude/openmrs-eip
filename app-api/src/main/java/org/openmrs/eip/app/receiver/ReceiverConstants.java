@@ -21,4 +21,6 @@ public class ReceiverConstants {
 	public static final String EX_PROP_SITE = "site";
 	
 	public static final String PROP_CAMEL_OUTPUT_ENDPOINT = "camel.output.endpoint";
+
+	public static final String PROP_RECEIVER_ID = "db-sync.receiverId";
 }

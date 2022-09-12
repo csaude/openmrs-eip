@@ -12,9 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Custom {@link org.springframework.jms.listener.MessageListenerContainer} that only acknowledges
  * messages to be removed from active MQ depending on our application logic to ensure no message
- * ever goes unprocessed. Message acknowledgement is enabled only when the following happen,
- * 
- * <pre>
+ * ever goes unprocessed. Message acknowledgement is enabled only when the following happen, <pre>
  * 1. A message is successfully synced to the receiver OpenMRS database
  * 2. If a message is saved to the receiver retry queue.
  * 3. If a message is saved to the receiver conflict queue.
@@ -25,13 +23,13 @@ public class CustomMessageListenerContainer extends DefaultJmsMessageListenerCon
 	
 	protected static final Logger log = LoggerFactory.getLogger(CustomMessageListenerContainer.class);
 	
-	private static boolean commit = false;
+	private boolean commit = false;
 	
 	public CustomMessageListenerContainer(JmsEndpoint endpoint) {
 		super(endpoint);
 	}
 	
-	public synchronized static void enableAcknowledgement() {
+	public void enableAcknowledgement() {
 		commit = true;
 	}
 	

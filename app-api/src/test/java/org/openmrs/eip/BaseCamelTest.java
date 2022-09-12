@@ -8,19 +8,25 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.RoutesDefinition;
 import org.apache.camel.test.spring.CamelSpringRunner;
 import org.apache.commons.lang3.SystemUtils;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.openmrs.eip.app.config.JMSApplicationContextInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +35,7 @@ import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
 import org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
@@ -45,6 +52,7 @@ import ch.qos.logback.core.read.ListAppender;
  */
 @RunWith(CamelSpringRunner.class)
 @SpringBootTest(classes = TestConfig.class)
+//@ContextConfiguration(initializers = JMSApplicationContextInitializer.class)
 @TestExecutionListeners(value = { DirtiesContextBeforeModesTestExecutionListener.class, MockitoTestExecutionListener.class,
         DependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class,
         ResetMocksTestExecutionListener.class })
@@ -81,6 +89,8 @@ public abstract class BaseCamelTest {
 	@Autowired
 	protected ConfigurableEnvironment env;
 	
+	private static Map<String, Object> dynamicConfigs = new HashMap<>();
+	
 	protected void advise(String routeId, AdviceWithRouteBuilder builder) throws Exception {
 		camelContext.adviceWith(camelContext.getRouteDefinition(routeId), builder);
 	}
@@ -108,8 +118,15 @@ public abstract class BaseCamelTest {
 		Assert.fail("Log event not satisfied -> [" + level + "] " + message);
 	}
 	
+	protected long getMessageLoggedCount(Level level, String message) {
+		ListAppender<LoggingEvent> app = (ListAppender) loggerContext.getLogger(ROOT_LOGGER_NAME).getAppender("test");
+		return app.list.stream().filter(e -> e.getLevel().equals(level) && e.getFormattedMessage().equalsIgnoreCase(message))
+		        .count();
+	}
+	
 	/**
-	 * Loads and registers the routes defined in the files on the classpath with the specified names.
+	 * Loads and registers the routes defined in the files on the classpath with the specified
+	 * names.
 	 *
 	 * @param filenames the names of the files to load
 	 * @throws Exception
@@ -140,6 +157,10 @@ public abstract class BaseCamelTest {
 		}
 	}
 	
+	protected void loadRoute(RouteBuilder routeBuilder) throws Exception {
+		camelContext.addRoutes(routeBuilder);
+	}
+	
 	private void loadRoute(InputStream in) throws Exception {
 		RoutesDefinition rd = (RoutesDefinition) camelContext.getXMLRoutesDefinitionLoader()
 		        .loadRoutesDefinition(camelContext, in);
@@ -152,6 +173,19 @@ public abstract class BaseCamelTest {
 	
 	protected Exception getException(Exchange e) {
 		return e.getProperty("error", Exception.class);
+	}
+	
+	protected static void addDynamicConfig(String key, Object value) {
+		dynamicConfigs.put(key, value);
+	}
+	
+	public static Map<String, Object> getDynamicConfigs() {
+		return Collections.unmodifiableMap(dynamicConfigs);
+	}
+	
+	@AfterClass
+	public static void clearDynamicConfigs() {
+		dynamicConfigs.clear();
 	}
 	
 }

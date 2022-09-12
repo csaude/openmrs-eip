@@ -25,15 +25,9 @@
                     <script>
                         <method beanType="org.openmrs.eip.component.service.TableToSyncEnum" method="getTableToSyncEnum(${exchangeProperty.syncRequest.tableName})" />
                     </script>
-
-                    <setBody>
-                        <method beanType="org.openmrs.eip.component.utils.JsonUtils" method="marshall(${exchangeProperty.syncRequest.buildModel()})" />
-                    </setBody>
-
-                    <log message="Sending sync request -> ${body}" />
-
-                    <toD uri="activemq:openmrs.sync.${exchangeProperty.syncRequest.site.identifier}" />
-
+                    
+                    <to uri="bean:receiverActiveMqMessagePublisher?method=sendSyncRequest(${exchangeProperty.syncRequest})" />
+                    
                     <log message="Request sent! Updating request status to sent" />
 
                     <script>

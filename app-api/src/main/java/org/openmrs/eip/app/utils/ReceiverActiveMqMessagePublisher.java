@@ -5,10 +5,13 @@ import java.time.LocalDateTime;
 
 import org.apache.camel.ProducerTemplate;
 import org.apache.commons.lang3.StringUtils;
+import org.openmrs.eip.app.config.JMSApplicationContextInitializer;
 import org.openmrs.eip.app.management.entity.AbstractEntity;
+import org.openmrs.eip.app.management.entity.JMSBroker;
 import org.openmrs.eip.app.management.entity.ReceiverSyncRequest;
 import org.openmrs.eip.app.management.entity.SyncMessage;
 import org.openmrs.eip.app.management.entity.SyncResponseModel;
+import org.openmrs.eip.app.management.repository.JMSBrokerRepository;
 import org.openmrs.eip.app.receiver.ReceiverConstants;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.utils.JsonUtils;
@@ -17,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,6 +34,11 @@ public class ReceiverActiveMqMessagePublisher {
 	
 	@Autowired
 	private ProducerTemplate producerTemplate;
+	
+	@Autowired
+	private JMSBrokerRepository jmsBrokerRepository;
+	
+	private JMSBroker broker;
 	
 	/**
 	 * Sends a <code>SyncResponseModel</code> back to the Sender.
@@ -77,6 +86,14 @@ public class ReceiverActiveMqMessagePublisher {
 		log.info("Sync response sent for message with uuid: {}", messageUuid);
 	}
 	
+	public void sendSyncRequest(ReceiverSyncRequest syncRequest) {
+		String payload = JsonUtils.marshall(syncRequest.buildModel());
+		
+		log.info("Sending sync request -> {}", payload);
+		
+		producerTemplate.sendBody(getCamelOutputEndpoint(syncRequest.getSite().getIdentifier()), payload);
+	}
+	
 	/**
 	 * Builds the endpoint based on <code>Constants.PROP_CAMEL_OUTPUT_ENDPOINT</code>
 	 * 
@@ -84,7 +101,19 @@ public class ReceiverActiveMqMessagePublisher {
 	 * @return The camel output endpoint
 	 */
 	public String getCamelOutputEndpoint(String siteIdentifier) {
-		return MessageFormat.format(endpointConfig, siteIdentifier);
+		return MessageFormat.format(endpointConfig, siteIdentifier,
+		    JMSApplicationContextInitializer.getConnectionFactoryId(getBroker()));
+	}
+	
+	private JMSBroker getBroker() {
+		if (this.broker == null) {
+			JMSBroker example = new JMSBroker();
+			example.setDisabled(false);
+			
+			this.broker = jmsBrokerRepository.findOne(Example.of(example)).get();
+		}
+		
+		return this.broker;
 	}
 	
 }

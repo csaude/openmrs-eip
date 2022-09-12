@@ -10,13 +10,18 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = Constants.PROP_URI_ERROR_HANDLER + "=" + TestConstants.URI_ERROR_HANDLER)
 public abstract class BaseRouteTest extends BaseDbBackedCamelTest {
 	
+	protected static final String ACTIVEMQ_IMAGE = "cnocorch/activemq-artemis";
+	protected static final int ACTIVEMQ_PORT = 61616;
+	
 	public abstract String getTestRouteFilename();
 	
 	public abstract String getAppFolderName();
 	
 	@Before
 	public void setupBaseRouteTest() throws Exception {
-		loadRoute(getTestRouteFilename() + ".xml");
+		if (getTestRouteFilename() != null) {
+			loadRoute(getTestRouteFilename() + ".xml");
+		}
 	}
 	
 	protected void loadRoute(String routeFilename) throws Exception {

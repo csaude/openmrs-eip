@@ -39,7 +39,7 @@ public class SenderSyncResponse extends AbstractEntity {
 	
 	@Override
 	public String toString() {
-		return "SyncResponse [messageUuid=" + messageUuid + ", dateSentByReceiver=" + dateSentByReceiver + "]";
+		return "SenderSyncResponse [messageUuid=" + messageUuid + ", dateSentByReceiver=" + dateSentByReceiver + "]";
 	}
 	
 }
