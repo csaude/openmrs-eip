@@ -13,44 +13,28 @@ public class CustomFileOffsetBackingStore extends FileOffsetBackingStore {
 	
 	protected static final Logger log = LoggerFactory.getLogger(CustomFileOffsetBackingStore.class);
 	
-	private static boolean disabled = false;
-	
-	private static boolean paused = false;
-	
-	public synchronized static void enable() {
-		disabled = false;
-		if (log.isDebugEnabled()) {
-			log.debug("Enabled saving of offsets");
-		}
+	public static void enable() {
+		CustomOffsetBackingStore.enable();
 	}
 	
-	public synchronized static void disable() {
-		disabled = true;
-		if (log.isDebugEnabled()) {
-			log.debug("Disabled saving of offsets");
-		}
+	public static void disable() {
+		CustomOffsetBackingStore.disable();
 	}
 	
-	public synchronized static boolean isDisabled() {
-		return disabled;
+	public static boolean isDisabled() {
+		return CustomOffsetBackingStore.isDisabled();
 	}
 	
-	public synchronized static boolean isPaused() {
-		return paused;
+	public static boolean isPaused() {
+		return CustomOffsetBackingStore.isPaused();
 	}
 	
-	public synchronized static void pause() {
-		paused = true;
-		if (log.isDebugEnabled()) {
-			log.debug("Pause saving of offsets");
-		}
+	public static void pause() {
+		CustomOffsetBackingStore.pause();
 	}
 	
-	public synchronized static void unpause() {
-		paused = false;
-		if (log.isDebugEnabled()) {
-			log.debug("Removing pause on saving of offsets");
-		}
+	public static void unpause() {
+		CustomOffsetBackingStore.unpause();
 	}
 	
 	/**
@@ -58,29 +42,10 @@ public class CustomFileOffsetBackingStore extends FileOffsetBackingStore {
 	 */
 	@Override
 	protected void save() {
-		synchronized (CustomFileOffsetBackingStore.class) {
-			if (disabled || paused) {
-				if (paused) {
-					if (log.isDebugEnabled()) {
-						log.debug("Skipping saving of offset because it is paused");
-					}
-				} else {
-					log.warn("Skipping saving of offset because an error was encountered while processing a source record");
-				}
-				
-				return;
-			}
-			
-			if (log.isDebugEnabled()) {
-				log.debug("Saving binlog offset");
-			}
-			
-			doSave();
-		}
-	}
-	
-	protected void doSave() {
-		super.save();
+		CustomOffsetBackingStore.save((Void) -> {
+			super.save();
+			return true;
+		});
 	}
 	
 }

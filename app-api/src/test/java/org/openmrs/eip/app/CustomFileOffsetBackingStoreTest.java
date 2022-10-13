@@ -1,10 +1,9 @@
 package org.openmrs.eip.app;
 
-import java.io.File;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.powermock.reflect.Whitebox;
@@ -12,43 +11,32 @@ import org.powermock.reflect.Whitebox;
 public class CustomFileOffsetBackingStoreTest {
 	
 	@Spy
-	private CustomFileOffsetBackingStore store;
-	
-	private File mockFile;
+	private CustomOffsetBackingStore store;
 	
 	@Before
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", false);
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "disabled", false);
-		Whitebox.setInternalState(store, File.class, mockFile);
+		Whitebox.setInternalState(CustomOffsetBackingStore.class, "paused", false);
+		Whitebox.setInternalState(CustomOffsetBackingStore.class, "disabled", false);
 	}
 	
 	@Test
 	public void save_shouldNotSaveOffsetsIfTheStoreIsPaused() {
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", true);
+		Whitebox.setInternalState(CustomOffsetBackingStore.class, "paused", true);
 		
-		store.save();
-		
-		Mockito.verify(store, Mockito.never()).doSave();
+		assertThat(store.save((Void) -> true)).isFalse();
 	}
 	
 	@Test
 	public void save_shouldNotSaveOffsetsIfTheStoreIsDisabled() {
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", true);
+		Whitebox.setInternalState(CustomOffsetBackingStore.class, "paused", true);
 		
-		store.save();
-		
-		Mockito.verify(store, Mockito.never()).doSave();
+		assertThat(store.save((Void) -> true)).isFalse();
 	}
 	
 	@Test
-	public void save_shouldSaveOffsetsIfTheStoreIsNotPausedAndIsNotDisabled() throws Exception {
-		Mockito.doNothing().when(store).doSave();
-		
-		store.save();
-		
-		Mockito.verify(store).doSave();
+	public void save_shouldSaveOffsetsIfTheStoreIsNotPausedAndIsNotDisabled() {
+		assertThat(store.save((Void) -> true)).isTrue();
 	}
 	
 }
