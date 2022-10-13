@@ -20,7 +20,7 @@ public class CustomDatabaseOffsetBackingStore extends MemoryOffsetBackingStore {
 	
 	@Override
 	public void save() {
-		CustomOffsetBackingStore.save((Void) -> {
+		CustomOffsetBackingStore.save(() -> {
 			
 			// TODO save to the database
 			

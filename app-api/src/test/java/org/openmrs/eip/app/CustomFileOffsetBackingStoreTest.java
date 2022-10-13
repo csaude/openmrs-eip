@@ -24,19 +24,19 @@ public class CustomFileOffsetBackingStoreTest {
 	public void save_shouldNotSaveOffsetsIfTheStoreIsPaused() {
 		Whitebox.setInternalState(CustomOffsetBackingStore.class, "paused", true);
 		
-		assertThat(store.save((Void) -> true)).isFalse();
+		assertThat(store.save(() -> true)).isFalse();
 	}
 	
 	@Test
 	public void save_shouldNotSaveOffsetsIfTheStoreIsDisabled() {
 		Whitebox.setInternalState(CustomOffsetBackingStore.class, "paused", true);
 		
-		assertThat(store.save((Void) -> true)).isFalse();
+		assertThat(store.save(() -> true)).isFalse();
 	}
 	
 	@Test
 	public void save_shouldSaveOffsetsIfTheStoreIsNotPausedAndIsNotDisabled() {
-		assertThat(store.save((Void) -> true)).isTrue();
+		assertThat(store.save(() -> true)).isTrue();
 	}
 	
 }

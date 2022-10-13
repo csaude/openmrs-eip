@@ -42,7 +42,7 @@ public class CustomFileOffsetBackingStore extends FileOffsetBackingStore {
 	 */
 	@Override
 	protected void save() {
-		CustomOffsetBackingStore.save((Void) -> {
+		CustomOffsetBackingStore.save(() -> {
 			super.save();
 			return true;
 		});

@@ -1,7 +1,5 @@
 package org.openmrs.eip.app;
 
-import java.util.function.Function;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +47,7 @@ public class CustomOffsetBackingStore {
 		}
 	}
 	
-	public static synchronized boolean save(Function<Void, Boolean> save) {
+	public static synchronized boolean save(OffsetSaveFunction saveFunction) {
 		if (isDisabled() || isPaused()) {
 			if (isPaused()) {
 				if (log.isDebugEnabled()) {
@@ -66,6 +64,12 @@ public class CustomOffsetBackingStore {
 			log.debug("Saving offset");
 		}
 		
-		return save.apply(null);
+		return saveFunction.save();
+	}
+	
+	@FunctionalInterface
+	public interface OffsetSaveFunction {
+		
+		boolean save();
 	}
 }
