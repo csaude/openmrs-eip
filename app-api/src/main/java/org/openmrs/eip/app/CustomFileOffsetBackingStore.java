@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CustomFileOffsetBackingStore extends FileOffsetBackingStore {
 	
-	protected static final Logger log = LoggerFactory.getLogger(CustomFileOffsetBackingStore.class);
+	private static final Logger log = LoggerFactory.getLogger(CustomFileOffsetBackingStore.class);
 	
 	public static void enable() {
 		CustomOffsetBackingStore.enable();

@@ -353,5 +353,28 @@
 
         <addNotNullConstraint tableName="sender_sync_request" columnName="status" columnDataType="VARCHAR(50)" />
     </changeSet>
-    
+
+    <changeSet author="lpinto" id="20221013-1450">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="debezium_offset" />
+            </not>
+        </preConditions>
+        <comment>Adding debezium_offset table</comment>
+
+        <createTable tableName="debezium_offset">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" />
+            </column>
+            <column name="date_created" type="TIMESTAMP(3)">
+                <constraints nullable="false" />
+            </column>
+            <column name="data" type="BLOB">
+                <constraints nullable="false" />
+            </column>
+            <column name="date_changed" type="TIMESTAMP(3)" />
+        </createTable>
+        
+    </changeSet>
+        
 </databaseChangeLog>
