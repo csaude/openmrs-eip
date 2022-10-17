@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import org.apache.kafka.connect.errors.ConnectException;
-import org.apache.kafka.connect.runtime.standalone.StandaloneConfig;
 import org.apache.kafka.connect.util.SafeObjectInputStream;
 import org.openmrs.eip.app.config.BeanAwareSpringLiquibase;
 import org.slf4j.Logger;
@@ -38,7 +37,7 @@ public class MigrateDebeziumOffsetFileToDatabaseChangeSet implements CustomTaskC
 		try {
 			JdbcConnection conn = (JdbcConnection) database.getConnection();
 			
-			File file = new File(BeanAwareSpringLiquibase.getProperty(StandaloneConfig.OFFSET_STORAGE_FILE_FILENAME_CONFIG));
+			File file = new File(BeanAwareSpringLiquibase.getProperty("debezium.offsetFilename"));
 			
 			migrateFileToDatabase(file, conn);
 		}
