@@ -4,10 +4,9 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Date;
+import java.util.HashMap;
 
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.util.SafeObjectInputStream;
@@ -19,7 +18,6 @@ import liquibase.change.custom.CustomTaskChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.CustomChangeException;
-import liquibase.exception.DatabaseException;
 import liquibase.exception.SetupException;
 import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
@@ -46,13 +44,16 @@ public class MigrateDebeziumOffsetFileToDatabaseChangeSet implements CustomTaskC
 		}
 	}
 	
-	private void migrateFileToDatabase(File file, JdbcConnection conn)
-	        throws CustomChangeException, DatabaseException, SQLException {
+	private void migrateFileToDatabase(File file, JdbcConnection conn) throws Exception {
 		try (SafeObjectInputStream is = new SafeObjectInputStream(new FileInputStream(file))) {
+			Object offsetData = is.readObject();
+			if (!(offsetData instanceof HashMap))
+				throw new ConnectException("Expected HashMap but found " + offsetData.getClass());
+			
 			final String SQL = "INSERT INTO debezium_offset (data, date_created) VALUES (?,?)";
 			
 			try (PreparedStatement statement = conn.prepareStatement(SQL)) {
-				statement.setBlob(1, is);
+				statement.setObject(1, offsetData);
 				statement.setObject(2, new Date());
 				
 				int rows = statement.executeUpdate();
@@ -64,10 +65,6 @@ public class MigrateDebeziumOffsetFileToDatabaseChangeSet implements CustomTaskC
 		catch (FileNotFoundException | EOFException e) {
 			log.info("No debezium offset file was found for migration. {}", file.getPath());
 		}
-		catch (IOException e) {
-			throw new ConnectException(e);
-		}
-		
 	}
 	
 	@Override
