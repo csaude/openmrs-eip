@@ -3,7 +3,7 @@
         <from uri="direct:shutdown-route" />
 
         <script>
-            <method beanType="org.openmrs.eip.app.CustomFileOffsetBackingStore" method="disable()" />
+            <method beanType="org.openmrs.eip.app.CustomDatabaseOffsetBackingStore" method="disable()" />
         </script>
 
         <choice>

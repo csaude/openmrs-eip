@@ -14,7 +14,7 @@ import org.apache.camel.Message;
 import org.apache.camel.component.debezium.DebeziumConstants;
 import org.apache.kafka.connect.data.Struct;
 import org.openmrs.eip.app.BaseParallelProcessor;
-import org.openmrs.eip.app.CustomFileOffsetBackingStore;
+import org.openmrs.eip.app.CustomDatabaseOffsetBackingStore;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 	@Override
 	public void process(Exchange exchange) throws Exception {
 		try {
-			if (CustomFileOffsetBackingStore.isDisabled()) {
+			if (CustomDatabaseOffsetBackingStore.isDisabled()) {
 				if (log.isDebugEnabled()) {
 					log.debug("Deferring DB event because an error was encountered while processing a previous one");
 				}
@@ -56,8 +56,8 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 			
 			//In case if initial loading, block saving offsets until all rows in the snapshot are processed
 			//In case of incremental, block saving until we have successfully save the event to the event queue in the DB
-			if (!CustomFileOffsetBackingStore.isPaused()) {
-				CustomFileOffsetBackingStore.pause();
+			if (!CustomDatabaseOffsetBackingStore.isPaused()) {
+				CustomDatabaseOffsetBackingStore.pause();
 			}
 			
 			final Message message = exchange.getMessage();
@@ -76,7 +76,7 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 				try {
 					setThreadName(table, id);
 					handler.handle(table, id, false, sourceMetadata, exchange);
-					CustomFileOffsetBackingStore.unpause();
+					CustomDatabaseOffsetBackingStore.unpause();
 				}
 				finally {
 					Thread.currentThread().setName(originalThreadName);
@@ -85,7 +85,7 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 		}
 		catch (Throwable t) {
 			try {
-				CustomFileOffsetBackingStore.disable();
+				CustomDatabaseOffsetBackingStore.disable();
 			}
 			finally {
 				throw new EIPException("Failed to process DB event", t);
@@ -99,8 +99,7 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 	}
 	
 	private void processSnapshotEvent(Exchange exchange, Map<String, Object> sourceMetadata, String id, String table,
-	                                  String snapshotStr)
-	    throws Exception {
+	        String snapshotStr) throws Exception {
 		if (batchSize == null) {
 			batchSize = DEFAULT_BATCH_SIZE;
 		}
@@ -177,7 +176,7 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 				//Only save offsets if it is the last snapshot item
 				log.info("Processed final snapshot change event");
 				
-				CustomFileOffsetBackingStore.unpause();
+				CustomDatabaseOffsetBackingStore.unpause();
 				
 				savepointStore.discard();
 				savepointStore = null;
