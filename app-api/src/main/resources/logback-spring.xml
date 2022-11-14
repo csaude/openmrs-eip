@@ -21,8 +21,23 @@
             <maxFileSize>${LOGS_MAX_FILE_SIZE}</maxFileSize>
         </rollingPolicy>
     </appender>
+    
+    <appender name="binlog-offset-errors" class="org.openmrs.eip.app.log.BinlogReaderOffsetErrorsAppender">
+        <filter class="org.openmrs.eip.app.log.BinlogReaderOffsetErrorsAppenderFilter" />
+    </appender>
 
+    <appender name="async-errors" class="ch.qos.logback.classic.AsyncAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        
+        <appender-ref ref="binlog-offset-errors" />
+    </appender>
+    
     <root level="info">
         <appender-ref ref="file" />
+        <appender-ref ref="async-errors" />
     </root>
 </configuration>

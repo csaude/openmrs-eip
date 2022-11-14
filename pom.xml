@@ -154,6 +154,11 @@
             <artifactId>json</artifactId>
             <version>${json.version}</version>
         </dependency>
+        <dependency>
+		    <groupId>ch.qos.logback</groupId>
+		    <artifactId>logback-classic</artifactId>
+		    <scope>provided</scope>
+		</dependency>
 
         <!-- testing -->
         <dependency>

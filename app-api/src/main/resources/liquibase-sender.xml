@@ -372,7 +372,13 @@
             <column name="data" type="BLOB">
                 <constraints nullable="false" />
             </column>
-            <column name="date_changed" type="DATETIME(3)" />
+            <column name="binlog_filename" type="VARCHAR(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="date_changed" type="TIMESTAMP(3)" />
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false" />
+            </column>
         </createTable>
     </changeSet>
     
@@ -380,5 +386,5 @@
         <comment>Migrating offset file to the database</comment>
         <customChange class="org.openmrs.eip.app.management.sender.MigrateDebeziumOffsetFileToDatabaseChangeSet" />
     </changeSet>
-        
+    
 </databaseChangeLog>

@@ -12,19 +12,17 @@ public class DebeziumOffset extends AbstractEntity {
 	
 	public static final long serialVersionUID = 1;
 	
-	@Column(name = "date_changed")
-	private LocalDateTime dateChanged;
-	
 	@Column(nullable = false)
 	private byte[] data;
 	
-	public LocalDateTime getDateChanged() {
-		return dateChanged;
-	}
+	@Column(name = "binlog_filename", nullable = false)
+	private String binlogFileName;
 	
-	public void setDateChanged(LocalDateTime dateChanged) {
-		this.dateChanged = dateChanged;
-	}
+	@Column(name = "date_changed")
+	private LocalDateTime dateChanged;
+	
+	@Column(name = "enabled", nullable = false)
+	private Boolean enabled;
 	
 	public byte[] getData() {
 		return data;
@@ -34,10 +32,34 @@ public class DebeziumOffset extends AbstractEntity {
 		this.data = data;
 	}
 	
+	public String getBinlogFileName() {
+		return binlogFileName;
+	}
+	
+	public void setBinlogFileName(String binlogFileName) {
+		this.binlogFileName = binlogFileName;
+	}
+	
+	public LocalDateTime getDateChanged() {
+		return dateChanged;
+	}
+	
+	public void setDateChanged(LocalDateTime dateChanged) {
+		this.dateChanged = dateChanged;
+	}
+	
+	public Boolean isEnabled() {
+		return enabled;
+	}
+	
+	public void setEnabled(Boolean enabled) {
+		this.enabled = enabled;
+	}
+	
 	@Override
 	public String toString() {
-		return "DebeziumOffset [getId()=" + getId() + ", getDateCreated()=" + getDateCreated() + ", dateChanged="
-		        + dateChanged + "]";
+		return "DebeziumOffset [getId()=" + getId() + ", getDateCreated()=" + getDateCreated() + ", binlogFileName="
+		        + binlogFileName + ", dateChanged=" + dateChanged + ", enabled=" + enabled + "]";
 	}
 	
 }
