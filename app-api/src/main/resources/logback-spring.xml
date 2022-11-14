@@ -22,8 +22,8 @@
         </rollingPolicy>
     </appender>
     
-    <appender name="binlog-offset-errors" class="org.openmrs.eip.app.log.BinlogReaderOffsetErrorsAppender">
-        <filter class="org.openmrs.eip.app.log.BinlogReaderOffsetErrorsAppenderFilter" />
+    <appender name="binlog-offset-errors" class="org.openmrs.eip.app.logger.BinlogReaderOffsetErrorsAppender">
+        <filter class="org.openmrs.eip.app.logger.BinlogReaderOffsetErrorsAppenderFilter" />
     </appender>
 
     <appender name="async-errors" class="ch.qos.logback.classic.AsyncAppender">

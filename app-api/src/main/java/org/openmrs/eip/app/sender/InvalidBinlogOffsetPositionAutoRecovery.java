@@ -3,7 +3,7 @@ package org.openmrs.eip.app.sender;
 import java.time.LocalDateTime;
 
 import org.openmrs.eip.app.AppUtils;
-import org.openmrs.eip.app.log.observer.EventListener;
+import org.openmrs.eip.app.logger.observer.EventListener;
 import org.openmrs.eip.app.management.entity.DebeziumOffset;
 import org.openmrs.eip.app.management.repository.DebeziumOffsetRepository;
 import org.slf4j.Logger;
