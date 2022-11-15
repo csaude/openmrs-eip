@@ -372,7 +372,7 @@
             <column name="data" type="BLOB">
                 <constraints nullable="false" />
             </column>
-            <column name="binlog_filename" type="VARCHAR(50)">
+            <column name="binlog_filename" type="VARCHAR(255)">
                 <constraints nullable="false" />
             </column>
             <column name="date_changed" type="TIMESTAMP(3)" />
@@ -383,6 +383,9 @@
     </changeSet>
     
     <changeSet author="lpinto" id="20221017-1100">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="debezium_offset" />
+        </preConditions>
         <comment>Migrating offset file to the database</comment>
         <customChange class="org.openmrs.eip.app.management.sender.MigrateDebeziumOffsetFileToDatabaseChangeSet" />
     </changeSet>

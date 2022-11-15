@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.kafka.connect.json.JsonConverterConfig;
 import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.storage.Converter;
 import org.apache.kafka.connect.storage.FileOffsetBackingStore;
@@ -76,7 +77,7 @@ public class CustomDatabaseOffsetBackingStore extends MemoryOffsetBackingStore {
 		
 		Map<String, Object> valueConverterOriginalConfs = config
 		        .originalsWithPrefix(WorkerConfig.INTERNAL_VALUE_CONVERTER_CLASS_CONFIG + ".", true);
-		valueConverterOriginalConfs.put("schemas.enable", false);
+		valueConverterOriginalConfs.put(JsonConverterConfig.SCHEMAS_ENABLE_CONFIG, false);
 		
 		this.valueConverter = Instantiator.getInstance(valueConverterClassName, () -> this.getClass().getClassLoader(),
 		    null);
