@@ -24,9 +24,9 @@ import io.debezium.embedded.EmbeddedEngine;
  * while processing a source record read by debezium from the MySQL binlog to ensure no binlog entry
  * goes unprocessed.
  */
-public class CustomFileOffsetBackingStore extends MemoryOffsetBackingStore {
+public class CustomDatabaseOffsetBackingStore extends MemoryOffsetBackingStore {
 	
-	protected static final Logger log = LoggerFactory.getLogger(CustomFileOffsetBackingStore.class);
+	protected static final Logger log = LoggerFactory.getLogger(CustomDatabaseOffsetBackingStore.class);
 	
 	private static boolean disabled = false;
 	
@@ -121,7 +121,7 @@ public class CustomFileOffsetBackingStore extends MemoryOffsetBackingStore {
 	
 	@Override
 	protected void save() {
-		synchronized (CustomFileOffsetBackingStore.class) {
+		synchronized (CustomDatabaseOffsetBackingStore.class) {
 			if (disabled || paused) {
 				if (paused) {
 					if (log.isDebugEnabled()) {

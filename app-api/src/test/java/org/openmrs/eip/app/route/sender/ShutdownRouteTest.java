@@ -18,7 +18,7 @@ import org.apache.camel.support.DefaultExchange;
 import org.junit.Before;
 import org.junit.Test;
 import org.openmrs.eip.app.AppUtils;
-import org.openmrs.eip.app.CustomFileOffsetBackingStore;
+import org.openmrs.eip.app.CustomDatabaseOffsetBackingStore;
 import org.openmrs.eip.app.sender.SenderConstants;
 import org.powermock.reflect.Whitebox;
 import org.springframework.test.context.TestPropertySource;
@@ -42,7 +42,7 @@ public class ShutdownRouteTest extends BaseSenderRouteTest {
 	
 	@Before
 	public void setup() throws Exception {
-		setInternalState(CustomFileOffsetBackingStore.class, "disabled", false);
+		setInternalState(CustomDatabaseOffsetBackingStore.class, "disabled", false);
 		setInternalState(AppUtils.class, "shuttingDown", false);
         setInternalState(AppUtils.class, "appContextStopping", false);
 		mockEmailNoticeProcessor.reset();
@@ -61,14 +61,14 @@ public class ShutdownRouteTest extends BaseSenderRouteTest {
 	
 	@Test
 	public void shouldDisableTheDebeziumBackingStoreCallEmailProcessorAndShutdownTheApplication() throws Exception {
-		assertFalse(CustomFileOffsetBackingStore.isDisabled());
+		assertFalse(CustomDatabaseOffsetBackingStore.isDisabled());
 		mockEmailNoticeProcessor.expectedMessageCount(1);
 		mockShutdownBean.expectedMessageCount(1);
 		mockEmailNoticeProcessor.expectedPropertyReceived(EX_APP_ID, TEST_SENDER_ID);
 		
 		producerTemplate.send(URI_SHUTDOWN, new DefaultExchange(camelContext));
 		
-		assertTrue(CustomFileOffsetBackingStore.isDisabled());
+		assertTrue(CustomDatabaseOffsetBackingStore.isDisabled());
 		mockEmailNoticeProcessor.assertIsSatisfied();
 		mockShutdownBean.assertIsSatisfied();
 	}
@@ -76,13 +76,13 @@ public class ShutdownRouteTest extends BaseSenderRouteTest {
 	@Test
 	public void shouldDisableTheDebeziumBackingStoreAndSkipCallingEmailProcessorAndShutdown() throws Exception {
 		setInternalState(AppUtils.class, "shuttingDown", true);
-		assertFalse(CustomFileOffsetBackingStore.isDisabled());
+		assertFalse(CustomDatabaseOffsetBackingStore.isDisabled());
 		mockEmailNoticeProcessor.expectedMessageCount(0);
 		mockShutdownBean.expectedMessageCount(0);
 		
 		producerTemplate.send(URI_SHUTDOWN, new DefaultExchange(camelContext));
 		
-		assertTrue(CustomFileOffsetBackingStore.isDisabled());
+		assertTrue(CustomDatabaseOffsetBackingStore.isDisabled());
 		mockEmailNoticeProcessor.assertIsSatisfied();
 		mockShutdownBean.assertIsSatisfied();
 	}

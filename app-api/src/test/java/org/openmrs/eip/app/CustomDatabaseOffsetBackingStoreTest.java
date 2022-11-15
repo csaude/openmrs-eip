@@ -22,10 +22,10 @@ import org.openmrs.eip.app.sender.BaseSenderTest;
 import org.powermock.reflect.Whitebox;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class CustomFileOffsetBackingStoreTest extends BaseSenderTest {
+public class CustomDatabaseOffsetBackingStoreTest extends BaseSenderTest {
 	
 	@Spy
-	private CustomFileOffsetBackingStore store;
+	private CustomDatabaseOffsetBackingStore store;
 	
 	@Autowired
 	private DebeziumOffsetRepository debeziumOffsetRepository;
@@ -39,13 +39,13 @@ public class CustomFileOffsetBackingStoreTest extends BaseSenderTest {
 	@Before
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", false);
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "disabled", false);
+		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "paused", false);
+		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "disabled", false);
 	}
 	
 	@Test
 	public void save_shouldNotSaveOffsetsIfTheStoreIsPaused() {
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", true);
+		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "paused", true);
 		
 		store.save();
 		
@@ -54,7 +54,7 @@ public class CustomFileOffsetBackingStoreTest extends BaseSenderTest {
 	
 	@Test
 	public void save_shouldNotSaveOffsetsIfTheStoreIsDisabled() {
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", true);
+		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "paused", true);
 		
 		store.save();
 		

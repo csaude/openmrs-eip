@@ -37,7 +37,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.openmrs.eip.app.CustomFileOffsetBackingStore;
+import org.openmrs.eip.app.CustomDatabaseOffsetBackingStore;
 import org.openmrs.eip.component.exception.EIPException;
 import org.powermock.reflect.Whitebox;
 
@@ -66,8 +66,8 @@ public class ChangeEventProcessorTest {
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
 		Whitebox.setInternalState(ChangeEventProcessor.class, "batchSize", (Integer) null);
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", false);
-		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "disabled", false);
+		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "paused", false);
+		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "disabled", false);
 		Mockito.reset(mockStore);
 	}
 	
@@ -121,7 +121,7 @@ public class ChangeEventProcessorTest {
 				Integer id = getId(arg);
 				expectedResults.add(id);
 				expectedIdThreadNameMap.put(id, Thread.currentThread().getName());
-				assertTrue(CustomFileOffsetBackingStore.isPaused());
+				assertTrue(CustomDatabaseOffsetBackingStore.isPaused());
 				return arg;
 			}).when(handler).handle(eq(TABLE_PERSON), eq(String.valueOf(i)), eq(true), anyMap(), eq(e));
 		}
@@ -134,7 +134,7 @@ public class ChangeEventProcessorTest {
 		assertEquals(originalThreadName, Thread.currentThread().getName());
 		assertEquals(size, expectedResults.size());
 		assertEquals(size, expectedIdThreadNameMap.size());
-		assertFalse(CustomFileOffsetBackingStore.isPaused());
+		assertFalse(CustomDatabaseOffsetBackingStore.isPaused());
 		Mockito.verify(mockStore).discard();
 		assertNull(Whitebox.getInternalState(processor, SnapshotSavePointStore.class));
 		
@@ -162,7 +162,7 @@ public class ChangeEventProcessorTest {
 				Integer id = getId(arg);
 				expectedResults.add(id);
 				expectedIdThreadNameMap.put(id, Thread.currentThread().getName());
-				assertTrue(CustomFileOffsetBackingStore.isPaused());
+				assertTrue(CustomDatabaseOffsetBackingStore.isPaused());
 				return arg;
 			}).when(handler).handle(eq(TABLE_PERSON), eq(String.valueOf(i)), eq(true), anyMap(), eq(e));
 		}
@@ -175,7 +175,7 @@ public class ChangeEventProcessorTest {
 		assertEquals(originalThreadName, Thread.currentThread().getName());
 		assertEquals(size, expectedResults.size());
 		assertEquals(size, expectedIdThreadNameMap.size());
-		assertFalse(CustomFileOffsetBackingStore.isPaused());
+		assertFalse(CustomDatabaseOffsetBackingStore.isPaused());
 		Mockito.verify(mockStore).discard();
 		assertNull(Whitebox.getInternalState(processor, SnapshotSavePointStore.class));
 		
@@ -204,7 +204,7 @@ public class ChangeEventProcessorTest {
 				Integer id = getId(arg);
 				expectedResults.add(id);
 				expectedIdThreadNameMap.put(id, Thread.currentThread().getName());
-				assertTrue(CustomFileOffsetBackingStore.isPaused());
+				assertTrue(CustomDatabaseOffsetBackingStore.isPaused());
 				return arg;
 			}).when(handler).handle(eq(TABLE_PERSON), eq(String.valueOf(i)), eq(true), anyMap(), eq(e));
 		}
@@ -224,7 +224,7 @@ public class ChangeEventProcessorTest {
 		assertEquals(originalThreadName, Thread.currentThread().getName());
 		assertEquals(size, expectedResults.size());
 		assertEquals(size, expectedIdThreadNameMap.size());
-		assertFalse(CustomFileOffsetBackingStore.isPaused());
+		assertFalse(CustomDatabaseOffsetBackingStore.isPaused());
 		assertNull(Whitebox.getInternalState(processor, SnapshotSavePointStore.class));
 		final int storeUpdateCallCount = size / batchSize;
 		Mockito.verify(mockStore, Mockito.times(storeUpdateCallCount)).update(ArgumentMatchers.anyMap());
@@ -260,8 +260,8 @@ public class ChangeEventProcessorTest {
 				Integer id = getId(arg);
 				expectedResults.add(id);
 				threadNames.add(Thread.currentThread().getName());
-				assertFalse(CustomFileOffsetBackingStore.isDisabled());
-				assertTrue(CustomFileOffsetBackingStore.isPaused());
+				assertFalse(CustomDatabaseOffsetBackingStore.isDisabled());
+				assertTrue(CustomDatabaseOffsetBackingStore.isPaused());
 				return arg;
 			}).when(handler).handle(eq(TABLE_PERSON), eq(String.valueOf(i)), eq(false), anyMap(), eq(e));
 		}
@@ -274,7 +274,7 @@ public class ChangeEventProcessorTest {
 		assertEquals(originalThreadName, Thread.currentThread().getName());
 		assertEquals(size, expectedResults.size());
 		assertEquals(size, threadNames.size());
-		assertFalse(CustomFileOffsetBackingStore.isPaused());
+		assertFalse(CustomDatabaseOffsetBackingStore.isPaused());
 		Mockito.verifyNoInteractions(mockStore);
 		
 		for (int i = 0; i < size; i++) {
@@ -306,7 +306,7 @@ public class ChangeEventProcessorTest {
 				Integer id = getId(arg);
 				expectedResults.add(TABLE_ENC + id);
 				expectedRowThreadNameMap.put(TABLE_ENC + id, Thread.currentThread().getName());
-				assertTrue(CustomFileOffsetBackingStore.isPaused());
+				assertTrue(CustomDatabaseOffsetBackingStore.isPaused());
 				return arg;
 			}).when(handler).handle(eq(TABLE_ENC), eq(String.valueOf(i)), eq(true), anyMap(), eq(e));
 		}
@@ -319,7 +319,7 @@ public class ChangeEventProcessorTest {
 				Integer id = getId(arg);
 				expectedResults.add(TABLE_PERSON + id);
 				expectedRowThreadNameMap.put(TABLE_PERSON + id, Thread.currentThread().getName());
-				assertTrue(CustomFileOffsetBackingStore.isPaused());
+				assertTrue(CustomDatabaseOffsetBackingStore.isPaused());
 				return arg;
 			}).when(handler).handle(eq(TABLE_PERSON), eq(String.valueOf(i)), eq(true), anyMap(), eq(e));
 		}
@@ -332,7 +332,7 @@ public class ChangeEventProcessorTest {
 				Integer id = getId(arg);
 				expectedResults.add(TABLE_VISIT + id);
 				expectedRowThreadNameMap.put(TABLE_VISIT + id, Thread.currentThread().getName());
-				assertTrue(CustomFileOffsetBackingStore.isPaused());
+				assertTrue(CustomDatabaseOffsetBackingStore.isPaused());
 				return arg;
 			}).when(handler).handle(eq(TABLE_VISIT), eq(String.valueOf(i)), eq(true), anyMap(), eq(e));
 		}
@@ -352,7 +352,7 @@ public class ChangeEventProcessorTest {
 		assertEquals(originalThreadName, Thread.currentThread().getName());
 		assertEquals(totalRowCount, expectedResults.size());
 		assertEquals(totalRowCount, expectedRowThreadNameMap.size());
-		assertFalse(CustomFileOffsetBackingStore.isPaused());
+		assertFalse(CustomDatabaseOffsetBackingStore.isPaused());
 		assertNull(Whitebox.getInternalState(processor, SnapshotSavePointStore.class));
 		final int storeUpdateCallCount = totalRowCount / batchSize;
 		Mockito.verify(mockStore, Mockito.times(storeUpdateCallCount)).update(ArgumentMatchers.anyMap());
@@ -423,7 +423,7 @@ public class ChangeEventProcessorTest {
 				Integer id = getId(arg);
 				expectedResults.add(id);
 				expectedIdThreadNameMap.put(id, Thread.currentThread().getName());
-				assertTrue(CustomFileOffsetBackingStore.isPaused());
+				assertTrue(CustomDatabaseOffsetBackingStore.isPaused());
 				return arg;
 			}).when(handler).handle(eq(TABLE_PERSON), eq(String.valueOf(i)), eq(true), anyMap(), eq(e));
 		}
@@ -437,7 +437,7 @@ public class ChangeEventProcessorTest {
 		assertEquals(originalThreadName, Thread.currentThread().getName());
 		assertEquals(3, expectedResults.size());
 		assertEquals(3, expectedIdThreadNameMap.size());
-		assertFalse(CustomFileOffsetBackingStore.isPaused());
+		assertFalse(CustomDatabaseOffsetBackingStore.isPaused());
 		Mockito.verify(mockStore).discard();
 		assertNull(Whitebox.getInternalState(processor, SnapshotSavePointStore.class));
 		
@@ -456,7 +456,7 @@ public class ChangeEventProcessorTest {
 	
 	@Test
 	public void process_shouldDisableTheOffsetStoreAndRethrowWhenAnExceptionIsEncountered() throws Exception {
-		assertFalse(CustomFileOffsetBackingStore.isDisabled());
+		assertFalse(CustomDatabaseOffsetBackingStore.isDisabled());
 		Exchange e = createExchange(0, FALSE.toString(), TABLE_PERSON);
 		Mockito.doThrow(new NumberFormatException()).when(handler).handle(eq(TABLE_PERSON), eq(String.valueOf(0)), eq(false),
 		    anyMap(), eq(e));
@@ -465,7 +465,7 @@ public class ChangeEventProcessorTest {
 			processor.process(e);
 		});
 		
-		assertTrue(CustomFileOffsetBackingStore.isDisabled());
+		assertTrue(CustomDatabaseOffsetBackingStore.isDisabled());
 		assertEquals("Failed to process DB event", thrown.getMessage());
 	}
 	
