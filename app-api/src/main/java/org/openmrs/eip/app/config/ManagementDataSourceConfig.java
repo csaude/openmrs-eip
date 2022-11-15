@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
+import liquibase.integration.spring.SpringLiquibase;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.app.SyncConstants;
@@ -27,8 +28,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.zaxxer.hikari.HikariDataSource;
-
-import liquibase.integration.spring.SpringLiquibase;
 
 @EnableTransactionManagement
 @EnableJpaRepositories(entityManagerFactoryRef = "mngtEntityManager", transactionManagerRef = "mngtTransactionManager", basePackages = {
@@ -75,7 +74,7 @@ public class ManagementDataSourceConfig {
 	
 	@Bean(name = "liquibase")
 	public SpringLiquibase getSpringLiquibaseForMgtDB(@Qualifier("mngtDataSource") DataSource dataSource, Environment env) {
-		BeanAwareSpringLiquibase liquibase = new BeanAwareSpringLiquibase();
+		SpringLiquibase liquibase = new SpringLiquibase();
 		liquibase.setContexts(StringUtils.join(env.getActiveProfiles(), ","));
 		liquibase.setDataSource(dataSource);
 		liquibase.setChangeLog("classpath:liquibase-master.xml");

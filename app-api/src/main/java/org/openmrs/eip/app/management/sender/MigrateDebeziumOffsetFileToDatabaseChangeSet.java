@@ -15,10 +15,11 @@ import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.kafka.connect.storage.Converter;
 import org.apache.kafka.connect.storage.OffsetUtils;
 import org.apache.kafka.connect.util.SafeObjectInputStream;
-import org.openmrs.eip.app.config.BeanAwareSpringLiquibase;
 import org.openmrs.eip.app.util.DebeziumOffsetUtil;
+import org.openmrs.eip.component.SyncContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 import io.debezium.config.Instantiator;
 import liquibase.change.custom.CustomTaskChange;
@@ -44,7 +45,7 @@ public class MigrateDebeziumOffsetFileToDatabaseChangeSet implements CustomTaskC
 		try {
 			JdbcConnection conn = (JdbcConnection) database.getConnection();
 			
-			String offsetPath = BeanAwareSpringLiquibase.getProperty(DEBEZIUM_OFFSET_FILENAME);
+			String offsetPath = SyncContext.getBean(Environment.class).getProperty(DEBEZIUM_OFFSET_FILENAME);
 			if (StringUtils.isBlank(offsetPath)) {
 				log.info("No \"{}\" property was found. Skipping migration process.", DEBEZIUM_OFFSET_FILENAME);
 				return;
