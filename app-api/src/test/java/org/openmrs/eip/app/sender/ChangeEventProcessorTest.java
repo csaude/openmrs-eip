@@ -38,7 +38,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.openmrs.eip.app.CustomFileOffsetBackingStore;
-import org.openmrs.eip.app.CustomOffsetBackingStore;
 import org.openmrs.eip.component.exception.EIPException;
 import org.powermock.reflect.Whitebox;
 
@@ -67,8 +66,8 @@ public class ChangeEventProcessorTest {
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
 		Whitebox.setInternalState(ChangeEventProcessor.class, "batchSize", (Integer) null);
-		Whitebox.setInternalState(CustomOffsetBackingStore.class, "paused", false);
-		Whitebox.setInternalState(CustomOffsetBackingStore.class, "disabled", false);
+		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", false);
+		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "disabled", false);
 		Mockito.reset(mockStore);
 	}
 	

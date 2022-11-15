@@ -8,6 +8,7 @@ import static org.openmrs.eip.app.SyncConstants.URI_SHUTDOWN;
 import static org.openmrs.eip.app.route.sender.ShutdownRouteTest.TEST_SENDER_ID;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
+import ch.qos.logback.classic.Level;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -18,12 +19,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.CustomFileOffsetBackingStore;
-import org.openmrs.eip.app.CustomOffsetBackingStore;
 import org.openmrs.eip.app.sender.SenderConstants;
 import org.powermock.reflect.Whitebox;
 import org.springframework.test.context.TestPropertySource;
-
-import ch.qos.logback.classic.Level;
 
 @TestPropertySource(properties = SenderConstants.PROP_SENDER_ID + "=" + TEST_SENDER_ID)
 @TestPropertySource(properties = "logging.level." + ROUTE_ID_SHUTDOWN + "=DEBUG")
@@ -44,7 +42,7 @@ public class ShutdownRouteTest extends BaseSenderRouteTest {
 	
 	@Before
 	public void setup() throws Exception {
-		setInternalState(CustomOffsetBackingStore.class, "disabled", false);
+		setInternalState(CustomFileOffsetBackingStore.class, "disabled", false);
 		setInternalState(AppUtils.class, "shuttingDown", false);
         setInternalState(AppUtils.class, "appContextStopping", false);
 		mockEmailNoticeProcessor.reset();
