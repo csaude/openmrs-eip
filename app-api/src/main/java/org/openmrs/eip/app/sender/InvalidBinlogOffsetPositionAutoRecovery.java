@@ -1,35 +1,29 @@
 package org.openmrs.eip.app.sender;
 
 import java.time.LocalDateTime;
+import java.util.function.Consumer;
 
 import org.openmrs.eip.app.AppUtils;
-import org.openmrs.eip.app.logger.observer.EventListener;
 import org.openmrs.eip.app.management.entity.DebeziumOffset;
 import org.openmrs.eip.app.management.repository.DebeziumOffsetRepository;
+import org.openmrs.eip.component.SyncContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 
-@Component
-public class InvalidBinlogOffsetPositionAutoRecovery implements EventListener {
-	
-	private static DebeziumOffsetRepository debeziumOffsetRepository;
+public class InvalidBinlogOffsetPositionAutoRecovery implements Consumer<ILoggingEvent> {
 	
 	private static final Logger logger = LoggerFactory.getLogger(InvalidBinlogOffsetPositionAutoRecovery.class);
 	
-	public InvalidBinlogOffsetPositionAutoRecovery() {
-	}
+	private DebeziumOffsetRepository debeziumOffsetRepository;
 	
-	@Autowired
-	public InvalidBinlogOffsetPositionAutoRecovery(DebeziumOffsetRepository debeziumOffsetRepository) {
-		InvalidBinlogOffsetPositionAutoRecovery.debeziumOffsetRepository = debeziumOffsetRepository;
+	public InvalidBinlogOffsetPositionAutoRecovery() {
+		this.debeziumOffsetRepository = SyncContext.getBean(DebeziumOffsetRepository.class);
 	}
 	
 	@Override
-	public void update(ILoggingEvent event) {
+	public void accept(ILoggingEvent event) {
 		logger.info("Starting recovering process. Log Event: {}", event);
 		
 		DebeziumOffset offset = debeziumOffsetRepository.findFirstByEnabledTrueOrderByDateCreatedDesc();
