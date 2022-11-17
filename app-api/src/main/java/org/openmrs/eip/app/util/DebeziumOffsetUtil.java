@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.storage.Converter;
 
@@ -46,6 +45,6 @@ public class DebeziumOffsetUtil {
 			}
 		}
 		
-		return StringUtils.EMPTY;
+		return null;
 	}
 }

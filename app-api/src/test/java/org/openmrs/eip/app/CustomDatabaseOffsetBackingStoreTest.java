@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -117,6 +118,49 @@ public class CustomDatabaseOffsetBackingStoreTest extends BaseSenderTest {
 		
 		assertThat(key).isEqualTo(A_KEY.getBytes());
 		assertThat(value).isEqualTo(A_VALUE.getBytes());
+	}
+	
+	@Test
+	public void shouldDisableAllByBinlogFileName() {
+		final String A_KEY = "aKey";
+		final String A_VALUE = "aValue";
+		final String BINLOG_FILENAME_1 = "bin1";
+		final String BINLOG_FILENAME_2 = "bin2";
+		
+		DebeziumOffset offset1 = new DebeziumOffset();
+		offset1.setDateCreated(new Date());
+		offset1.setBinlogFileName(BINLOG_FILENAME_1);
+		offset1.setEnabled(Boolean.TRUE);
+		
+		DebeziumOffset offset2 = new DebeziumOffset();
+		offset2.setDateCreated(new Date());
+		offset2.setBinlogFileName(BINLOG_FILENAME_1);
+		offset2.setEnabled(Boolean.TRUE);
+		
+		DebeziumOffset offset3 = new DebeziumOffset();
+		offset3.setDateCreated(new Date());
+		offset3.setBinlogFileName(BINLOG_FILENAME_2);
+		offset3.setEnabled(Boolean.TRUE);
+		
+		Map<byte[], byte[]> dataToSave = new HashMap<>();
+		dataToSave.put(A_KEY.getBytes(), A_VALUE.getBytes());
+		
+		byte[] serialized = SerializationUtils.serialize((Serializable) dataToSave);
+		offset1.setData(serialized);
+		offset2.setData(serialized);
+		offset3.setData(serialized);
+		
+		assertThat(debeziumOffsetRepository.countByEnabledTrue()).isEqualTo(0);
+		
+		debeziumOffsetRepository.save(offset1);
+		debeziumOffsetRepository.save(offset2);
+		debeziumOffsetRepository.save(offset3);
+		
+		assertThat(debeziumOffsetRepository.countByEnabledTrue()).isEqualTo(3);
+		
+		debeziumOffsetRepository.disableAllByBinlogFileName(BINLOG_FILENAME_1, LocalDateTime.now());
+		
+		assertThat(debeziumOffsetRepository.countByEnabledTrue()).isEqualTo(1);
 	}
 	
 }

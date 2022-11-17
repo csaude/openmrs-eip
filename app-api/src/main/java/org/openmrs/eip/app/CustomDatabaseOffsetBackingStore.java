@@ -8,7 +8,6 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.apache.kafka.connect.json.JsonConverterConfig;
 import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.storage.Converter;
-import org.apache.kafka.connect.storage.FileOffsetBackingStore;
 import org.apache.kafka.connect.storage.MemoryOffsetBackingStore;
 import org.openmrs.eip.app.management.entity.DebeziumOffset;
 import org.openmrs.eip.app.management.repository.DebeziumOffsetRepository;
@@ -21,9 +20,11 @@ import io.debezium.config.Instantiator;
 import io.debezium.embedded.EmbeddedEngine;
 
 /**
- * Custom {@link FileOffsetBackingStore} that only saves the offset if no exception was encountered
- * while processing a source record read by debezium from the MySQL binlog to ensure no binlog entry
- * goes unprocessed.
+ * Custom OffsetBackingStore class that:
+ * <ol>
+ * <li>Saves the offset to the database
+ * <li>Only saves it if no exception was encountered while processing a source record read by
+ * debezium from the MySQL binlog to ensure no binlog entry goes unprocessed.
  */
 public class CustomDatabaseOffsetBackingStore extends MemoryOffsetBackingStore {
 	

@@ -384,7 +384,9 @@
     
     <changeSet author="lpinto" id="20221017-1100">
         <preConditions onFail="MARK_RAN">
-            <tableExists tableName="debezium_offset" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM debezium_offset
+            </sqlCheck>
         </preConditions>
         <comment>Migrating offset file to the database</comment>
         <customChange class="org.openmrs.eip.app.management.sender.MigrateDebeziumOffsetFileToDatabaseChangeSet" />

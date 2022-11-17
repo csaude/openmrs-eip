@@ -1,15 +1,14 @@
 package org.openmrs.eip.app.management.sender;
 
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 import java.sql.PreparedStatement;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.kafka.connect.storage.Converter;
@@ -83,9 +82,8 @@ public class MigrateDebeziumOffsetFileToDatabaseChangeSet implements CustomTaskC
 				}
 			}
 		}
-		catch (FileNotFoundException | EOFException e) {
-			log.info("No debezium offset file was found for migration. {}", file.getPath());
-		}
+		
+		FileUtils.deleteQuietly(file);
 	}
 	
 	private String getOffsetBinlogFilename(Object offsetData) {
