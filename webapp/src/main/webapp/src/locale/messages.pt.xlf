@@ -296,6 +296,12 @@
 				<target>Eventos Pendentes</target>
 			</segment>
 		</unit>
+		<unit id="receiver-pending-events">
+			<segment>
+				<source>Pending Events</source>
+				<target>Eventos Pendentes</target>
+			</segment>
+		</unit>
 		<unit id="common-no-events-msg">
 			<segment>
 				<source>No events, everything looks good!</source>
@@ -327,6 +333,12 @@
 			</segment>
 		</unit>
 		<unit id="common-sync-msgs">
+			<segment>
+				<source>Sync Items</source>
+				<target>Itens Sincronizados</target>
+			</segment>
+		</unit>
+		<unit id="sender-sync-msgs">
 			<segment>
 				<source>Sync Items</source>
 				<target>Caixa de Saída</target>
