@@ -27,7 +27,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-import org.openmrs.eip.app.CustomDatabaseOffsetBackingStore;
+import org.openmrs.eip.app.CustomFileOffsetBackingStore;
 import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
 import org.openmrs.eip.component.exception.EIPException;
 import org.powermock.api.mockito.PowerMockito;
@@ -37,7 +37,7 @@ import org.powermock.reflect.Whitebox;
 import org.slf4j.Logger;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(CustomDatabaseOffsetBackingStore.class)
+@PrepareForTest(CustomFileOffsetBackingStore.class)
 public class ChangeEventHandlerTest {
 	
 	@Mock
@@ -53,7 +53,7 @@ public class ChangeEventHandlerTest {
 	
 	@Before
 	public void setup() {
-		PowerMockito.mockStatic(CustomDatabaseOffsetBackingStore.class);
+		PowerMockito.mockStatic(CustomFileOffsetBackingStore.class);
 		handler = new ChangeEventHandler(mockRepository);
 		Whitebox.setInternalState(ChangeEventHandler.class, Logger.class, mockLogger);
 	}

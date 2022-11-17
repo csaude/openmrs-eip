@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class CustomDatabaseOffsetBackingStoreTest extends BaseSenderTest {
 	
 	@Spy
-	private CustomDatabaseOffsetBackingStore store;
+	private CustomFileOffsetBackingStore store;
 	
 	@Autowired
 	private DebeziumOffsetRepository debeziumOffsetRepository;
@@ -40,13 +40,13 @@ public class CustomDatabaseOffsetBackingStoreTest extends BaseSenderTest {
 	@Before
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
-		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "paused", false);
-		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "disabled", false);
+		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", false);
+		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "disabled", false);
 	}
 	
 	@Test
 	public void save_shouldNotSaveOffsetsIfTheStoreIsPaused() {
-		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "paused", true);
+		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", true);
 		
 		store.save();
 		
@@ -55,7 +55,7 @@ public class CustomDatabaseOffsetBackingStoreTest extends BaseSenderTest {
 	
 	@Test
 	public void save_shouldNotSaveOffsetsIfTheStoreIsDisabled() {
-		Whitebox.setInternalState(CustomDatabaseOffsetBackingStore.class, "paused", true);
+		Whitebox.setInternalState(CustomFileOffsetBackingStore.class, "paused", true);
 		
 		store.save();
 		
