@@ -3,12 +3,13 @@
 		<li ngbNavItem="dashboard">
 			<a ngbNavLink i18n="@@common-dashboard">Dashboard</a>
 			<ng-template ngbNavContent>
-				<receiver-dashboard></receiver-dashboard>
+				<span class="font-italic">Running in Receiver Mode</span>
+				<!--<receiver-dashboard></receiver-dashboard>-->
 			</ng-template>
 		</li>
 		<li ngbNavItem="syncMsgs">
 			<a ngbNavLink i18n="@@receiver-sync-msgs">Pending Sync Items</a>
-			<ng-template ngbNavContent>
+			<ng-template ngbNavContent>      R
 				<receiver-sync-messages></receiver-sync-messages>
 			</ng-template>
 		</li>
