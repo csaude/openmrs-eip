@@ -10,7 +10,6 @@ import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_MSG_PROCESS
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_TASK_BATCH_SIZE;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +23,7 @@ import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.SiteInfo;
 import org.openmrs.eip.app.management.entity.SyncMessage;
 import org.openmrs.eip.app.management.entity.receiver.SyncedMessage;
+import org.openmrs.eip.app.management.entity.receiver.SyncedMessage.SyncOutcome;
 import org.openmrs.eip.app.management.repository.SyncedMessageRepository;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.camel.utils.CamelUtils;
@@ -215,10 +215,6 @@ public class SiteMessageConsumer implements Runnable {
 	 * @param msg the sync message to process
 	 */
 	public void processMessage(SyncMessage msg) {
-		if (log.isDebugEnabled()) {
-			log.debug("Submitting sync message to the processor");
-		}
-		
 		Exchange exchange = ExchangeBuilder.anExchange(producerTemplate.getCamelContext()).withBody(msg).build();
 		
 		CamelUtils.send(messageProcessorUri, exchange);
@@ -229,19 +225,28 @@ public class SiteMessageConsumer implements Runnable {
 		
 		final Long id = msg.getId();
 		if (msgProcessed || movedToConflict || movedToError) {
+			SyncOutcome outcome;
 			if (msgProcessed) {
+				outcome = SyncOutcome.SUCCESS;
 				log.info("Moving the message to the synced queue");
-				SyncedMessage syncedMsg = new SyncedMessage(msg);
-				syncedMsg.setDateCreated(new Date());
-				if (log.isDebugEnabled()) {
-					log.debug("Saving synced message");
-				}
-				
-				syncedMsgRepo.save(syncedMsg);
-				
-				if (log.isDebugEnabled()) {
-					log.debug("Successfully saved synced message");
-				}
+			} else if (movedToConflict) {
+				outcome = SyncOutcome.CONFLICT;
+				log.info("Adding the message to the synced queue with outcome as: " + outcome);
+			} else {
+				outcome = SyncOutcome.ERROR;
+				log.info("Adding the message to the synced queue with outcome as: " + outcome);
+			}
+			
+			SyncedMessage syncedMsg = ReceiverUtils.createSyncedMessage(msg, outcome);
+			
+			if (log.isDebugEnabled()) {
+				log.debug("Saving synced message");
+			}
+			
+			syncedMsgRepo.save(syncedMsg);
+			
+			if (log.isDebugEnabled()) {
+				log.debug("Successfully saved synced message");
 			}
 			
 			if (log.isDebugEnabled()) {

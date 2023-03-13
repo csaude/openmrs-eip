@@ -3,6 +3,8 @@ package org.openmrs.eip.app.management.entity.receiver;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -14,13 +16,10 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.openmrs.eip.app.management.entity.AbstractEntity;
-import org.openmrs.eip.app.management.entity.ConflictQueueItem;
-import org.openmrs.eip.app.management.entity.ReceiverRetryQueueItem;
 import org.openmrs.eip.app.management.entity.SiteInfo;
-import org.openmrs.eip.app.management.entity.SyncMessage;
 import org.openmrs.eip.component.SyncOperation;
-import org.springframework.beans.BeanUtils;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,12 +32,19 @@ public class SyncedMessage extends AbstractEntity {
 	
 	public static final long serialVersionUID = 1;
 	
+	public enum SyncOutcome {
+		SUCCESS, ERROR, CONFLICT
+	}
+	
+	@NotNull
 	@Column(nullable = false, updatable = false)
 	private String identifier;
 	
+	@NotNull
 	@Column(name = "entity_payload", columnDefinition = "text", nullable = false)
 	private String entityPayload;
 	
+	@NotNull
 	@Column(name = "model_class_name", nullable = false, updatable = false)
 	private String modelClassName;
 	
@@ -51,6 +57,7 @@ public class SyncedMessage extends AbstractEntity {
 	@JoinColumn(name = "site_id", nullable = false, updatable = false)
 	private SiteInfo site;
 	
+	@NotNull
 	@Column(name = "is_snapshot", nullable = false, updatable = false)
 	private Boolean snapshot = false;
 	
@@ -64,46 +71,41 @@ public class SyncedMessage extends AbstractEntity {
 	@Column(name = "date_received", updatable = false)
 	private Date dateReceived;
 	
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	@Column(name = "sync_outcome", nullable = false, length = 50)
+	@Access(AccessType.FIELD)
+	@Setter(AccessLevel.NONE)
+	private SyncOutcome outcome;
+	
 	@Column(name = "response_sent", nullable = false)
 	private boolean responseSent = false;
 	
-	@Column(name = "is_itemized", nullable = false)
-	private boolean itemized = false;
+	@Column(name = "is_cached", nullable = false, updatable = false)
+	private boolean cached = false;
 	
-	@Column(name = "is_cached")
-	private Boolean cached;
+	@Column(name = "evicted_from_cache", nullable = false)
+	private boolean evictedFromCache = false;
 	
-	@Column(name = "evicted_from_cache")
-	private Boolean evictedFromCache;
+	@Column(name = "is_indexed", nullable = false, updatable = false)
+	private boolean indexed = false;
 	
-	@Column(name = "is_indexed")
-	private Boolean indexed;
-	
-	@Column(name = "search_index_updated")
-	private Boolean searchIndexUpdated;
+	@Column(name = "search_index_updated", nullable = false)
+	private boolean searchIndexUpdated = false;
 	
 	public SyncedMessage() {
 	}
 	
-	public SyncedMessage(SyncMessage syncMessage) {
-		BeanUtils.copyProperties(syncMessage, this, "id", "dateCreated");
-		setDateReceived(syncMessage.getDateCreated());
-	}
-	
-	public SyncedMessage(ReceiverRetryQueueItem retry) {
-		BeanUtils.copyProperties(retry, this, "id", "dateCreated");
-	}
-	
-	public SyncedMessage(ConflictQueueItem conflict) {
-		BeanUtils.copyProperties(conflict, this, "id", "dateCreated");
+	public SyncedMessage(SyncOutcome outcome) {
+		this.outcome = outcome;
 	}
 	
 	@Override
 	public String toString() {
 		return "{id=" + getId() + ", identifier=" + identifier + ", modelClassName=" + modelClassName + ", operation="
-		        + operation + ", snapshot=" + snapshot + ", messageUuid=" + messageUuid + ", responseSent=" + responseSent
-		        + ", itemized=" + itemized + ", cached=" + cached + ", evictedFromCache=" + evictedFromCache + ", indexed="
-		        + indexed + ", searchIndexUpdated=" + searchIndexUpdated + "}";
+		        + operation + ", snapshot=" + snapshot + ", messageUuid=" + messageUuid + ", outcome=" + outcome
+		        + ", responseSent=" + responseSent + ", cached=" + cached + ", evictedFromCache=" + evictedFromCache
+		        + ", indexed=" + indexed + ", searchIndexUpdated=" + searchIndexUpdated + "}";
 	}
 	
 }
