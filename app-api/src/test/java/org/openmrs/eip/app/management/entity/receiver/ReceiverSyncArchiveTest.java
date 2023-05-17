@@ -23,25 +23,24 @@ import org.springframework.beans.BeanUtils;
 public class ReceiverSyncArchiveTest {
 	
 	@Test
-	public void shouldCreateAReceiverArchiveFromASyncMessage() throws Exception {
+	public void shouldCreateAReceiverArchiveFromAProcessedMessage() throws Exception {
 		PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(SyncMessage.class);
-		SyncMessage syncMessage = new SyncMessage();
-		syncMessage.setId(1L);
-		syncMessage.setDateCreated(new Date());
-		syncMessage.setIdentifier("uuid");
-		syncMessage.setEntityPayload("payload");
-		syncMessage.setModelClassName(PersonModel.class.getName());
-		syncMessage.setSite(new SiteInfo());
-		syncMessage.setSnapshot(true);
-		syncMessage.setMessageUuid("message-uuid");
-		syncMessage.setDateSentBySender(LocalDateTime.now());
-		syncMessage.setOperation(SyncOperation.c);
+		SyncedMessage msg = new SyncedMessage();
+		msg.setId(1L);
+		msg.setDateCreated(new Date());
+		msg.setIdentifier("uuid");
+		msg.setEntityPayload("payload");
+		msg.setModelClassName(PersonModel.class.getName());
+		msg.setSite(new SiteInfo());
+		msg.setSnapshot(true);
+		msg.setMessageUuid("message-uuid");
+		msg.setDateSentBySender(LocalDateTime.now());
+		msg.setOperation(SyncOperation.c);
 		
-		ReceiverSyncArchive archive = new ReceiverSyncArchive(syncMessage);
+		ReceiverSyncArchive archive = new ReceiverSyncArchive(msg);
 		
 		Assert.assertNull(archive.getId());
 		Assert.assertNull(archive.getDateCreated());
-		Assert.assertEquals(syncMessage.getDateCreated(), archive.getDateReceived());
 		Set<String> ignored = new HashSet();
 		ignored.add("id");
 		ignored.add("class");
@@ -52,7 +51,7 @@ public class ReceiverSyncArchiveTest {
 			}
 			
 			String getter = descriptor.getReadMethod().getName();
-			assertEquals(invokeMethod(syncMessage, getter), invokeMethod(archive, getter));
+			assertEquals(invokeMethod(msg, getter), invokeMethod(archive, getter));
 		}
 	}
 	
@@ -100,19 +99,19 @@ public class ReceiverSyncArchiveTest {
 	@Test
 	public void shouldCreateAReceiverArchiveFromAConflictQueueItem() throws Exception {
 		PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(ConflictQueueItem.class);
-		ConflictQueueItem retry = new ConflictQueueItem();
-		retry.setId(1L);
-		retry.setDateCreated(new Date());
-		retry.setIdentifier("uuid");
-		retry.setEntityPayload("payload");
-		retry.setModelClassName(PersonModel.class.getName());
-		retry.setSite(new SiteInfo());
-		retry.setSnapshot(true);
-		retry.setMessageUuid("message-uuid");
-		retry.setDateSentBySender(LocalDateTime.now());
-		retry.setDateReceived(new Date());
+		ConflictQueueItem conflict = new ConflictQueueItem();
+		conflict.setId(1L);
+		conflict.setDateCreated(new Date());
+		conflict.setIdentifier("uuid");
+		conflict.setEntityPayload("payload");
+		conflict.setModelClassName(PersonModel.class.getName());
+		conflict.setSite(new SiteInfo());
+		conflict.setSnapshot(true);
+		conflict.setMessageUuid("message-uuid");
+		conflict.setDateSentBySender(LocalDateTime.now());
+		conflict.setDateReceived(new Date());
 		
-		ReceiverSyncArchive archive = new ReceiverSyncArchive(retry);
+		ReceiverSyncArchive archive = new ReceiverSyncArchive(conflict);
 		
 		Assert.assertNull(archive.getId());
 		Assert.assertNull(archive.getDateCreated());
@@ -127,7 +126,7 @@ public class ReceiverSyncArchiveTest {
 			}
 			
 			String getter = descriptor.getReadMethod().getName();
-			assertEquals(invokeMethod(retry, getter), invokeMethod(archive, getter));
+			assertEquals(invokeMethod(conflict, getter), invokeMethod(archive, getter));
 		}
 	}
 	

@@ -12,15 +12,17 @@ public class SyncConstants {
 	
 	public static final String FOLDER_ROUTES = "routes";
 	
-	public static final int MAX_COUNT = 200;
+	public static final String BEAN_NAME_SYNC_EXECUTOR = "syncExecutor";
 	
-	public static final int DEFAULT_SITE_PARALLEL_SIZE = 5;
+	public static final int EXECUTOR_SHUTDOWN_TIMEOUT = 15;
+	
+	public static final int DEFAULT_SITE_PARALLEL_SIZE = 6;
 	
 	public static final int DEFAULT_THREAD_NUMBER = 10;
 	
 	public static final int DEFAULT_CONN_POOL_SIZE = 50;
 	
-	public static final int DEFAULT_BATCH_SIZE = 100;
+	public static final int THREAD_THRESHOLD_MULTIPLIER = 2;
 	
 	public static final String DEFAULT_OPENMRS_POOL_NAME = "openmrs-ds-pool";
 	

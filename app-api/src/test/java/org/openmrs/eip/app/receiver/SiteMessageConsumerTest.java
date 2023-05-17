@@ -7,20 +7,38 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.openmrs.eip.app.SyncConstants.THREAD_THRESHOLD_MULTIPLIER;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.DEFAULT_TASK_BATCH_SIZE;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_MOVED_TO_CONFLICT_QUEUE;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_MOVED_TO_ERROR_QUEUE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_MSG_PROCESSED;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_TASK_BATCH_SIZE;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.ROUTE_ID_MSG_PROCESSOR;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.URI_MSG_PROCESSOR;
+import static org.openmrs.eip.app.receiver.SiteMessageConsumer.ENTITY;
+import static org.powermock.reflect.Whitebox.getInternalState;
+import static org.powermock.reflect.Whitebox.setInternalState;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.ProducerTemplate;
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,7 +46,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.openmrs.eip.app.management.entity.SiteInfo;
 import org.openmrs.eip.app.management.entity.SyncMessage;
+import org.openmrs.eip.app.management.entity.receiver.SyncedMessage;
+import org.openmrs.eip.app.management.entity.receiver.SyncedMessage.SyncOutcome;
+import org.openmrs.eip.app.management.repository.SyncedMessageRepository;
+import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.camel.utils.CamelUtils;
+import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.DrugOrderModel;
 import org.openmrs.eip.component.model.OrderModel;
 import org.openmrs.eip.component.model.PatientModel;
@@ -38,14 +61,17 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
+import org.springframework.core.env.Environment;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ ReceiverContext.class, CamelUtils.class })
+@PrepareForTest({ SyncContext.class, ReceiverContext.class, CamelUtils.class })
 public class SiteMessageConsumerTest {
+	
+	private static final String MOCK_PROCESSOR_URI = "mock:" + ROUTE_ID_MSG_PROCESSOR;
 	
 	private SiteMessageConsumer consumer;
 	
-	private ExecutorService executor;
+	private ThreadPoolExecutor executor;
 	
 	private SiteInfo siteInfo;
 	
@@ -55,24 +81,36 @@ public class SiteMessageConsumerTest {
 	@Mock
 	private ExtendedCamelContext mockCamelContext;
 	
+	@Mock
+	private SyncedMessageRepository syncedMsgRepo;
+	
+	@Mock
+	private Environment mockEnv;
+	
 	@Before
 	public void setup() {
+		PowerMockito.mockStatic(SyncContext.class);
 		PowerMockito.mockStatic(ReceiverContext.class);
 		PowerMockito.mockStatic(CamelUtils.class);
+		setInternalState(SiteMessageConsumer.class, "initialized", true);
 		siteInfo = new SiteInfo();
 		siteInfo.setIdentifier("testSite");
 		Mockito.when(mockProducerTemplate.getCamelContext()).thenReturn(mockCamelContext);
+		Mockito.when(SyncContext.getBean(Environment.class)).thenReturn(mockEnv);
 	}
 	
-	private void initExecutorAndConsumer(final int size) {
-		ReceiverActiveMqMessagePublisher messagePublisher = new ReceiverActiveMqMessagePublisher();
-		Whitebox.setInternalState(messagePublisher, "endpointConfig", "queue.name.prefix.{0}");
-		Whitebox.setInternalState(messagePublisher, ProducerTemplate.class, mockProducerTemplate);
-		
-		executor = Executors.newFixedThreadPool(size);
-		consumer = new SiteMessageConsumer(URI_MSG_PROCESSOR, siteInfo, size, 0, executor);
+	@After
+	public void tearDown() {
+		setInternalState(BaseSiteRunnable.class, "initialized", false);
+		setInternalState(SiteMessageConsumer.class, "batchSize", 0);
+	}
+	
+	private void setupConsumer(final int size) {
+		executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(size);
+		consumer = new SiteMessageConsumer(URI_MSG_PROCESSOR, siteInfo, executor);
 		Whitebox.setInternalState(consumer, ProducerTemplate.class, mockProducerTemplate);
-		Whitebox.setInternalState(consumer, ReceiverActiveMqMessagePublisher.class, messagePublisher);
+		Whitebox.setInternalState(consumer, SyncedMessageRepository.class, syncedMsgRepo);
+		setInternalState(SiteMessageConsumer.class, "batchSize", DEFAULT_TASK_BATCH_SIZE);
 	}
 	
 	private SyncMessage createMessage(int index, boolean snapshot) {
@@ -86,11 +124,46 @@ public class SiteMessageConsumerTest {
 	}
 	
 	@Test
+	public void initIfNecessary_shouldInitializeStaticFields() {
+		setupConsumer(1);
+		setInternalState(SiteMessageConsumer.class, "initialized", false);
+		setInternalState(SiteMessageConsumer.class, "taskThreshold", 0);
+		setInternalState(SiteMessageConsumer.class, "batchSize", 0);
+		final int batchSize = 4;
+		Mockito.when(mockEnv.getProperty(PROP_SYNC_TASK_BATCH_SIZE, Integer.class, DEFAULT_TASK_BATCH_SIZE))
+		        .thenReturn(batchSize);
+		
+		consumer.initIfNecessary();
+		
+		Assert.assertTrue(getInternalState(SiteMessageConsumer.class, "initialized"));
+		final int expected = executor.getMaximumPoolSize() * THREAD_THRESHOLD_MULTIPLIER;
+		assertEquals(expected, ((Integer) getInternalState(SiteMessageConsumer.class, "taskThreshold")).intValue());
+		assertEquals(batchSize, ((Integer) getInternalState(SiteMessageConsumer.class, "batchSize")).intValue());
+		
+	}
+	
+	@Test
+	public void initIfNecessary_shouldSkipIfAlreadyInitialized() {
+		setupConsumer(1);
+		setInternalState(SiteMessageConsumer.class, "taskThreshold", 0);
+		setInternalState(SiteMessageConsumer.class, "batchSize", 0);
+		assertEquals(true, getInternalState(SiteMessageConsumer.class, "initialized"));
+		assertEquals(0, ((Integer) getInternalState(SiteMessageConsumer.class, "taskThreshold")).intValue());
+		assertEquals(0, ((Integer) getInternalState(SiteMessageConsumer.class, "batchSize")).intValue());
+		
+		consumer.initIfNecessary();
+		
+		assertEquals(true, getInternalState(SiteMessageConsumer.class, "initialized"));
+		assertEquals(0, ((Integer) getInternalState(SiteMessageConsumer.class, "taskThreshold")).intValue());
+		assertEquals(0, ((Integer) getInternalState(SiteMessageConsumer.class, "batchSize")).intValue());
+	}
+	
+	@Test
 	public void processMessages_shouldProcessAllSnapshotMessagesInParallelForSlowThreads() throws Exception {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 100;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -129,7 +202,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 100;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -167,7 +240,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 10;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -208,7 +281,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 20;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -262,7 +335,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 3;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -310,7 +383,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 3;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -358,7 +431,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 3;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -406,7 +479,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 3;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -454,7 +527,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 3;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -502,7 +575,7 @@ public class SiteMessageConsumerTest {
 		Thread originalThread = Thread.currentThread();
 		final String originalThreadName = Thread.currentThread().getName();
 		final int size = 3;
-		initExecutorAndConsumer(size);
+		setupConsumer(size);
 		List<SyncMessage> messages = new ArrayList(size);
 		List<Long> expectedResults = synchronizedList(new ArrayList(size));
 		Map<Long, Thread> expectedMsgIdThreadMap = new ConcurrentHashMap(size);
@@ -543,6 +616,139 @@ public class SiteMessageConsumerTest {
 			assertFalse(expectedMsgIdThreadMap.containsKey(msg.getId()));
 			assertFalse(expectedMsgIdThreadNameMap.containsKey(msg.getId()));
 		}
+	}
+	
+	@Test
+	public void processMessage_shouldAddTheMessageToTheSyncedQueueAndDeleteTheProcessedMessage() throws Exception {
+		setupConsumer(1);
+		Whitebox.setInternalState(consumer, "messageProcessorUri", MOCK_PROCESSOR_URI);
+		final int msgId = 1;
+		SyncMessage msg = createMessage(msgId, false);
+		msg.setMessageUuid("msg-uuid");
+		msg.setEntityPayload("{}");
+		msg.setDateSentBySender(LocalDateTime.now());
+		msg.setDateCreated(new Date());
+		long timestamp = System.currentTimeMillis();
+		
+		List<SyncMessage> processedMsgs = new ArrayList(1);
+		Mockito.when(CamelUtils.send(eq(MOCK_PROCESSOR_URI), any(Exchange.class))).thenAnswer(invocation -> {
+			Exchange exchange = invocation.getArgument(1);
+			processedMsgs.add(exchange.getIn().getBody(SyncMessage.class));
+			exchange.setProperty(EX_PROP_MSG_PROCESSED, true);
+			return null;
+		});
+		
+		List<SyncedMessage> archivedMsgs = new ArrayList(1);
+		Mockito.when(syncedMsgRepo.save(any(SyncedMessage.class))).thenAnswer(invocation -> {
+			archivedMsgs.add(invocation.getArgument(0));
+			return null;
+		});
+		
+		consumer.processMessage(msg);
+		
+		assertEquals(1, processedMsgs.size());
+		assertEquals(msg, processedMsgs.get(0));
+		verify(syncedMsgRepo).save(any(SyncedMessage.class));
+		verify(mockProducerTemplate).sendBody("jpa:" + ENTITY + "?query=DELETE FROM " + ENTITY + " WHERE id = " + msgId,
+		    null);
+		assertEquals(1, archivedMsgs.size());
+		SyncedMessage archive = archivedMsgs.get(0);
+		assertEquals(msg.getMessageUuid(), archive.getMessageUuid());
+		assertEquals(msg.getModelClassName(), archive.getModelClassName());
+		assertEquals(msg.getIdentifier(), archive.getIdentifier());
+		assertEquals(msg.getEntityPayload(), archive.getEntityPayload());
+		assertEquals(msg.getSite(), archive.getSite());
+		assertEquals(msg.getSnapshot(), archive.getSnapshot());
+		assertEquals(msg.getDateSentBySender(), archive.getDateSentBySender());
+		assertEquals(msg.getDateCreated(), archive.getDateReceived());
+		assertEquals(SyncOutcome.SUCCESS, archive.getOutcome());
+		assertTrue(archive.getDateCreated().getTime() == timestamp || archive.getDateCreated().getTime() > timestamp);
+	}
+	
+	@Test
+	public void processMessage_shouldAddTheConflictMessageToTheSyncedQueue() {
+		setupConsumer(1);
+		Whitebox.setInternalState(consumer, "messageProcessorUri", MOCK_PROCESSOR_URI);
+		final Long msgId = 2L;
+		SyncMessage msg = new SyncMessage();
+		msg.setId(msgId);
+		List<SyncMessage> processedMsgs = new ArrayList(1);
+		Mockito.when(CamelUtils.send(eq(MOCK_PROCESSOR_URI), any(Exchange.class))).thenAnswer(invocation -> {
+			Exchange exchange = invocation.getArgument(1);
+			processedMsgs.add(exchange.getIn().getBody(SyncMessage.class));
+			exchange.setProperty(EX_PROP_MOVED_TO_CONFLICT_QUEUE, true);
+			return null;
+		});
+		
+		List<SyncedMessage> archivedMsgs = new ArrayList(1);
+		Mockito.when(syncedMsgRepo.save(any(SyncedMessage.class))).thenAnswer(invocation -> {
+			archivedMsgs.add(invocation.getArgument(0));
+			return null;
+		});
+		
+		consumer.processMessage(msg);
+		
+		assertEquals(1, processedMsgs.size());
+		assertEquals(msg, processedMsgs.get(0));
+		verify(syncedMsgRepo).save(any(SyncedMessage.class));
+		verify(mockProducerTemplate).sendBody("jpa:" + ENTITY + "?query=DELETE FROM " + ENTITY + " WHERE id = " + msgId,
+		    null);
+		assertEquals(1, archivedMsgs.size());
+		assertEquals(SyncOutcome.CONFLICT, archivedMsgs.get(0).getOutcome());
+	}
+	
+	@Test
+	public void processMessage_shouldAddTheErrorMessageToTheSyncedQueue() {
+		setupConsumer(1);
+		Whitebox.setInternalState(consumer, "messageProcessorUri", MOCK_PROCESSOR_URI);
+		final Long msgId = 2L;
+		SyncMessage msg = new SyncMessage();
+		msg.setId(msgId);
+		List<SyncMessage> processedMsgs = new ArrayList(1);
+		Mockito.when(CamelUtils.send(eq(MOCK_PROCESSOR_URI), any(Exchange.class))).thenAnswer(invocation -> {
+			Exchange exchange = invocation.getArgument(1);
+			processedMsgs.add(exchange.getIn().getBody(SyncMessage.class));
+			exchange.setProperty(EX_PROP_MOVED_TO_ERROR_QUEUE, true);
+			return null;
+		});
+		
+		List<SyncedMessage> archivedMsgs = new ArrayList(1);
+		Mockito.when(syncedMsgRepo.save(any(SyncedMessage.class))).thenAnswer(invocation -> {
+			archivedMsgs.add(invocation.getArgument(0));
+			return null;
+		});
+		
+		consumer.processMessage(msg);
+		
+		assertEquals(1, processedMsgs.size());
+		assertEquals(msg, processedMsgs.get(0));
+		verify(syncedMsgRepo).save(any(SyncedMessage.class));
+		verify(mockProducerTemplate).sendBody("jpa:" + ENTITY + "?query=DELETE FROM " + ENTITY + " WHERE id = " + msgId,
+		    null);
+		assertEquals(1, archivedMsgs.size());
+		assertEquals(SyncOutcome.ERROR, archivedMsgs.get(0).getOutcome());
+	}
+	
+	@Test
+	public void processMessage_shouldFailIfTheSyncOutComeIsUnknown() {
+		setupConsumer(1);
+		Whitebox.setInternalState(consumer, "messageProcessorUri", MOCK_PROCESSOR_URI);
+		final Long msgId = 2L;
+		SyncMessage msg = new SyncMessage();
+		msg.setId(msgId);
+		List<SyncMessage> processedMsgs = new ArrayList(1);
+		Mockito.when(CamelUtils.send(eq(MOCK_PROCESSOR_URI), any(Exchange.class))).thenAnswer(invocation -> {
+			Exchange exchange = invocation.getArgument(1);
+			processedMsgs.add(exchange.getIn().getBody(SyncMessage.class));
+			return null;
+		});
+		
+		Exception thrown = Assert.assertThrows(EIPException.class, () -> consumer.processMessage(msg));
+		assertEquals("Something went wrong while processing sync message with id: " + msgId, thrown.getMessage());
+		assertEquals(1, processedMsgs.size());
+		assertEquals(msg, processedMsgs.get(0));
+		verifyNoInteractions(syncedMsgRepo);
+		verify(mockProducerTemplate, never()).sendBody(anyString(), isNull());
 	}
 	
 }

@@ -1,16 +1,19 @@
 package org.openmrs.eip.app.sender;
 
 import static org.apache.camel.component.debezium.DebeziumConstants.HEADER_SOURCE_METADATA;
-import static org.openmrs.eip.app.SyncConstants.DEFAULT_BATCH_SIZE;
+import static org.openmrs.eip.app.SyncConstants.BEAN_NAME_SYNC_EXECUTOR;
+import static org.openmrs.eip.app.SyncConstants.THREAD_THRESHOLD_MULTIPLIER;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
+import org.apache.camel.Processor;
 import org.apache.camel.component.debezium.DebeziumConstants;
 import org.apache.kafka.connect.data.Struct;
 import org.openmrs.eip.app.BaseParallelProcessor;
@@ -19,15 +22,17 @@ import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component("changeEventProcessor")
 @Profile(SyncProfiles.SENDER)
-public class ChangeEventProcessor extends BaseParallelProcessor {
+public class ChangeEventProcessor extends BaseParallelProcessor<Exchange> implements Processor {
 	
-	protected static final Logger log = LoggerFactory.getLogger(ChangeEventProcessor.class);
+	private static final Logger log = LoggerFactory.getLogger(ChangeEventProcessor.class);
+	
+	private ThreadPoolExecutor executor;
 	
 	private List<CompletableFuture<Void>> futures;
 	
@@ -35,16 +40,26 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 	
 	private SnapshotSavePointStore savepointStore;
 	
-	private static Integer batchSize;
+	private int taskThreshold;
 	
 	private ChangeEventHandler handler;
 	
-	public ChangeEventProcessor(@Autowired ChangeEventHandler handler) {
+	public ChangeEventProcessor(@Qualifier(BEAN_NAME_SYNC_EXECUTOR) ThreadPoolExecutor executor,
+	    ChangeEventHandler handler) {
+		this.executor = executor;
 		this.handler = handler;
+		//This ensures there will only be a limited number of queued items for each thread
+		taskThreshold = executor.getMaximumPoolSize() * THREAD_THRESHOLD_MULTIPLIER;
+		futures = new Vector(taskThreshold);
 	}
 	
 	@Override
 	public void process(Exchange exchange) throws Exception {
+		processWork(exchange);
+	}
+	
+	@Override
+	public void processWork(Exchange exchange) {
 		try {
 			if (CustomFileOffsetBackingStore.isDisabled()) {
 				if (log.isDebugEnabled()) {
@@ -101,16 +116,9 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 	private void processSnapshotEvent(Exchange exchange, Map<String, Object> sourceMetadata, String id, String table,
 	                                  String snapshotStr)
 	    throws Exception {
-		if (batchSize == null) {
-			batchSize = DEFAULT_BATCH_SIZE;
-		}
-		
-		if (futures == null) {
-			futures = new Vector(batchSize);
-		}
 		
 		if (tableAndMaxRowIdsMap == null) {
-			tableAndMaxRowIdsMap = new ConcurrentHashMap(batchSize);
+			tableAndMaxRowIdsMap = new ConcurrentHashMap(taskThreshold);
 		}
 		
 		if (savepointStore == null) {
@@ -142,8 +150,11 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 		}, executor));
 		
 		boolean isLast = snapshotStr.equalsIgnoreCase("last");
-		if (isLast || futures.size() == batchSize) {
+		if (isLast || futures.size() >= taskThreshold) {
 			waitForFutures(futures);
+			List<CompletableFuture<Void>> futuresCopy = new Vector(futures);
+			futures.clear();
+			
 			//If the executor is already shutdown, there could be tasks for some DB events that were never processed
 			//Which leaves unprocessed rows when initial loading is resumed, so we can't persist the savepoint
 			if (executor.isShutdown()) {
@@ -151,7 +162,7 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 				return;
 			}
 			
-			for (CompletableFuture f : futures) {
+			for (CompletableFuture f : futuresCopy) {
 				boolean stop = false;
 				if (!f.isDone()) {
 					stop = true;
@@ -170,8 +181,6 @@ public class ChangeEventProcessor extends BaseParallelProcessor {
 					return;
 				}
 			}
-			
-			futures.clear();
 			
 			if (isLast) {
 				//Only save offsets if it is the last snapshot item

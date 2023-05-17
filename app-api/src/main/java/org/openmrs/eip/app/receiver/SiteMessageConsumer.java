@@ -2,16 +2,18 @@ package org.openmrs.eip.app.receiver;
 
 import static java.util.Collections.singletonMap;
 import static java.util.Collections.synchronizedList;
-import static org.openmrs.eip.app.SyncConstants.MAX_COUNT;
+import static org.openmrs.eip.app.SyncConstants.THREAD_THRESHOLD_MULTIPLIER;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.DEFAULT_TASK_BATCH_SIZE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_MOVED_TO_CONFLICT_QUEUE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_MOVED_TO_ERROR_QUEUE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_MSG_PROCESSED;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_TASK_BATCH_SIZE;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
@@ -20,13 +22,16 @@ import org.apache.camel.component.jpa.JpaConstants;
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.SiteInfo;
 import org.openmrs.eip.app.management.entity.SyncMessage;
-import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncArchive;
+import org.openmrs.eip.app.management.entity.receiver.SyncedMessage;
+import org.openmrs.eip.app.management.entity.receiver.SyncedMessage.SyncOutcome;
+import org.openmrs.eip.app.management.repository.SyncedMessageRepository;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.camel.utils.CamelUtils;
 import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 /**
  * An instance of this class consumes sync messages for a single site and forwards them to the
@@ -40,9 +45,14 @@ public class SiteMessageConsumer implements Runnable {
 	
 	protected static final String ENTITY = SyncMessage.class.getSimpleName();
 	
-	//Order by dateCreated may be just in case the DB is migrated and id change
+	protected static int batchSize;
+	
 	private static final String GET_JPA_URI = "jpa:" + ENTITY + "?query=SELECT m FROM " + ENTITY + " m WHERE m.site = :"
-	        + PARAM_SITE + " ORDER BY m.dateCreated ASC, m.id ASC &maximumResults=" + MAX_COUNT;
+	        + PARAM_SITE + " ORDER BY m.dateCreated ASC &maximumResults=" + batchSize;
+	
+	private static boolean initialized = false;
+	
+	private static int taskThreshold;
 	
 	private SiteInfo site;
 	
@@ -50,39 +60,51 @@ public class SiteMessageConsumer implements Runnable {
 	
 	private ProducerTemplate producerTemplate;
 	
-	private int threadCount;
-	
-	private ExecutorService msgExecutor;
-	
-	private int failureCount;
-	
-	private ReceiverActiveMqMessagePublisher messagePublisher;
+	private ThreadPoolExecutor executor;
 	
 	private String messageProcessorUri;
 	
-	private int delay;
+	private SyncedMessageRepository syncedMsgRepo;
 	
 	/**
+	 * @param messageProcessorUri the camel endpoint URI to call to process a sync message
 	 * @param site sync messages from this site will be consumed by this instance
-	 * @param threadCount the number of threads to use to sync messages in parallel
-	 * @param delay when the message queue is empty, this specifies the delay in milliseconds before the
-	 *            next read from the queue
-	 * @param msgExecutor {@link ExecutorService} instance to messages in parallel
+	 * @param executor {@link ExecutorService} instance to messages in parallel
 	 */
-	public SiteMessageConsumer(String messageProcessorUri, SiteInfo site, int threadCount, int delay,
-	    ExecutorService msgExecutor) {
+	public SiteMessageConsumer(String messageProcessorUri, SiteInfo site, ThreadPoolExecutor executor) {
 		this.messageProcessorUri = messageProcessorUri;
 		this.site = site;
-		this.threadCount = threadCount;
-		this.msgExecutor = msgExecutor;
-		this.delay = delay;
-		failureCount = 0;
+		this.executor = executor;
+		producerTemplate = SyncContext.getBean(ProducerTemplate.class);
+		syncedMsgRepo = SyncContext.getBean(SyncedMessageRepository.class);
+		initIfNecessary();
+	}
+	
+	protected void initIfNecessary() {
+		synchronized (SiteMessageConsumer.class) {
+			if (!initialized) {
+				Environment e = SyncContext.getBean(Environment.class);
+				batchSize = e.getProperty(PROP_SYNC_TASK_BATCH_SIZE, Integer.class, DEFAULT_TASK_BATCH_SIZE);
+				//This ensures there will only be a limited number of queued items for each thread
+				taskThreshold = executor.getMaximumPoolSize() * THREAD_THRESHOLD_MULTIPLIER;
+				initialized = true;
+			}
+		}
 	}
 	
 	@Override
 	public void run() {
-		producerTemplate = SyncContext.getBean(ProducerTemplate.class);
-		messagePublisher = SyncContext.getBean(ReceiverActiveMqMessagePublisher.class);
+		if (AppUtils.isStopping()) {
+			if (log.isDebugEnabled()) {
+				log.debug("Sync message consumer skipping execution because the application is stopping");
+			}
+			
+			return;
+		}
+		
+		if (log.isDebugEnabled()) {
+			log.debug("Starting message consumer thread for site -> " + site);
+		}
 		
 		do {
 			Thread.currentThread().setName(site.getIdentifier());
@@ -96,18 +118,10 @@ public class SiteMessageConsumer implements Runnable {
 				
 				if (syncMessages.isEmpty()) {
 					if (log.isTraceEnabled()) {
-						log.trace("No sync message found from site: " + site);
+						log.trace("No sync messages found from site: " + site);
 					}
 					
-					try {
-						Thread.sleep(delay);
-					}
-					catch (InterruptedException e) {
-						//ignore
-						log.warn("Sync message consumer for site: " + site + " has been interrupted");
-					}
-					
-					continue;
+					break;
 				}
 				
 				processMessages(syncMessages);
@@ -115,44 +129,18 @@ public class SiteMessageConsumer implements Runnable {
 			}
 			catch (Throwable t) {
 				if (!AppUtils.isAppContextStopping()) {
+					errorEncountered = true;
 					log.error("Message consumer thread for site: " + site + " encountered an error", t);
-					
-					failureCount++;
-					if (failureCount < 3) {
-						//TODO Make the wait times configurable
-						long wait;
-						if (failureCount == 1) {
-							wait = 300000;
-						} else {
-							wait = 900000;
-						}
-						
-						log.info("Pausing message consumer thread for site: " + site + " for " + (wait / 60000)
-						        + " minutes after an encountered error");
-						
-						try {
-							Thread.sleep(wait);
-						}
-						catch (InterruptedException e) {
-							log.warn("Sync message consumer for site: " + site + " has been interrupted");
-						}
-					} else {
-						log.error("Stopping message consumer thread for site: " + site);
-						
-						errorEncountered = true;
-						break;
-					}
+					break;
 				}
 			}
 			
-		} while (!AppUtils.isAppContextStopping() && !errorEncountered);
+		} while (!AppUtils.isStopping() && !errorEncountered);
 		
-		log.info("Sync message consumer for site: " + site + " has stopped");
-		
-		if (errorEncountered) {
-			log.info("Shutting down after the sync message consumer for " + site + " encountered an error");
-			
-			AppUtils.shutdown();
+		if (!errorEncountered) {
+			if (log.isDebugEnabled()) {
+				log.debug("Sync message consumer for site: " + site + " has completed");
+			}
 		}
 		
 	}
@@ -165,8 +153,8 @@ public class SiteMessageConsumer implements Runnable {
 	protected void processMessages(List<SyncMessage> syncMessages) throws Exception {
 		log.info("Processing " + syncMessages.size() + " message(s) from site: " + site);
 		
-		List<String> typeAndIdentifier = synchronizedList(new ArrayList(threadCount));
-		List<CompletableFuture<Void>> syncThreadFutures = synchronizedList(new ArrayList(threadCount));
+		List<String> typeAndIdentifier = synchronizedList(new ArrayList(taskThreshold));
+		List<CompletableFuture<Void>> futures = synchronizedList(new ArrayList(taskThreshold));
 		
 		for (SyncMessage msg : syncMessages) {
 			if (AppUtils.isAppContextStopping()) {
@@ -196,8 +184,7 @@ public class SiteMessageConsumer implements Runnable {
 				typeAndIdentifier.add(modelClass + "#" + msg.getIdentifier());
 			}
 			
-			//TODO Periodically wait and reset futures to save memory
-			syncThreadFutures.add(CompletableFuture.runAsync(() -> {
+			futures.add(CompletableFuture.runAsync(() -> {
 				final String originalThreadName = Thread.currentThread().getName();
 				try {
 					setThreadName(msg);
@@ -208,12 +195,17 @@ public class SiteMessageConsumer implements Runnable {
 					//be 2 snapshot events for the same entity i.e. for tables with a hierarchy
 					Thread.currentThread().setName(originalThreadName);
 				}
-			}, msgExecutor));
+			}, executor));
+			
+			if (futures.size() >= taskThreshold) {
+				waitForFutures(futures);
+				futures.clear();
+			}
 			
 		}
 		
-		if (syncThreadFutures.size() > 0) {
-			waitForFutures(syncThreadFutures);
+		if (futures.size() > 0) {
+			waitForFutures(futures);
 		}
 	}
 	
@@ -223,10 +215,6 @@ public class SiteMessageConsumer implements Runnable {
 	 * @param msg the sync message to process
 	 */
 	public void processMessage(SyncMessage msg) {
-		messagePublisher.sendSyncResponse(msg);
-		
-		log.info("Submitting sync message to the processor");
-		
 		Exchange exchange = ExchangeBuilder.anExchange(producerTemplate.getCamelContext()).withBody(msg).build();
 		
 		CamelUtils.send(messageProcessorUri, exchange);
@@ -237,20 +225,28 @@ public class SiteMessageConsumer implements Runnable {
 		
 		final Long id = msg.getId();
 		if (msgProcessed || movedToConflict || movedToError) {
+			SyncOutcome outcome;
 			if (msgProcessed) {
-				log.info("Archiving the sync message");
-				
-				ReceiverSyncArchive archive = new ReceiverSyncArchive(msg);
-				archive.setDateCreated(new Date());
-				if (log.isDebugEnabled()) {
-					log.debug("Saving sync archive");
-				}
-				
-				producerTemplate.sendBody("jpa:" + ReceiverSyncArchive.class.getSimpleName(), archive);
-				
-				if (log.isDebugEnabled()) {
-					log.debug("Successfully saved sync archive");
-				}
+				outcome = SyncOutcome.SUCCESS;
+				log.info("Moving the message to the synced queue");
+			} else if (movedToConflict) {
+				outcome = SyncOutcome.CONFLICT;
+				log.info("Adding the message to the synced queue with outcome as: " + outcome);
+			} else {
+				outcome = SyncOutcome.ERROR;
+				log.info("Adding the message to the synced queue with outcome as: " + outcome);
+			}
+			
+			SyncedMessage syncedMsg = ReceiverUtils.createSyncedMessage(msg, outcome);
+			
+			if (log.isDebugEnabled()) {
+				log.debug("Saving synced message");
+			}
+			
+			syncedMsgRepo.save(syncedMsg);
+			
+			if (log.isDebugEnabled()) {
+				log.debug("Successfully saved synced message");
 			}
 			
 			if (log.isDebugEnabled()) {
@@ -294,8 +290,8 @@ public class SiteMessageConsumer implements Runnable {
 	}
 	
 	protected String getThreadName(SyncMessage msg) {
-		return msg.getSite().getIdentifier() + "-" + AppUtils.getSimpleName(msg.getModelClassName()) + "-"
-		        + msg.getIdentifier() + "-" + msg.getMessageUuid() + "-" + msg.getId();
+		return msg.getSite().getIdentifier() + "-" + msg.getMessageUuid() + "-"
+		        + AppUtils.getSimpleName(msg.getModelClassName()) + "-" + msg.getIdentifier() + "-" + msg.getId();
 	}
 	
 }

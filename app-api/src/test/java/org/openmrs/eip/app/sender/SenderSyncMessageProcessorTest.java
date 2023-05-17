@@ -1,14 +1,29 @@
 package org.openmrs.eip.app.sender;
 
 import static org.junit.Assert.assertEquals;
+import static org.powermock.reflect.Whitebox.setInternalState;
 
-import org.junit.Assert;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.SenderSyncMessage;
+import org.powermock.reflect.Whitebox;
 
 public class SenderSyncMessageProcessorTest {
 	
-	private SenderSyncMessageProcessor processor = new SenderSyncMessageProcessor();
+	private SenderSyncMessageProcessor processor;
+	
+	@Before
+	public void setup() {
+		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
+		processor = new SenderSyncMessageProcessor(null, null);
+	}
+	
+	@After
+	public void tearDown() {
+		setInternalState(BaseQueueProcessor.class, "initialized", false);
+	}
 	
 	@Test
 	public void getProcessorName_shouldReturnTheProcessorName() {
@@ -18,47 +33,41 @@ public class SenderSyncMessageProcessorTest {
 	@Test
 	public void getThreadName_shouldReturnTheThreadNameContainingEventDetails() {
 		final String table = "visit";
-		final Long id = 2L;
+		final String msgUuid = "msg-uuid";
 		final String uuid = "som-visit-uuid";
 		SenderSyncMessage msg = new SenderSyncMessage();
-		msg.setId(id);
+		msg.setMessageUuid(msgUuid);
 		msg.setTableName(table);
 		msg.setIdentifier(uuid);
-		assertEquals(table + "-" + uuid + "-" + id, processor.getThreadName(msg));
+		assertEquals(table + "-" + uuid + "-" + msgUuid, processor.getThreadName(msg));
 	}
 	
 	@Test
-	public void getItemKey_shouldReturnTheKeyContainingTableAndId() {
+	public void getUniqueId_shouldReturnTheUuid() {
+		final String visitUuid = "som-visit-uuid";
+		SenderSyncMessage msg = new SenderSyncMessage();
+		msg.setIdentifier(visitUuid);
+		assertEquals(visitUuid, processor.getUniqueId(msg));
+	}
+	
+	@Test
+	public void getLogicalType_shouldReturnTheTableName() {
 		final String table = "visit";
-		final String uuid = "som-visit-uuid";
 		SenderSyncMessage msg = new SenderSyncMessage();
 		msg.setTableName(table);
-		msg.setIdentifier(uuid);
-		assertEquals(table + "#" + uuid, processor.getItemKey(msg));
+		assertEquals(table, processor.getLogicalType(msg));
 	}
 	
 	@Test
-	public void processInParallel_shouldReturnTrueForSnapshotEvent() {
-		SenderSyncMessage msg = new SenderSyncMessage();
-		msg.setSnapshot(true);
-		Assert.assertTrue(processor.processInParallel(msg));
-	}
-	
-	@Test
-	public void processInParallel_shouldReturnFalseForNonSnapshotEvent() {
-		SenderSyncMessage msg = new SenderSyncMessage();
-		msg.setSnapshot(false);
-		Assert.assertFalse(processor.processInParallel(msg));
+	public void getLogicalTypeHierarchy_shouldReturnTheTablesInTheSameHierarchy() {
+		assertEquals(1, processor.getLogicalTypeHierarchy("visit").size());
+		assertEquals(2, processor.getLogicalTypeHierarchy("person").size());
+		assertEquals(3, processor.getLogicalTypeHierarchy("orders").size());
 	}
 	
 	@Test
 	public void getQueueName_shouldReturnTheQueueName() {
 		assertEquals("sync-msg", processor.getQueueName());
-	}
-	
-	@Test
-	public void getDestinationUri_shouldReturnTheUriToSendToEventsForProcessing() {
-		assertEquals(SenderConstants.URI_ACTIVEMQ_PUBLISHER, processor.getDestinationUri());
 	}
 	
 }

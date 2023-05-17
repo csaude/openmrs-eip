@@ -76,7 +76,7 @@ public class AppUtils {
 		return tables;
 	}
 	
-	private static Map<String, String> getClassAndSimpleNameMap() {
+	public static Map<String, String> getClassAndSimpleNameMap() {
 		synchronized (AppUtils.class) {
 			if (classAndSimpleNameMap == null) {
 				log.info("Initializing class to simple name mappings...");
@@ -122,6 +122,7 @@ public class AppUtils {
 	 */
 	public static void setAppContextStopping() {
 		appContextStopping = true;
+		EipFailoverTransportFactory.stopTransport();
 		log.info("Application context is stopping");
 	}
 	
@@ -139,6 +140,13 @@ public class AppUtils {
 	 */
 	public static boolean isShuttingDown() {
 		return shuttingDown;
+	}
+	
+	/**
+	 * Checks if the application is stopping
+	 */
+	public static boolean isStopping() {
+		return isAppContextStopping() || isShuttingDown();
 	}
 	
 	/**

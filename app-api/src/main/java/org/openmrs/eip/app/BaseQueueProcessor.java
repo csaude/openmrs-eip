@@ -1,37 +1,59 @@
 package org.openmrs.eip.app;
 
 import static java.util.Collections.synchronizedList;
+import static org.openmrs.eip.app.SyncConstants.THREAD_THRESHOLD_MULTIPLIER;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
-import org.apache.camel.Exchange;
-import org.apache.camel.ProducerTemplate;
 import org.openmrs.eip.app.management.entity.AbstractEntity;
-import org.openmrs.eip.component.SyncContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Base class for processors that operate on items in a DB sync related queue and forward each item
- * to another handler camel endpoint for processing
- * 
- * @param <T>
+ * Base class for processors that support parallelism to process items in a DB sync related queue.
+ *
+ * @param <T> item type
  */
-public abstract class BaseQueueProcessor<T extends AbstractEntity> extends BaseParallelProcessor {
+public abstract class BaseQueueProcessor<T extends AbstractEntity> extends BaseParallelProcessor<List<T>> {
 	
 	private static final Logger log = LoggerFactory.getLogger(BaseQueueProcessor.class);
 	
+	private static boolean initialized = false;
+	
+	private static int taskThreshold;
+	
+	private ThreadPoolExecutor executor;
+	
+	public BaseQueueProcessor(ThreadPoolExecutor executor) {
+		this.executor = executor;
+		initIfNecessary();
+	}
+	
+	protected void initIfNecessary() {
+		synchronized (BaseQueueProcessor.class) {
+			if (!initialized) {
+				//This ensures there will only be a limited number of queued items for each thread
+				taskThreshold = executor.getMaximumPoolSize() * THREAD_THRESHOLD_MULTIPLIER;
+				initialized = true;
+			}
+		}
+	}
+	
 	@Override
-	public void process(Exchange exchange) throws Exception {
-		if (producerTemplate == null) {
-			producerTemplate = SyncContext.getBean(ProducerTemplate.class);
+	public void processWork(List<T> items) throws Exception {
+		if (items.isEmpty()) {
+			if (log.isTraceEnabled()) {
+				log.trace("No items in the list to process");
+			}
+			
+			return;
 		}
 		
-		List<String> uniqueKeys = synchronizedList(new ArrayList(threadCount));
-		List<CompletableFuture<Void>> syncThreadFutures = synchronizedList(new ArrayList(threadCount));
-		List<T> items = exchange.getIn().getBody(List.class);
+		List<String> uniqueKeys = synchronizedList(new ArrayList(taskThreshold));
+		List<CompletableFuture<Void>> futures = synchronizedList(new ArrayList(taskThreshold));
 		
 		for (T item : items) {
 			if (AppUtils.isAppContextStopping()) {
@@ -42,40 +64,53 @@ public abstract class BaseQueueProcessor<T extends AbstractEntity> extends BaseP
 				break;
 			}
 			
-			final String key = getItemKey(item);
-			if (processInParallel(item) && !uniqueKeys.contains(key)) {
-				uniqueKeys.add(key);
-				
-				//TODO Periodically wait and reset futures to save memory
-				syncThreadFutures.add(CompletableFuture.runAsync(() -> {
-					final String originalThreadName = Thread.currentThread().getName();
-					try {
-						setThreadName(item);
-						producerTemplate.sendBody(getDestinationUri(), item);
-					}
-					finally {
-						Thread.currentThread().setName(originalThreadName);
-					}
-				}, executor));
-			} else {
+			final String id = getUniqueId(item);
+			final String logicalType = getLogicalType(item);
+			final String logicalKey = logicalType + "#" + id;
+			if (uniqueKeys.contains(logicalKey)) {
 				final String originalThreadName = Thread.currentThread().getName();
 				try {
 					setThreadName(item);
-					if (syncThreadFutures.size() > 0) {
-						waitForFutures(syncThreadFutures);
-						syncThreadFutures.clear();
+					if (log.isDebugEnabled()) {
+						log.debug("Postponed processing of {} because of earlier unprocessed item(s) for the same entity",
+						    item);
 					}
-					
-					producerTemplate.sendBody(getDestinationUri(), item);
 				}
 				finally {
 					Thread.currentThread().setName(originalThreadName);
 				}
+				
+				continue;
+			}
+			
+			List<String> typesInHierarchy = getLogicalTypeHierarchy(logicalType);
+			if (typesInHierarchy == null) {
+				uniqueKeys.add(logicalKey);
+			} else {
+				for (String type : typesInHierarchy) {
+					uniqueKeys.add(type + "#" + id);
+				}
+			}
+			
+			futures.add(CompletableFuture.runAsync(() -> {
+				final String originalThreadName = Thread.currentThread().getName();
+				try {
+					setThreadName(item);
+					processItem(item);
+				}
+				finally {
+					Thread.currentThread().setName(originalThreadName);
+				}
+			}, executor));
+			
+			if (futures.size() >= taskThreshold) {
+				waitForFutures(futures);
+				futures.clear();
 			}
 		}
 		
-		if (syncThreadFutures.size() > 0) {
-			waitForFutures(syncThreadFutures);
+		if (futures.size() > 0) {
+			waitForFutures(futures);
 		}
 	}
 	
@@ -84,41 +119,50 @@ public abstract class BaseQueueProcessor<T extends AbstractEntity> extends BaseP
 	}
 	
 	/**
-	 * Generate a unique key for the item
-	 * 
-	 * @param item the queue item
-	 * @return the key
+	 * Processes the specified item
+	 *
+	 * @param item the queue item to process
 	 */
-	public abstract String getItemKey(T item);
+	public abstract void processItem(T item);
 	
 	/**
-	 * Checks if the item should be processed in parallel or not
-	 * 
-	 * @param item the queue item
-	 * @return true to process in parallel otherwise false
+	 * Gets a unique identifier for the specified item
+	 *
+	 * @param item the item
+	 * @return the key
 	 */
-	public abstract boolean processInParallel(T item);
+	public abstract String getUniqueId(T item);
 	
 	/**
 	 * Gets the logical queue name
-	 * 
+	 *
 	 * @return the logical name
 	 */
 	public abstract String getQueueName();
 	
 	/**
 	 * Generate a unique name for the thread that will process the item
-	 * 
+	 *
 	 * @param item the queue item
 	 * @return the thread name
 	 */
 	public abstract String getThreadName(T item);
 	
 	/**
-	 * Gets the camel URI to call to process a single item
-	 * 
-	 * @return the camel URI
+	 * Gets logical type name of the item
+	 *
+	 * @param item the item
+	 * @return the logical type name of the item
 	 */
-	public abstract String getDestinationUri();
+	public abstract String getLogicalType(T item);
+	
+	/**
+	 * Gets the list of logical types in the same hierarchy as the specified logical type, the method
+	 * should return null if the type has no hierarchy.
+	 *
+	 * @param logicalType logical type to match
+	 * @return list of types in the same hierarchy
+	 */
+	public abstract List<String> getLogicalTypeHierarchy(String logicalType);
 	
 }

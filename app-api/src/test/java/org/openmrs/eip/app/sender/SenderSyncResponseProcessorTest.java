@@ -1,14 +1,30 @@
 package org.openmrs.eip.app.sender;
 
 import static org.junit.Assert.assertEquals;
+import static org.powermock.reflect.Whitebox.setInternalState;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.SenderSyncResponse;
+import org.powermock.reflect.Whitebox;
 
 public class SenderSyncResponseProcessorTest {
 	
-	private SenderSyncResponseProcessor processor = new SenderSyncResponseProcessor();
+	private SenderSyncResponseProcessor processor;
+	
+	@Before
+	public void setup() {
+		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
+		processor = new SenderSyncResponseProcessor(null, null);
+	}
+	
+	@After
+	public void tearDown() {
+		setInternalState(BaseQueueProcessor.class, "initialized", false);
+	}
 	
 	@Test
 	public void getProcessorName_shouldReturnTheProcessorName() {
@@ -18,34 +34,32 @@ public class SenderSyncResponseProcessorTest {
 	@Test
 	public void getThreadName_shouldReturnTheThreadNameContainingEventDetails() {
 		final String messageUuid = "message-uuid";
-		final Long id = 2L;
 		SenderSyncResponse msg = new SenderSyncResponse();
-		msg.setId(id);
 		msg.setMessageUuid(messageUuid);
-		assertEquals(messageUuid + "-" + id, processor.getThreadName(msg));
+		assertEquals(messageUuid, processor.getThreadName(msg));
 	}
 	
 	@Test
-	public void getItemKey_shouldReturnTheKeyContainingTableAndId() {
+	public void getUniqueId_shouldReturnDatabaseId() {
 		final Long id = 2L;
 		SenderSyncResponse msg = new SenderSyncResponse();
 		msg.setId(id);
-		assertEquals(id.toString(), processor.getItemKey(msg));
+		assertEquals(id.toString(), processor.getUniqueId(msg));
 	}
 	
 	@Test
-	public void processInParallel_shouldAlwaysReturnTrue() {
-		Assert.assertTrue(processor.processInParallel(null));
+	public void getLogicalType_shouldReturnTheTableName() {
+		assertEquals(SenderSyncResponse.class.getName(), processor.getLogicalType(new SenderSyncResponse()));
+	}
+	
+	@Test
+	public void getLogicalTypeHierarchy_shouldReturnNull() {
+		Assert.assertNull(processor.getLogicalTypeHierarchy("visit"));
 	}
 	
 	@Test
 	public void getQueueName_shouldReturnTheQueueName() {
 		assertEquals("sync-response", processor.getQueueName());
-	}
-	
-	@Test
-	public void getDestinationUri_shouldReturnTheUriToSendToEventsForProcessing() {
-		assertEquals(SenderConstants.URI_RESPONSE_PROCESSOR, processor.getDestinationUri());
 	}
 	
 }

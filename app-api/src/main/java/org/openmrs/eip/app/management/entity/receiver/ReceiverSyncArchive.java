@@ -16,7 +16,6 @@ import org.openmrs.eip.app.management.entity.AbstractEntity;
 import org.openmrs.eip.app.management.entity.ConflictQueueItem;
 import org.openmrs.eip.app.management.entity.ReceiverRetryQueueItem;
 import org.openmrs.eip.app.management.entity.SiteInfo;
-import org.openmrs.eip.app.management.entity.SyncMessage;
 import org.openmrs.eip.component.SyncOperation;
 import org.springframework.beans.BeanUtils;
 
@@ -26,12 +25,15 @@ public class ReceiverSyncArchive extends AbstractEntity {
 	
 	public static final long serialVersionUID = 1;
 	
+	@NotNull
 	@Column(nullable = false, updatable = false)
 	private String identifier;
 	
+	@NotNull
 	@Column(name = "entity_payload", columnDefinition = "text", nullable = false)
 	private String entityPayload;
 	
+	@NotNull
 	@Column(name = "model_class_name", nullable = false, updatable = false)
 	private String modelClassName;
 	
@@ -44,6 +46,7 @@ public class ReceiverSyncArchive extends AbstractEntity {
 	@JoinColumn(name = "site_id", nullable = false, updatable = false)
 	private SiteInfo site;
 	
+	@NotNull
 	@Column(name = "is_snapshot", nullable = false, updatable = false)
 	private Boolean snapshot = false;
 	
@@ -60,9 +63,8 @@ public class ReceiverSyncArchive extends AbstractEntity {
 	public ReceiverSyncArchive() {
 	}
 	
-	public ReceiverSyncArchive(SyncMessage syncMessage) {
-		BeanUtils.copyProperties(syncMessage, this, "id", "dateCreated");
-		setDateReceived(syncMessage.getDateCreated());
+	public ReceiverSyncArchive(SyncedMessage processedMessage) {
+		BeanUtils.copyProperties(processedMessage, this, "id", "dateCreated");
 	}
 	
 	public ReceiverSyncArchive(ReceiverRetryQueueItem retry) {
