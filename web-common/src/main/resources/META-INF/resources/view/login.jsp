@@ -19,6 +19,9 @@
 <body>
 <%@ include file="header.jsp" %>
 <div id="loginContainer" class="container">
+    <div class="confidential-message text-center" > 
+        <img src="images/security_warning_pt.${projectBuildNumber}.png" class="img-fluid" alt="Responsive image"/>
+    </div>
     <c:url value="/login" var="loginProcessingUrl"/>
     <form class="form-signin" action="${loginProcessingUrl}" method="post">
         <!-- FormLoginConfigurer#failureUrl is /login?error -->

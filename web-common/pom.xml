@@ -106,6 +106,16 @@
                                     <sourceFile>${project.build.outputDirectory}/META-INF/resources/${localeDir}favicon.ico</sourceFile>
                                     <destinationFile>${project.build.outputDirectory}/META-INF/resources/${localeDir}favicon.${projectBuildNumber}.ico</destinationFile>
                                 </fileSet>
+                                
+                                <!-- Rename Confidential image -->
+                                <fileSet>
+                                    <sourceFile>${project.build.outputDirectory}/META-INF/resources/images/security_warning_en.png</sourceFile>
+                                    <destinationFile>${project.build.outputDirectory}/META-INF/resources/images/security_warning_en.${projectBuildNumber}.png</destinationFile>
+                                </fileSet>
+                                <fileSet>
+                                    <sourceFile>${project.build.outputDirectory}/META-INF/resources/images/security_warning_pt.png</sourceFile>
+                                    <destinationFile>${project.build.outputDirectory}/META-INF/resources/images/security_warning_pt.${projectBuildNumber}.png</destinationFile>
+                                </fileSet>
 
                                 <!-- Rename images and icons files -->
                                 <!--
