@@ -61,8 +61,6 @@ public class SpringWebSecurityConfig extends WebSecurityConfigurerAdapter {
 		http.authorizeRequests().antMatchers("/styles.*.css").permitAll();
 		http.authorizeRequests().antMatchers("/*/styles.*.css").permitAll();
 		http.authorizeRequests().antMatchers("/css/login.*.css").permitAll();
-		http.authorizeRequests().antMatchers("/images/security_warning_pt.*.png").permitAll();
-		http.authorizeRequests().antMatchers("/images/security_warning_en.*.png").permitAll();
 		http.httpBasic();
 		
 		http.authorizeRequests().anyRequest().fullyAuthenticated();

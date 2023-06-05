@@ -19,8 +19,13 @@
 <body>
 <%@ include file="header.jsp" %>
 <div id="loginContainer" class="container">
-    <div class="confidential-message text-center" > 
-        <img src="images/security_warning_pt.${projectBuildNumber}.png" class="img-fluid" alt="Responsive image"/>
+    <div class="alert alert-dark text-center text-danger font-weight-bold confidential-message" role="alert" >
+        <div class="h2" >
+            <spring:message code="login.confidential.type" />
+        </div>
+        <div>
+            <spring:message code="login.confidential.message" />
+        </div>
     </div>
     <c:url value="/login" var="loginProcessingUrl"/>
     <form class="form-signin" action="${loginProcessingUrl}" method="post">
