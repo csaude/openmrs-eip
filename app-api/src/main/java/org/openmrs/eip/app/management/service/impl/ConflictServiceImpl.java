@@ -3,8 +3,6 @@ package org.openmrs.eip.app.management.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
-
 import org.apache.camel.ProducerTemplate;
 import org.openmrs.eip.app.management.entity.ConflictQueueItem;
 import org.openmrs.eip.app.management.entity.ReceiverRetryQueueItem;
@@ -66,7 +64,6 @@ public class ConflictServiceImpl extends BaseService implements ConflictService 
 	}
 	
 	@Override
-	@Transactional
 	public ReceiverRetryQueueItem moveToRetryQueue(ConflictQueueItem conflict, String reason) {
 		if (log.isDebugEnabled()) {
 			log.debug("Moving to retry queue the conflict item with id: " + conflict.getId());
