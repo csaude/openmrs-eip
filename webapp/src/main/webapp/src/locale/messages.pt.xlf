@@ -467,7 +467,7 @@
 		<unit id="common-count">
 			<segment>
 				<source>Count</source>
-				<target>Contagem</target>
+				<target>Quantidade</target>
 			</segment>
 		</unit>
 		<unit id="common-entity-breakdown">
@@ -533,13 +533,13 @@
 		<unit id="receiver-conflict-clean">
 			<segment>
 				<source>Do you want to clean them?</source>
-				<target>Você quer limpá-los?</target>
+				<target>Você quer Apagá-los?</target>
 			</segment>
 		</unit>
 		<unit id="receiver-conflict-cleaned-msg">
 			<segment>
 				<source>Cleaned conflict(s)</source>
-				<target>Conflito(s) limpo(s)</target>
+				<target>Conflito(s) Apagado(s)</target>
 			</segment>
 		</unit>
 	</file>
