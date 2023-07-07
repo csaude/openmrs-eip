@@ -15,6 +15,9 @@
         <setProperty name="entity-id">
             <simple>${body.identifier}</simple>
         </setProperty>
+        <setProperty name="${routeId}-sendingSite">
+            <simple>${body.site}</simple>
+        </setProperty>
         <setProperty name="sync-message">
             <simple>${body}</simple>
         </setProperty>
@@ -31,7 +34,7 @@
             <method beanType="org.openmrs.eip.component.utils.Utils" method="getModelClassesInHierarchy(${exchangeProperty.model-class})" />
         </setProperty>
 
-        <toD uri="jpa:ReceiverRetryQueueItem?query=SELECT i from ReceiverRetryQueueItem i WHERE i.modelClassName IN (${exchangeProperty.model-classes}) AND i.identifier='${exchangeProperty.entity-id}'" />
+        <toD uri="jpa:ReceiverRetryQueueItem?query=SELECT i from ReceiverRetryQueueItem i WHERE i.modelClassName IN (${exchangeProperty.model-classes}) AND i.identifier='${exchangeProperty.entity-id}' AND i.site.id = ${exchangeProperty.${routeId}-sendingSite.id}" />
 
         <setProperty name="retry-count">
             <simple>${body.size()}</simple>

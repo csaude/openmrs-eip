@@ -16,14 +16,17 @@ import org.apache.camel.Exchange;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.DefaultExchange;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openmrs.eip.app.management.entity.SiteInfo;
 import org.openmrs.eip.app.management.entity.SyncMessage;
+import org.openmrs.eip.app.management.repository.SiteRepository;
 import org.openmrs.eip.app.receiver.ReceiverConstants;
 import org.openmrs.eip.component.model.PatientModel;
 import org.openmrs.eip.component.model.PersonModel;
 import org.openmrs.eip.component.model.SyncModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 
@@ -33,6 +36,9 @@ public class MessageProcessorRouteTest extends BaseReceiverRouteTest {
 	
 	@EndpointInject("mock:" + ROUTE_ID_INBOUND_DB_SYNC)
 	private MockEndpoint mockInboundDbSyncEndpoint;
+	
+	@Autowired
+	private SiteRepository siteRepo;
 	
 	@Before
 	public void setup() throws Exception {
@@ -58,6 +64,8 @@ public class MessageProcessorRouteTest extends BaseReceiverRouteTest {
 		message.setModelClassName(PersonModel.class.getName());
 		message.setIdentifier("uuid-1");
 		message.setEntityPayload("{}");
+		final SiteInfo site = siteRepo.findById(1L).get();
+		message.setSite(site);
 		Exchange exchange = new DefaultExchange(camelContext);
 		exchange.getIn().setBody(message);
 		mockInboundDbSyncEndpoint.expectedMessageCount(0);
@@ -76,8 +84,9 @@ public class MessageProcessorRouteTest extends BaseReceiverRouteTest {
 		message.setModelClassName(PatientModel.class.getName());
 		message.setIdentifier("uuid-1");
 		message.setEntityPayload("{}");
-		final LocalDateTime dateSentBySender = LocalDateTime.now();
-		message.setDateSentBySender(dateSentBySender);
+		final SiteInfo site = siteRepo.findById(1L).get();
+		message.setSite(site);
+		message.setDateSentBySender(LocalDateTime.now());
 		Exchange exchange = new DefaultExchange(camelContext);
 		exchange.getIn().setBody(message);
 		mockInboundDbSyncEndpoint.expectedMessageCount(0);
@@ -95,20 +104,46 @@ public class MessageProcessorRouteTest extends BaseReceiverRouteTest {
 		final String modelClass = PersonModel.class.getName();
 		final String entityId = "uuid-3";
 		final String payload = "{}";
-		final SiteInfo site = new SiteInfo();
+		final SiteInfo site = siteRepo.findById(1L).get();
 		SyncMessage message = new SyncMessage();
 		message.setModelClassName(modelClass);
 		message.setIdentifier(entityId);
 		message.setEntityPayload(payload);
 		message.setSite(site);
-		final LocalDateTime dateSentBySender = LocalDateTime.now();
-		message.setDateSentBySender(dateSentBySender);
+		message.setDateSentBySender(LocalDateTime.now());
 		Exchange exchange = new DefaultExchange(camelContext);
 		exchange.getIn().setBody(message);
 		mockInboundDbSyncEndpoint.expectedMessageCount(1);
 		mockInboundDbSyncEndpoint.expectedBodyReceived().body(SyncModel.class).isNotNull();
 		mockInboundDbSyncEndpoint.expectedPropertyReceived(ReceiverConstants.EX_PROP_MODEL_CLASS, modelClass);
 		mockInboundDbSyncEndpoint.expectedPropertyReceived(ReceiverConstants.EX_PROP_ENTITY_ID, entityId);
+		mockInboundDbSyncEndpoint.expectedPropertyReceived(ReceiverConstants.EX_PROP_PAYLOAD, payload);
+		mockInboundDbSyncEndpoint.expectedPropertyReceived(EX_PROP_SYNC_MESSAGE, message);
+		
+		producerTemplate.send(URI_MSG_PROCESSOR, exchange);
+		
+		mockInboundDbSyncEndpoint.assertIsSatisfied();
+	}
+	
+	@Test
+	public void shouldProcessAMessageForAnEntityWithARetryItemButFromADifferentSite() throws Exception {
+		final String UUID = "uuid-1";
+		Assert.assertTrue(ReceiverTestUtils.hasRetryItem(PersonModel.class, UUID));
+		final String modelClass = PersonModel.class.getName();
+		final String payload = "{}";
+		final SiteInfo site = siteRepo.findById(2L).get();
+		SyncMessage message = new SyncMessage();
+		message.setModelClassName(modelClass);
+		message.setIdentifier(UUID);
+		message.setEntityPayload(payload);
+		message.setSite(site);
+		message.setDateSentBySender(LocalDateTime.now());
+		Exchange exchange = new DefaultExchange(camelContext);
+		exchange.getIn().setBody(message);
+		mockInboundDbSyncEndpoint.expectedMessageCount(1);
+		mockInboundDbSyncEndpoint.expectedBodyReceived().body(SyncModel.class).isNotNull();
+		mockInboundDbSyncEndpoint.expectedPropertyReceived(ReceiverConstants.EX_PROP_MODEL_CLASS, modelClass);
+		mockInboundDbSyncEndpoint.expectedPropertyReceived(ReceiverConstants.EX_PROP_ENTITY_ID, UUID);
 		mockInboundDbSyncEndpoint.expectedPropertyReceived(ReceiverConstants.EX_PROP_PAYLOAD, payload);
 		mockInboundDbSyncEndpoint.expectedPropertyReceived(EX_PROP_SYNC_MESSAGE, message);
 		
