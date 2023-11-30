@@ -14,19 +14,19 @@ import java.time.LocalDateTime;
 @AttributeOverride(name = "id", column = @Column(name = "clinical_summary_usage_report_id"))
 public class ClinicalSummaryUsageReport extends BaseChangeableDataEntity {
 	
-	@Column(name = "report", length = 200)
+	@Column(name = "report")
 	private String report;
 	
-	@Column(name = "health_facility", length = 200)
+	@Column(name = "health_facility")
 	private String healthFacility;
 	
-	@Column(name = "username", length = 200)
+	@Column(name = "username")
 	private String username;
 	
-	@Column(name = "confidential_terms", length = 200)
+	@Column(name = "confidential_terms")
 	private String confidentialTerms;
 	
-	@Column(name = "app_version", length = 200)
+	@Column(name = "app_version")
 	private String appversion;
 	
 	@Column(name = "date_opened")
