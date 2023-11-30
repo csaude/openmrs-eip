@@ -3,15 +3,13 @@ package org.openmrs.eip.component.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "clinical_summary_usage_report")
 @AttributeOverride(name = "id", column = @Column(name = "clinical_summary_usage_report_id"))
 public class ClinicalSummaryUsageReport extends BaseChangeableDataEntity {
