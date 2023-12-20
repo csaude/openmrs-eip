@@ -30,7 +30,7 @@
         <guava.version>28.0-jre</guava.version>
         <activeMq.version>5.15.8</activeMq.version>
         <lombok.version>1.18.8</lombok.version>
-        <jsonassert.version>1.5.1-SNAPSHOT</jsonassert.version>
+        <jsonassert.version>1.5.0</jsonassert.version>
         <json.version>20190722</json.version>
         <exclude.tests>nothing-to-exclude</exclude.tests>
         <springBootVersion>2.1.4.RELEASE</springBootVersion>
