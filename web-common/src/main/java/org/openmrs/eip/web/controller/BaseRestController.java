@@ -16,6 +16,7 @@ import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.web.RestConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +43,10 @@ public abstract class BaseRestController {
 		results.put(FIELD_COUNT, count);
 		
 		if (count > 0) {
-			List<Object> items = producerTemplate.requestBody(
-			    "jpa:" + getName() + "?query=SELECT c FROM " + getName() + " c &maximumResults=" + DEFAULT_MAX_COUNT, null,
-			    List.class);
+			String order = StringUtils.isBlank(getOrderBy()) ? "" : " ORDER BY " + getOrderBy();
+			List<Object> items = producerTemplate.requestBody("jpa:" + getName() + "?query=SELECT i FROM " + getName() + " i"
+			        + order + "&maximumResults=" + DEFAULT_MAX_COUNT,
+			    null, List.class);
 			
 			results.put(FIELD_ITEMS, items);
 		} else {
@@ -66,6 +68,10 @@ public abstract class BaseRestController {
 	
 	public String getName() {
 		return getClazz().getSimpleName();
+	}
+	
+	protected String getOrderBy() {
+		return null;
 	}
 	
 	public abstract Class<?> getClazz();

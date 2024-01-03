@@ -42,6 +42,11 @@ public class ReceiverSyncArchiveController extends BaseRestController {
 		return ReceiverSyncArchive.class;
 	}
 	
+	@Override
+	protected String getOrderBy() {
+		return "i." + PROP_DATE_RECEIVED + " DESC";
+	}
+	
 	@GetMapping
 	public Map<String, Object> getAll() {
 		if (log.isDebugEnabled()) {
