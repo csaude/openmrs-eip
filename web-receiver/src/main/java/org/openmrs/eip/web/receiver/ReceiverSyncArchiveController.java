@@ -120,13 +120,17 @@ public class ReceiverSyncArchiveController extends BaseRestController {
 		
 		String fields = "e";
 		String groupBy = "";
+		String order = "";
 		if (group) {
 			fields += ("." + groupProperty + ", count(*)");
 			groupBy += (" GROUP BY e." + groupProperty);
+		} else {
+			order = " ORDER BY e." + PROP_DATE_RECEIVED + " DESC";
 		}
 		
-		String query = "jpa:" + getName() + "?query=SELECT " + fields + " FROM " + getName() + " e " + whereClause + groupBy;
-		List<Object> items = producerTemplate.requestBodyAndHeader(query + " &maximumResults=" + DEFAULT_MAX_COUNT, null,
+		String query = "jpa:" + getName() + "?query=SELECT " + fields + " FROM " + getName() + " e " + whereClause + groupBy
+		        + order;
+		List<Object> items = producerTemplate.requestBodyAndHeader(query + "&maximumResults=" + DEFAULT_MAX_COUNT, null,
 		    JPA_PARAMETERS_HEADER, paramAndValueMap, List.class);
 		results.put(FIELD_ITEMS, items);
 		

@@ -73,8 +73,8 @@ public class ReceiverSyncArchiveControllerTest extends BaseReceiverWebTest {
 		result.andExpect(jsonPath("length()", equalTo(2)));
 		result.andExpect(jsonPath("count", equalTo(2)));
 		result.andExpect(jsonPath("items.length()", equalTo(2)));
-		result.andExpect(jsonPath("items[0].id", equalTo(1)));
-		result.andExpect(jsonPath("items[1].id", equalTo(2)));
+		result.andExpect(jsonPath("items[0].id", equalTo(2)));
+		result.andExpect(jsonPath("items[1].id", equalTo(1)));
 	}
 	
 	@Test
@@ -90,8 +90,8 @@ public class ReceiverSyncArchiveControllerTest extends BaseReceiverWebTest {
 		result.andExpect(jsonPath("length()", equalTo(2)));
 		result.andExpect(jsonPath("count", equalTo(2)));
 		result.andExpect(jsonPath("items.length()", equalTo(2)));
-		result.andExpect(jsonPath("items[0].id", equalTo(2)));
-		result.andExpect(jsonPath("items[1].id", equalTo(3)));
+		result.andExpect(jsonPath("items[0].id", equalTo(3)));
+		result.andExpect(jsonPath("items[1].id", equalTo(2)));
 	}
 	
 	@Test
