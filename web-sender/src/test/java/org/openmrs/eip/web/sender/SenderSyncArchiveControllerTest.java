@@ -25,7 +25,11 @@ public class SenderSyncArchiveControllerTest extends BaseSenderTest {
 		Map result = controller.getAll();
 		assertEquals(2, result.size());
 		assertEquals(3, result.get("count"));
-		assertEquals(3, ((List) result.get("items")).size());
+		List<SenderSyncArchive> archives = (List) result.get("items");
+		assertEquals(3, (archives.size()));
+		assertEquals(3, (archives.get(0).getId().longValue()));
+		assertEquals(2, (archives.get(1).getId().longValue()));
+		assertEquals(1, (archives.get(2).getId().longValue()));
 	}
 	
 	@Test
@@ -43,8 +47,8 @@ public class SenderSyncArchiveControllerTest extends BaseSenderTest {
 		assertEquals(2, response.size());
 		assertEquals(2, response.get("count"));
 		assertEquals(2, ((List) response.get("items")).size());
-		assertEquals(1, ((List<SenderSyncArchive>) response.get("items")).get(0).getId().longValue());
-		assertEquals(2, ((List<SenderSyncArchive>) response.get("items")).get(1).getId().longValue());
+		assertEquals(2, ((List<SenderSyncArchive>) response.get("items")).get(0).getId().longValue());
+		assertEquals(1, ((List<SenderSyncArchive>) response.get("items")).get(1).getId().longValue());
 	}
 	
 	@Test
@@ -53,8 +57,8 @@ public class SenderSyncArchiveControllerTest extends BaseSenderTest {
 		assertEquals(2, response.size());
 		assertEquals(2, response.get("count"));
 		assertEquals(2, ((List) response.get("items")).size());
-		assertEquals(2, ((List<SenderSyncArchive>) response.get("items")).get(0).getId().longValue());
-		assertEquals(3, ((List<SenderSyncArchive>) response.get("items")).get(1).getId().longValue());
+		assertEquals(3, ((List<SenderSyncArchive>) response.get("items")).get(0).getId().longValue());
+		assertEquals(2, ((List<SenderSyncArchive>) response.get("items")).get(1).getId().longValue());
 	}
 	
 }

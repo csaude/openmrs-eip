@@ -41,6 +41,11 @@ public class SenderSyncArchiveController extends BaseRestController {
 		return SenderSyncArchive.class;
 	}
 	
+	@Override
+	protected String getOrderBy() {
+		return "i." + PROP_EVENT_DATE + " DESC";
+	}
+	
 	@GetMapping
 	public Map<String, Object> getAll() {
 		if (log.isDebugEnabled()) {
@@ -104,9 +109,12 @@ public class SenderSyncArchiveController extends BaseRestController {
 			return results;
 		}
 		
-		List<Object> items = producerTemplate.requestBodyAndHeader("jpa:" + getName() + "?query=SELECT e FROM " + getName()
-		        + " e " + whereClause + " &maximumResults=" + DEFAULT_MAX_COUNT,
-		    null, JPA_PARAMETERS_HEADER, paramAndValueMap, List.class);
+		String order = " ORDER BY e." + PROP_EVENT_DATE + " DESC";
+		List<Object> items = producerTemplate
+		        .requestBodyAndHeader(
+		            "jpa:" + getName() + "?query=SELECT e FROM " + getName() + " e " + whereClause + order
+		                    + "&maximumResults=" + DEFAULT_MAX_COUNT,
+		            null, JPA_PARAMETERS_HEADER, paramAndValueMap, List.class);
 		
 		results.put(FIELD_COUNT, count);
 		results.put(FIELD_ITEMS, items);
