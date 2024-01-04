@@ -2,11 +2,12 @@ package org.openmrs.eip.app.management.entity.sender;
 
 import org.openmrs.eip.app.management.entity.AbstractEntity;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "debezium_event_queue")
@@ -14,13 +15,9 @@ public class DebeziumEvent extends AbstractEntity {
 	
 	private static final long serialVersionUID = -1884382844867650350L;
 	
-	@Embedded
-	@AttributeOverride(name = "identifier", column = @Column(updatable = false))
-	@AttributeOverride(name = "primaryKeyId", column = @Column(name = "primary_key_id", nullable = false, updatable = false))
-	@AttributeOverride(name = "tableName", column = @Column(name = "table_name", nullable = false, updatable = false, length = 100))
-	@AttributeOverride(name = "operation", column = @Column(nullable = false, updatable = false, length = 1))
-	@AttributeOverride(name = "snapshot", column = @Column(nullable = false, updatable = false))
-	@AttributeOverride(name = "requestUuid", column = @Column(name = "request_uuid", unique = true, updatable = false, length = 38))
+	@OneToOne(optional = false, cascade = CascadeType.ALL)
+	@JoinColumn(name = "event_id", unique = true, nullable = false, updatable = false)
+	@NotNull
 	private Event event;
 	
 	/**

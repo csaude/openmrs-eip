@@ -1,28 +1,43 @@
 package org.openmrs.eip.app.management.entity.sender;
 
-import java.io.Serializable;
 import java.util.Map;
 
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Transient;
+import org.openmrs.eip.app.management.entity.AbstractEntity;
 
-@Embeddable
-public class Event implements Serializable {
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+@Entity
+@Table(name = "sender_event_details")
+public class Event extends AbstractEntity {
 	
-	public static final long serialVersionUID = 1;
+	private static final long serialVersionUID = 1L;
 	
 	//Unique identifier for the entity usually a uuid or name for an entity like a privilege that has no uuid
+	@Column
 	private String identifier;
 	
 	//The primary key value of the affected row
+	@Column(name = "primary_key_id", nullable = false, updatable = false)
 	private String primaryKeyId;
 	
+	@NotBlank
+	@Column(name = "table_name", nullable = false, updatable = false, length = 100)
 	private String tableName;
 	
+	@NotBlank
+	@Column(nullable = false, updatable = false, length = 1)
 	private String operation;
 	
+	@NotNull
+	@Column(nullable = false, updatable = false)
 	private Boolean snapshot = Boolean.FALSE;
 	
+	@Column(name = "request_uuid", updatable = false, length = 38)
 	private String requestUuid;
 	
 	@Transient
