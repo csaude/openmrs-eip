@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.app.management.entity.sender.SenderPrunedArchive;
 import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncArchive;
@@ -18,7 +19,6 @@ import org.openmrs.eip.app.management.repository.SenderSyncArchiveRepository;
 import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
 import org.openmrs.eip.app.management.service.SenderService;
 import org.openmrs.eip.component.SyncProfiles;
-import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.model.SyncMetadata;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
@@ -85,7 +85,7 @@ public class SenderServiceImpl implements SenderService {
 			log.debug("Moving debezium event to the sync queue");
 		}
 		
-		addToSyncQueue(debeziumEvent.getEvent(), syncModel, debeziumEvent.getDateCreated());
+		addToSyncQueue(debeziumEvent.getEvent(), syncModel);
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Removing item from the event queue");
@@ -105,7 +105,7 @@ public class SenderServiceImpl implements SenderService {
 			log.debug("Moving retry item to the sync queue");
 		}
 		
-		addToSyncQueue(retry.getEvent(), syncModel, retry.getEventDate());
+		addToSyncQueue(retry.getEvent(), syncModel);
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Removing from the retry queue an item with id: " + retry.getId());
@@ -127,7 +127,6 @@ public class SenderServiceImpl implements SenderService {
 		retry.setEvent(debeziumEvent.getEvent());
 		retry.setExceptionType(exceptionType);
 		retry.setMessage(errorMessage);
-		retry.setEventDate(debeziumEvent.getDateCreated());
 		retry.setDateCreated(new Date());
 		
 		if (log.isDebugEnabled()) {
@@ -151,7 +150,7 @@ public class SenderServiceImpl implements SenderService {
 		}
 	}
 	
-	private void addToSyncQueue(Event event, SyncModel syncModel, Date eventDate) {
+	private void addToSyncQueue(Event event, SyncModel syncModel) {
 		if (syncModel == null && "r".equals(event.getOperation())) {
 			log.info("Entity not found for request with uuid: " + event.getRequestUuid());
 			syncModel = SyncModel.builder().metadata(new SyncMetadata()).build();
@@ -164,15 +163,10 @@ public class SenderServiceImpl implements SenderService {
 		syncModel.getMetadata().setRequestUuid(event.getRequestUuid());
 		
 		SenderSyncMessage msg = new SenderSyncMessage();
-		msg.setTableName(event.getTableName());
-		msg.setIdentifier(event.getIdentifier());
-		msg.setOperation(event.getOperation());
-		msg.setSnapshot(event.getSnapshot());
-		msg.setRequestUuid(event.getRequestUuid());
+		msg.setEvent(event);
 		msg.setData(JsonUtils.marshall(syncModel));
 		msg.setMessageUuid(msgUuid);
 		msg.setDateCreated(new Date());
-		msg.setEventDate(eventDate);
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Saving sync message");

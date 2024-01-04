@@ -18,6 +18,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "sender_sync_message")
@@ -33,6 +34,7 @@ public class SenderSyncMessage extends AbstractEntity {
 	@JoinColumn(name = "event_id", unique = true, nullable = false, updatable = false)
 	@NotNull
 	@Getter
+	@Setter
 	private Event event;
 	
 	@NotNull
