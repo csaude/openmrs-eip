@@ -13,7 +13,7 @@ import jakarta.validation.constraints.NotNull;
 @Table(name = "sender_retry_queue")
 public class SenderRetryQueueItem extends BaseRetryQueueItem {
 	
-	public static final long serialVersionUID = 1;
+	private static final long serialVersionUID = 1;
 	
 	@OneToOne(optional = false, cascade = CascadeType.ALL)
 	@JoinColumn(name = "event_id", unique = true, nullable = false, updatable = false)

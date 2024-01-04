@@ -30,12 +30,12 @@ public class SenderSyncMessageProcessor extends BaseFromCamelToCamelEndpointProc
 	
 	@Override
 	public String getThreadName(SenderSyncMessage msg) {
-		return msg.getTableName() + "-" + msg.getIdentifier() + "-" + msg.getMessageUuid();
+		return msg.getEvent().getTableName() + "-" + msg.getEvent().getIdentifier() + "-" + msg.getMessageUuid();
 	}
 	
 	@Override
 	public String getUniqueId(SenderSyncMessage item) {
-		return item.getIdentifier();
+		return item.getEvent().getIdentifier();
 	}
 	
 	@Override
@@ -45,7 +45,7 @@ public class SenderSyncMessageProcessor extends BaseFromCamelToCamelEndpointProc
 	
 	@Override
 	public String getLogicalType(SenderSyncMessage item) {
-		return item.getTableName();
+		return item.getEvent().getTableName();
 	}
 	
 	@Override
