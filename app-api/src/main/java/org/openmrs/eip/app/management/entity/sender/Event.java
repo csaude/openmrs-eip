@@ -1,4 +1,4 @@
-package org.openmrs.eip.component.entity;
+package org.openmrs.eip.app.management.entity.sender;
 
 import java.io.Serializable;
 import java.util.Map;

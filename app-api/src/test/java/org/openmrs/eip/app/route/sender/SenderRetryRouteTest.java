@@ -36,7 +36,7 @@ import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
 import org.openmrs.eip.app.route.TestUtils;
 import org.openmrs.eip.app.sender.SenderConstants;
-import org.openmrs.eip.component.entity.Event;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.exception.EIPException;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;

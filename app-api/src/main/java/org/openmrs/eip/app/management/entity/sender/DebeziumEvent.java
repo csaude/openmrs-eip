@@ -1,7 +1,6 @@
 package org.openmrs.eip.app.management.entity.sender;
 
 import org.openmrs.eip.app.management.entity.AbstractEntity;
-import org.openmrs.eip.component.entity.Event;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;

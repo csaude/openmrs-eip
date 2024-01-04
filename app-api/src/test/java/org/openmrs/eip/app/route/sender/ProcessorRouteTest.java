@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
 import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
-import org.openmrs.eip.component.entity.Event;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;

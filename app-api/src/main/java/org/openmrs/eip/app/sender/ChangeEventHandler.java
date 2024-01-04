@@ -10,7 +10,7 @@ import org.apache.kafka.connect.data.Struct;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
 import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
 import org.openmrs.eip.component.SyncProfiles;
-import org.openmrs.eip.component.entity.Event;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;

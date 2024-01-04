@@ -27,7 +27,7 @@ import org.openmrs.eip.app.management.repository.SenderSyncArchiveRepository;
 import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
 import org.openmrs.eip.app.route.sender.SenderTestUtils;
 import org.openmrs.eip.app.sender.BaseSenderTest;
-import org.openmrs.eip.component.entity.Event;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.PatientModel;
 import org.openmrs.eip.component.model.SyncMetadata;

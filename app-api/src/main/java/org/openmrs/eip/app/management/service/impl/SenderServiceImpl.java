@@ -18,7 +18,7 @@ import org.openmrs.eip.app.management.repository.SenderSyncArchiveRepository;
 import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
 import org.openmrs.eip.app.management.service.SenderService;
 import org.openmrs.eip.component.SyncProfiles;
-import org.openmrs.eip.component.entity.Event;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.model.SyncMetadata;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;

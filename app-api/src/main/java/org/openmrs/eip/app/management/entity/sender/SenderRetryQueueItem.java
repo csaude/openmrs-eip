@@ -3,7 +3,6 @@ package org.openmrs.eip.app.management.entity.sender;
 import java.util.Date;
 
 import org.openmrs.eip.app.management.entity.BaseRetryQueueItem;
-import org.openmrs.eip.component.entity.Event;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;

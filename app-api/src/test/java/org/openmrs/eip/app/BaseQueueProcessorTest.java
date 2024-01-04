@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
-import org.openmrs.eip.component.entity.Event;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.utils.Utils;
 
 public class BaseQueueProcessorTest {

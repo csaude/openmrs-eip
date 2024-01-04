@@ -32,7 +32,7 @@ import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
 import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
 import org.openmrs.eip.app.management.repository.SenderRetryRepository;
 import org.openmrs.eip.app.route.TestUtils;
-import org.openmrs.eip.component.entity.Event;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.exception.EIPException;
 import org.powermock.reflect.Whitebox;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -60,7 +60,7 @@
                         </setProperty>
                         <script>
                             <spel>
-                                #{getProperty('debeziumEvent').setEvent(new org.openmrs.eip.component.entity.Event())}
+                                #{getProperty('debeziumEvent').setEvent(new org.openmrs.eip.app.management.entity.sender.Event())}
                                 #{getProperty('debeziumEvent').event.setPrimaryKeyId(getProperty('reqEntityPrimaryKeyId'))}
                                 #{getProperty('debeziumEvent').event.setTableName(getProperty('syncRequest').tableName)}
                                 #{getProperty('debeziumEvent').event.setIdentifier(getProperty('syncRequest').identifier)}
