@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.camel.ProducerTemplate;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.AbstractEntity;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.SyncContext;
 
 public final class TestUtils {
@@ -54,6 +55,15 @@ public final class TestUtils {
 		}
 		
 		return matches.get(0);
+	}
+	
+	public static Event createEvent(String table, String identifier, String op) {
+		Event event = new Event();
+		event.setTableName(table);
+		event.setIdentifier(identifier);
+		event.setOperation(op);
+		event.setSnapshot(false);
+		return event;
 	}
 	
 }

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.openmrs.eip.app.route.TestUtils;
 import org.springframework.beans.BeanUtils;
 
 public class SenderSyncArchiveTest {
@@ -21,13 +22,12 @@ public class SenderSyncArchiveTest {
 		SenderSyncMessage syncMessage = new SenderSyncMessage();
 		syncMessage.setId(1L);
 		syncMessage.setDateCreated(new Date());
-		syncMessage.setIdentifier("uuid");
-		syncMessage.setTableName("person");
-		syncMessage.setOperation("c");
-		syncMessage.setEventDate(new Date());
-		syncMessage.setSnapshot(true);
+		Event event = TestUtils.createEvent("person", "uuid", "c");
+		event.setDateCreated(new Date());
+		event.setSnapshot(true);
+		event.setRequestUuid("request-uuid");
+		syncMessage.setEvent(event);
 		syncMessage.setMessageUuid("message-uuid");
-		syncMessage.setRequestUuid("request-uuid");
 		syncMessage.markAsSent(LocalDateTime.now());
 		syncMessage.setData("{}");
 		

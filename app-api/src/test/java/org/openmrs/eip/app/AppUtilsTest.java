@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.app.management.service.ConflictService;
 import org.openmrs.eip.app.management.service.impl.ConflictServiceImpl;
 import org.openmrs.eip.app.receiver.ConflictResolution;
@@ -82,24 +82,24 @@ public class AppUtilsTest {
 	
 	@Test
 	public void getFieldValue_shouldGetTheFieldValue() throws Exception {
-		Field field = SenderSyncMessage.class.getDeclaredField("tableName");
+		Field field = Event.class.getDeclaredField("tableName");
 		assertFalse(field.isAccessible());
 		final String tableName = "person";
-		SenderSyncMessage msg = new SenderSyncMessage();
-		msg.setTableName(tableName);
-		assertEquals(tableName, AppUtils.getFieldValue(msg, field));
+		Event event = new Event();
+		event.setTableName(tableName);
+		assertEquals(tableName, AppUtils.getFieldValue(event, field));
 		assertFalse(field.isAccessible());
 	}
 	
 	@Test
 	public void setFieldValue_shouldSetTheFieldValue() throws Exception {
-		Field field = SenderSyncMessage.class.getDeclaredField("tableName");
+		Field field = Event.class.getDeclaredField("tableName");
 		assertFalse(field.isAccessible());
 		final String tableName = "person";
-		SenderSyncMessage msg = new SenderSyncMessage();
-		assertNull(msg.getTableName());
-		AppUtils.setFieldValue(msg, field, tableName);
-		assertEquals(tableName, msg.getTableName());
+		Event event = new Event();
+		assertNull(event.getTableName());
+		AppUtils.setFieldValue(event, field, tableName);
+		assertEquals(tableName, event.getTableName());
 		assertFalse(field.isAccessible());
 	}
 	
