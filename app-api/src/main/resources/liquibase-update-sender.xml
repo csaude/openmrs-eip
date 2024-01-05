@@ -24,4 +24,33 @@
         <addNotNullConstraint columnName="date_created" tableName="sender_retry_queue" columnDataType="DATETIME(3)" />
     </changeSet>
 
+    <changeSet author="wluyima" id="20240105-0831">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="sender_event"/>
+            </not>
+        </preConditions>
+        <comment>Adding sender_event table</comment>
+        <createTable tableName="sender_event">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="table_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="primary_key_id" type="VARCHAR(255)"/>
+            <column name="identifier" type="VARCHAR(255)"/>
+            <column name="operation" type="VARCHAR(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="snapshot" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_uuid" type="VARCHAR(38)" />
+            <column name="date_created" type="DATETIME(3)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>

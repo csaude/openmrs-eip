@@ -12,29 +12,30 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "sender_event_details")
+@Table(name = "sender_event")
 public class Event extends AbstractEntity {
 	
 	private static final long serialVersionUID = 1L;
+	
+	@Column(name = "table_name", nullable = false, updatable = false, length = 100)
+	@NotBlank
+	private String tableName;
+	
+	//The primary key value of the affected row
+	@Column(name = "primary_key_id", updatable = false)
+	@NotBlank
+	private String primaryKeyId;
 	
 	//Unique identifier for the entity usually a uuid or name for an entity like a privilege that has no uuid
 	@Column
 	private String identifier;
 	
-	//The primary key value of the affected row
-	@Column(name = "primary_key_id", nullable = false, updatable = false)
-	private String primaryKeyId;
-	
-	@NotBlank
-	@Column(name = "table_name", nullable = false, updatable = false, length = 100)
-	private String tableName;
-	
-	@NotBlank
 	@Column(nullable = false, updatable = false, length = 1)
+	@NotBlank
 	private String operation;
 	
-	@NotNull
 	@Column(nullable = false, updatable = false)
+	@NotNull
 	private Boolean snapshot = Boolean.FALSE;
 	
 	@Column(name = "request_uuid", updatable = false, length = 38)
