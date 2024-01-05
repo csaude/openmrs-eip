@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
+import org.openmrs.eip.app.route.TestUtils;
 import org.powermock.reflect.Whitebox;
 
 public class SenderSyncMessageProcessorTest {
@@ -36,9 +37,8 @@ public class SenderSyncMessageProcessorTest {
 		final String msgUuid = "msg-uuid";
 		final String uuid = "som-visit-uuid";
 		SenderSyncMessage msg = new SenderSyncMessage();
+		msg.setEvent(TestUtils.createEvent(table, uuid, null));
 		msg.setMessageUuid(msgUuid);
-		msg.setTableName(table);
-		msg.setIdentifier(uuid);
 		assertEquals(table + "-" + uuid + "-" + msgUuid, processor.getThreadName(msg));
 	}
 	
@@ -46,7 +46,7 @@ public class SenderSyncMessageProcessorTest {
 	public void getUniqueId_shouldReturnTheUuid() {
 		final String visitUuid = "som-visit-uuid";
 		SenderSyncMessage msg = new SenderSyncMessage();
-		msg.setIdentifier(visitUuid);
+		msg.setEvent(TestUtils.createEvent(null, visitUuid, null));
 		assertEquals(visitUuid, processor.getUniqueId(msg));
 	}
 	
@@ -54,7 +54,7 @@ public class SenderSyncMessageProcessorTest {
 	public void getLogicalType_shouldReturnTheTableName() {
 		final String table = "visit";
 		SenderSyncMessage msg = new SenderSyncMessage();
-		msg.setTableName(table);
+		msg.setEvent(TestUtils.createEvent(table, null, null));
 		assertEquals(table, processor.getLogicalType(msg));
 	}
 	

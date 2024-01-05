@@ -85,13 +85,12 @@ public class SenderResponseProcessorRouteTest extends BaseSenderRouteTest {
 		List<SenderSyncArchive> archives = archiveRepo.findAll();
 		assertEquals(1, archives.size());
 		SenderSyncArchive archive = archives.get(0);
-		assertEquals(msg.getIdentifier(), archive.getIdentifier());
-		assertEquals(msg.getTableName(), archive.getTableName());
-		assertEquals(msg.getOperation(), archive.getOperation());
-		assertEquals(msg.getEventDate(), archive.getEventDate());
-		assertEquals(msg.getSnapshot(), archive.getSnapshot());
+		assertEquals(msg.getEvent().getIdentifier(), archive.getIdentifier());
+		assertEquals(msg.getEvent().getTableName(), archive.getTableName());
+		assertEquals(msg.getEvent().getOperation(), archive.getOperation());
+		assertEquals(msg.getEvent().getDateCreated(), archive.getEventDate());
+		assertEquals(msg.getEvent().getSnapshot(), archive.getSnapshot());
 		assertEquals(msg.getMessageUuid(), archive.getMessageUuid());
-		assertEquals(msg.getRequestUuid(), archive.getRequestUuid());
 		assertEquals(msg.getDateSent(), archive.getDateSent());
 		assertEquals(response.getDateReceivedByReceiver(), archive.getDateReceivedByReceiver());
 		assertNotNull(msg.getDateCreated());
