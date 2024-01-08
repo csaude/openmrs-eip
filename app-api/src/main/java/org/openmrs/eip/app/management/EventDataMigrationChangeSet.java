@@ -1,5 +1,7 @@
 package org.openmrs.eip.app.management;
 
+import static org.apache.commons.lang3.StringUtils.replace;
+
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,6 +29,11 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 	private static final String TABLE = "sender_event";
 	
 	private static final String SOURCE_TABLE_PLACEHOLDER = "$sourceTable";
+	
+	private static final String SOURCE_COLUMNS_PLACEHOLDER = "$sourceColumns";
+	
+	private static final String SELECT_QUERY_TEMPLATE = "SELECT " + SOURCE_COLUMNS_PLACEHOLDER + " FROM "
+	        + SOURCE_TABLE_PLACEHOLDER + " WHERE event_id IS NULL LIMIT 100";
 	
 	private static final String INSERT_QUERY = "INSERT INTO " + TABLE
 	        + " (table_name,identifier,operation,snapshot,request_uuid,primary_key_id,date_created) VALUES(?,?,?,?,?,?,?)";
@@ -82,8 +89,9 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 			columns.add("primary_key_id");
 		}
 		
-		selectQuery = "SELECT " + StringUtils.join(columns, ",") + " FROM " + sourceTable + " LIMIT 100";
-		updateQuery = StringUtils.replace(UPDATE_QUERY_TEMPLATE, SOURCE_TABLE_PLACEHOLDER, sourceTable);
+		selectQuery = replace(SELECT_QUERY_TEMPLATE, SOURCE_COLUMNS_PLACEHOLDER, StringUtils.join(columns, ","));
+		selectQuery = replace(selectQuery, SOURCE_TABLE_PLACEHOLDER, sourceTable);
+		updateQuery = replace(UPDATE_QUERY_TEMPLATE, SOURCE_TABLE_PLACEHOLDER, sourceTable);
 		try {
 			int migrationCount = 0;
 			List<Event> events = getNextBatch(getConnection(database));
