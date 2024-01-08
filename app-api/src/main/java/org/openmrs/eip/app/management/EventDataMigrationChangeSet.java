@@ -1,5 +1,6 @@
 package org.openmrs.eip.app.management;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -28,12 +29,14 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 	private static final String SOURCE_TABLE_PLACEHOLDER = "$sourceTable";
 	
 	private static final String INSERT_QUERY = "INSERT INTO " + TABLE
-	        + " (table_name,identifier,operation,snapshot,request_uuid,primary_key_id) VALUES(?,?,?,?,?,?)";
+	        + " (table_name,identifier,operation,snapshot,request_uuid,primary_key_id,date_created) VALUES(?,?,?,?,?,?,?)";
 	
 	private static final String UPDATE_QUERY_TEMPLATE = "UPDATE " + SOURCE_TABLE_PLACEHOLDER
 	        + " SET event_id = ? WHERE id = ?";
 	
 	private String sourceTable;
+	
+	private String dateCreatedSourceColumn;
 	
 	private boolean hasPrimaryKeyColumn = false;
 	
@@ -51,6 +54,15 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 	}
 	
 	/**
+	 * Sets the dateCreatedSourceColumn
+	 *
+	 * @param dateCreatedSourceColumn the dateCreatedSourceColumn to set
+	 */
+	public void setDateCreatedSourceColumn(String dateCreatedSourceColumn) {
+		this.dateCreatedSourceColumn = dateCreatedSourceColumn;
+	}
+	
+	/**
 	 * Sets the hasPrimaryKeyColumn
 	 *
 	 * @param hasPrimaryKeyColumn the hasPrimaryKeyColumn to set
@@ -65,6 +77,7 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 		
 		List<String> columns = new ArrayList<>(
 		        List.of("id", "table_name", "identifier", "operation", "snapshot", "request_uuid"));
+		columns.add(dateCreatedSourceColumn);
 		if (hasPrimaryKeyColumn) {
 			columns.add("primary_key_id");
 		}
@@ -111,6 +124,7 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 			insertStmt.setBoolean(4, event.getSnapshot());
 			insertStmt.setString(5, event.getRequestUuid());
 			insertStmt.setString(6, event.getPrimaryKeyId());
+			insertStmt.setDate(7, new Date(event.getDateCreated().getTime()));
 			int insertCount = insertStmt.executeUpdate();
 			if (insertCount != 1) {
 				throw new CustomChangeException("Failed to insert row into " + TABLE + " associated to the item with id: "
@@ -166,8 +180,9 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 				event.setOperation(rs.getString(4));
 				event.setSnapshot(rs.getBoolean(5));
 				event.setRequestUuid(rs.getString(6));
+				event.setDateCreated(rs.getDate(7));
 				if (hasPrimaryKeyColumn) {
-					event.setPrimaryKeyId(rs.getString(7));
+					event.setPrimaryKeyId(rs.getString(8));
 				}
 				events.add(event);
 			}
