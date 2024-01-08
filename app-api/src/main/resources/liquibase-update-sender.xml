@@ -53,4 +53,114 @@
         </createTable>
     </changeSet>
 
+    <changeSet author="wluyima" id="20240108-0831">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="event_id" tableName="debezium_event_queue"/>
+            </not>
+        </preConditions>
+        <comment>Add event_id column to debezium_event_queue table</comment>
+        <addColumn tableName="debezium_event_queue">
+            <column name="event_id" type="BIGINT">
+                <constraints unique="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240108-0832">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="event_id" tableName="sender_retry_queue"/>
+            </not>
+        </preConditions>
+        <comment>Add event_id column to sender_retry_queue table</comment>
+        <addColumn tableName="sender_retry_queue">
+            <column name="event_id" type="BIGINT">
+                <constraints unique="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240108-0833">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="event_id" tableName="sender_sync_message"/>
+            </not>
+        </preConditions>
+        <comment>Add event_id column to sender_sync_message table</comment>
+        <addColumn tableName="sender_sync_message">
+            <column name="event_id" type="BIGINT">
+                <constraints unique="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240108-0834">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableIsEmpty tableName="debezium_event_queue"/>
+            </not>
+        </preConditions>
+        <comment>Migrating event data from debezium_event_queue to sender_event table</comment>
+        <customChange class="org.openmrs.eip.app.management.EventDataMigrationChangeSet">
+            <param name="sourceTable" value="debezium_event_queue"/>
+            <param name="dateCreatedSourceColumn" value="date_created"/>
+            <param name="hasPrimaryKeyColumn" value="true"/>
+        </customChange>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240108-0835">
+        <preConditions onFail="MARK_RAN">
+            <columnExists columnName="event_id" tableName="debezium_event_queue" />
+        </preConditions>
+        <comment>Adding not null constraint to debezium_event_queue.event_id column</comment>
+
+        <addNotNullConstraint columnName="event_id" tableName="debezium_event_queue" columnDataType="BIGINT" />
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240108-0836">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableIsEmpty tableName="sender_retry_queue"/>
+            </not>
+        </preConditions>
+        <comment>Migrating event data from sender_retry_queue to sender_event table</comment>
+        <customChange class="org.openmrs.eip.app.management.EventDataMigrationChangeSet">
+            <param name="sourceTable" value="sender_retry_queue"/>
+            <param name="dateCreatedSourceColumn" value="event_date"/>
+            <param name="hasPrimaryKeyColumn" value="true"/>
+        </customChange>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240108-0837">
+        <preConditions onFail="MARK_RAN">
+            <columnExists columnName="event_id" tableName="sender_retry_queue" />
+        </preConditions>
+        <comment>Adding not null constraint to sender_retry_queue.event_id column</comment>
+
+        <addNotNullConstraint columnName="event_id" tableName="sender_retry_queue" columnDataType="BIGINT" />
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240108-0838">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableIsEmpty tableName="sender_sync_message"/>
+            </not>
+        </preConditions>
+        <comment>Migrating event data from sender_sync_message to sender_event table</comment>
+        <customChange class="org.openmrs.eip.app.management.EventDataMigrationChangeSet">
+            <param name="sourceTable" value="sender_sync_message"/>
+            <param name="dateCreatedSourceColumn" value="event_date"/>
+        </customChange>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240108-0839">
+        <preConditions onFail="MARK_RAN">
+            <columnExists columnName="event_id" tableName="sender_sync_message" />
+        </preConditions>
+        <comment>Adding not null constraint to sender_sync_message.event_id column</comment>
+
+        <addNotNullConstraint columnName="event_id" tableName="sender_sync_message" columnDataType="BIGINT" />
+    </changeSet>
+
 </databaseChangeLog>

@@ -2,10 +2,10 @@ package org.openmrs.eip.app.management;
 
 import static org.apache.commons.lang3.StringUtils.replace;
 
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -132,7 +132,7 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 			insertStmt.setBoolean(4, event.getSnapshot());
 			insertStmt.setString(5, event.getRequestUuid());
 			insertStmt.setString(6, event.getPrimaryKeyId());
-			insertStmt.setDate(7, new Date(event.getDateCreated().getTime()));
+			insertStmt.setTimestamp(7, new Timestamp(event.getDateCreated().getTime()));
 			int insertCount = insertStmt.executeUpdate();
 			if (insertCount != 1) {
 				throw new CustomChangeException("Failed to insert row into " + TABLE + " associated to the item with id: "
@@ -188,7 +188,7 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 				event.setOperation(rs.getString(4));
 				event.setSnapshot(rs.getBoolean(5));
 				event.setRequestUuid(rs.getString(6));
-				event.setDateCreated(rs.getDate(7));
+				event.setDateCreated(rs.getTimestamp(7));
 				if (hasPrimaryKeyColumn) {
 					event.setPrimaryKeyId(rs.getString(8));
 				}
