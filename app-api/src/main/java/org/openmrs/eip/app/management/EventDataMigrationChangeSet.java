@@ -19,9 +19,9 @@ import liquibase.exception.SetupException;
 import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
 
-public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
+public class EventDataMigrationChangeSet implements CustomTaskChange {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(BaseItemMigrationChangeSet.class);
+	private static final Logger LOG = LoggerFactory.getLogger(EventDataMigrationChangeSet.class);
 	
 	private static final String TABLE = "sender_event";
 	
@@ -35,7 +35,7 @@ public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
 	
 	private String sourceTable;
 	
-	private boolean includePrimaryKey;
+	private boolean hasPrimaryKeyColumn = false;
 	
 	private String selectQuery;
 	
@@ -51,12 +51,12 @@ public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
 	}
 	
 	/**
-	 * Sets the includePrimaryKey
+	 * Sets the hasPrimaryKeyColumn
 	 *
-	 * @param includePrimaryKey the includePrimaryKey to set
+	 * @param hasPrimaryKeyColumn the hasPrimaryKeyColumn to set
 	 */
-	public void setIncludePrimaryKey(boolean includePrimaryKey) {
-		this.includePrimaryKey = includePrimaryKey;
+	public void setHasPrimaryKeyColumn(boolean hasPrimaryKeyColumn) {
+		this.hasPrimaryKeyColumn = hasPrimaryKeyColumn;
 	}
 	
 	@Override
@@ -65,11 +65,11 @@ public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
 		
 		List<String> columns = new ArrayList<>(
 		        List.of("id", "table_name", "identifier", "operation", "snapshot", "request_uuid"));
-		if (includePrimaryKey) {
+		if (hasPrimaryKeyColumn) {
 			columns.add("primary_key_id");
 		}
 		
-		selectQuery = "SELECT " + StringUtils.join(columns, ",") + " FROM LIMIT 100" + sourceTable;
+		selectQuery = "SELECT " + StringUtils.join(columns, ",") + " FROM " + sourceTable + " LIMIT 100";
 		updateQuery = StringUtils.replace(UPDATE_QUERY_TEMPLATE, SOURCE_TABLE_PLACEHOLDER, sourceTable);
 		try {
 			int migrationCount = 0;
@@ -166,7 +166,7 @@ public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
 				event.setOperation(rs.getString(4));
 				event.setSnapshot(rs.getBoolean(5));
 				event.setRequestUuid(rs.getString(6));
-				if (includePrimaryKey) {
+				if (hasPrimaryKeyColumn) {
 					event.setPrimaryKeyId(rs.getString(7));
 				}
 				events.add(event);
