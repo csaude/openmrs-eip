@@ -30,13 +30,34 @@ public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
 	private static final String INSERT_QUERY = "INSERT INTO " + TABLE
 	        + " (table_name,identifier,operation,snapshot,request_uuid,primary_key_id) VALUES(?,?,?,?,?,?)";
 	
-	private static final String UPDATE_QUERY = "UPDATE " + SOURCE_TABLE_PLACEHOLDER + " SET event_id = ? WHERE id = ?";
+	private static final String UPDATE_QUERY_TEMPLATE = "UPDATE " + SOURCE_TABLE_PLACEHOLDER
+	        + " SET event_id = ? WHERE id = ?";
 	
 	private String sourceTable;
 	
 	private boolean includePrimaryKey;
 	
-	private String query;
+	private String selectQuery;
+	
+	private String updateQuery;
+	
+	/**
+	 * Sets the sourceTable
+	 *
+	 * @param sourceTable the sourceTable to set
+	 */
+	public void setSourceTable(String sourceTable) {
+		this.sourceTable = sourceTable;
+	}
+	
+	/**
+	 * Sets the includePrimaryKey
+	 *
+	 * @param includePrimaryKey the includePrimaryKey to set
+	 */
+	public void setIncludePrimaryKey(boolean includePrimaryKey) {
+		this.includePrimaryKey = includePrimaryKey;
+	}
 	
 	@Override
 	public void execute(Database database) throws CustomChangeException {
@@ -48,7 +69,8 @@ public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
 			columns.add("primary_key_id");
 		}
 		
-		query = "SELECT " + StringUtils.join(columns, ",") + " FROM LIMIT 100" + sourceTable;
+		selectQuery = "SELECT " + StringUtils.join(columns, ",") + " FROM LIMIT 100" + sourceTable;
+		updateQuery = StringUtils.replace(UPDATE_QUERY_TEMPLATE, SOURCE_TABLE_PLACEHOLDER, sourceTable);
 		try {
 			int migrationCount = 0;
 			List<Event> events = getNextBatch(getConnection(database));
@@ -79,7 +101,7 @@ public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
 		
 		boolean commit = connection.getAutoCommit();
 		try (PreparedStatement insertStmt = connection.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
-		        PreparedStatement updateStmt = connection.prepareStatement(UPDATE_QUERY)) {
+		        PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
 			
 			connection.setAutoCommit(false);
 			
@@ -135,7 +157,7 @@ public abstract class BaseItemMigrationChangeSet implements CustomTaskChange {
 	
 	private List<Event> getNextBatch(JdbcConnection connection) throws Exception {
 		List<Event> events = new ArrayList<>();
-		try (Statement s = connection.createStatement(); ResultSet rs = s.executeQuery(query)) {
+		try (Statement s = connection.createStatement(); ResultSet rs = s.executeQuery(selectQuery)) {
 			while (rs.next()) {
 				Event event = new Event();
 				event.setId(rs.getLong(1));
