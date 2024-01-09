@@ -46,6 +46,7 @@
             <column name="snapshot" type="BOOLEAN">
                 <constraints nullable="false"/>
             </column>
+            <column name="event_date" type="DATETIME(3)"/>
             <column name="request_uuid" type="VARCHAR(38)"/>
             <column name="date_created" type="DATETIME(3)">
                 <constraints nullable="false"/>
@@ -122,7 +123,7 @@
         <comment>Migrating event data from debezium_event_queue to sender_event table</comment>
         <customChange class="org.openmrs.eip.app.management.EventDataMigrationChangeSet">
             <param name="sourceTable" value="debezium_event_queue"/>
-            <param name="dateCreatedSourceColumn" value="date_created"/>
+            <param name="eventDateSourceColumn" value="date_created"/>
             <param name="hasPrimaryKeyColumn" value="true"/>
         </customChange>
     </changeSet>
@@ -144,7 +145,7 @@
         <comment>Migrating event data from sender_retry_queue to sender_event table</comment>
         <customChange class="org.openmrs.eip.app.management.EventDataMigrationChangeSet">
             <param name="sourceTable" value="sender_retry_queue"/>
-            <param name="dateCreatedSourceColumn" value="event_date"/>
+            <param name="eventDateSourceColumn" value="event_date"/>
             <param name="hasPrimaryKeyColumn" value="true"/>
         </customChange>
     </changeSet>
@@ -166,7 +167,7 @@
         <comment>Migrating event data from sender_sync_message to sender_event table</comment>
         <customChange class="org.openmrs.eip.app.management.EventDataMigrationChangeSet">
             <param name="sourceTable" value="sender_sync_message"/>
-            <param name="dateCreatedSourceColumn" value="event_date"/>
+            <param name="eventDateSourceColumn" value="event_date"/>
         </customChange>
     </changeSet>
 

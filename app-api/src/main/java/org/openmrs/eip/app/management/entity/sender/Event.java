@@ -1,5 +1,6 @@
 package org.openmrs.eip.app.management.entity.sender;
 
+import java.util.Date;
 import java.util.Map;
 
 import org.openmrs.eip.app.management.entity.AbstractEntity;
@@ -10,6 +11,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "sender_event")
@@ -37,6 +40,11 @@ public class Event extends AbstractEntity {
 	@Column(nullable = false, updatable = false)
 	@NotNull
 	private Boolean snapshot = Boolean.FALSE;
+	
+	@Column(name = "event_date", updatable = false)
+	@Getter
+	@Setter
+	private Date eventDate;
 	
 	@Column(name = "request_uuid", updatable = false, length = 38)
 	private String requestUuid;

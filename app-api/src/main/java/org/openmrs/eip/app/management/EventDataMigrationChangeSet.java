@@ -36,14 +36,14 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 	        + SOURCE_TABLE_PLACEHOLDER + " WHERE event_id IS NULL LIMIT 100";
 	
 	private static final String INSERT_QUERY = "INSERT INTO " + TABLE
-	        + " (table_name,identifier,operation,snapshot,request_uuid,primary_key_id,date_created) VALUES(?,?,?,?,?,?,?)";
+	        + " (table_name,identifier,operation,snapshot,request_uuid,primary_key_id,event_date,date_created) VALUES(?,?,?,?,?,?,?,now())";
 	
 	private static final String UPDATE_QUERY_TEMPLATE = "UPDATE " + SOURCE_TABLE_PLACEHOLDER
 	        + " SET event_id = ? WHERE id = ?";
 	
 	private String sourceTable;
 	
-	private String dateCreatedSourceColumn;
+	private String eventDateSourceColumn;
 	
 	private boolean hasPrimaryKeyColumn = false;
 	
@@ -61,12 +61,12 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 	}
 	
 	/**
-	 * Sets the dateCreatedSourceColumn
+	 * Sets the eventDateSourceColumn
 	 *
-	 * @param dateCreatedSourceColumn the dateCreatedSourceColumn to set
+	 * @param eventDateSourceColumn the eventDateSourceColumn to set
 	 */
-	public void setDateCreatedSourceColumn(String dateCreatedSourceColumn) {
-		this.dateCreatedSourceColumn = dateCreatedSourceColumn;
+	public void setEventDateSourceColumn(String eventDateSourceColumn) {
+		this.eventDateSourceColumn = eventDateSourceColumn;
 	}
 	
 	/**
@@ -84,7 +84,7 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 		
 		List<String> columns = new ArrayList<>(
 		        List.of("id", "table_name", "identifier", "operation", "snapshot", "request_uuid"));
-		columns.add(dateCreatedSourceColumn);
+		columns.add(eventDateSourceColumn);
 		if (hasPrimaryKeyColumn) {
 			columns.add("primary_key_id");
 		}
@@ -188,7 +188,7 @@ public class EventDataMigrationChangeSet implements CustomTaskChange {
 				event.setOperation(rs.getString(4));
 				event.setSnapshot(rs.getBoolean(5));
 				event.setRequestUuid(rs.getString(6));
-				event.setDateCreated(rs.getTimestamp(7));
+				event.setEventDate(rs.getTimestamp(7));
 				if (hasPrimaryKeyColumn) {
 					event.setPrimaryKeyId(rs.getString(8));
 				}
