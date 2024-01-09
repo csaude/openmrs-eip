@@ -190,7 +190,7 @@
             </or>
         </preConditions>
         <comment>
-            Removing table_name, identifier, operation, snapshot, request_uuid, primary_key_id columns from
+            Removing table_name, identifier, operation, snapshot, primary_key_id, request_uuid columns from
             debezium_event_queue table
         </comment>
         <dropColumn tableName="debezium_event_queue">
@@ -198,8 +198,8 @@
             <column name="identifier"/>
             <column name="operation"/>
             <column name="snapshot"/>
-            <column name="request_uuid"/>
             <column name="primary_key_id"/>
+            <column name="request_uuid"/>
         </dropColumn>
     </changeSet>
 
@@ -215,7 +215,7 @@
             </or>
         </preConditions>
         <comment>
-            Removing table_name, identifier, operation, snapshot, request_uuid, primary_key_id columns from
+            Removing table_name, identifier, operation, snapshot, primary_key_id, request_uuid, event_date columns from
             sender_retry_queue table
         </comment>
         <dropColumn tableName="sender_retry_queue">
@@ -223,8 +223,9 @@
             <column name="identifier"/>
             <column name="operation"/>
             <column name="snapshot"/>
-            <column name="request_uuid"/>
             <column name="primary_key_id"/>
+            <column name="request_uuid"/>
+            <column name="event_date"/>
         </dropColumn>
     </changeSet>
 
@@ -239,7 +240,7 @@
             </or>
         </preConditions>
         <comment>
-            Removing table_name, identifier, operation, snapshot, request_uuid, primary_key_id columns from
+            Removing table_name, identifier, operation, snapshot, event_date, request_uuid columns from
             sender_sync_message table
         </comment>
         <dropColumn tableName="sender_sync_message">
@@ -247,6 +248,7 @@
             <column name="identifier"/>
             <column name="operation"/>
             <column name="snapshot"/>
+            <column name="event_date"/>
             <column name="request_uuid"/>
         </dropColumn>
     </changeSet>
