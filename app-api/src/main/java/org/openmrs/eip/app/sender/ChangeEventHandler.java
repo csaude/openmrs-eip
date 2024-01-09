@@ -8,9 +8,9 @@ import org.apache.camel.Message;
 import org.apache.camel.component.debezium.DebeziumConstants;
 import org.apache.kafka.connect.data.Struct;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
 import org.openmrs.eip.component.SyncProfiles;
-import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
@@ -72,11 +72,14 @@ public class ChangeEventHandler {
 			return;
 		}
 		
+		Date eventDate = new Date();
 		Event event = new Event();
 		event.setTableName(tableName);
 		event.setPrimaryKeyId(id);
 		event.setOperation(op);
 		event.setSnapshot(snapshot);
+		event.setEventDate(eventDate);
+		event.setDateCreated(eventDate);
 		if (!isSubclassTable) {
 			String uuid;
 			if (op.equals("d")) {
@@ -90,7 +93,7 @@ public class ChangeEventHandler {
 		
 		DebeziumEvent debeziumEvent = new DebeziumEvent();
 		debeziumEvent.setEvent(event);
-		debeziumEvent.setDateCreated(new Date());
+		debeziumEvent.setDateCreated(eventDate);
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Saving debezium event to event queue: " + debeziumEvent);

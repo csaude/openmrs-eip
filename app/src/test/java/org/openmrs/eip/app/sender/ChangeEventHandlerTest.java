@@ -27,6 +27,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.openmrs.eip.app.CustomFileOffsetBackingStore;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
 import org.openmrs.eip.component.exception.EIPException;
 import org.powermock.api.mockito.PowerMockito;
@@ -55,10 +56,6 @@ public class ChangeEventHandlerTest {
 		PowerMockito.mockStatic(CustomFileOffsetBackingStore.class);
 		handler = new ChangeEventHandler(mockRepository);
 		Whitebox.setInternalState(ChangeEventHandler.class, Logger.class, mockLogger);
-	}
-	
-	private Exchange createExchange(int index, String snapshot, String table) {
-		return null;
 	}
 	
 	@Test
@@ -110,11 +107,11 @@ public class ChangeEventHandlerTest {
 		
 		verify(mockRepository).save(argThat(dbzmEvent -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && uuid.equals(dbzmEvent.getEvent().getIdentifier())
-				        && "s".equals(dbzmEvent.getEvent().getOperation()) && dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getDateCreated() != null;
+				Event e = dbzmEvent.getEvent();
+				return tableName.equals(e.getTableName()) && id.equals(e.getPrimaryKeyId()) && uuid.equals(e.getIdentifier())
+				        && "s".equals(e.getOperation()) && e.getSnapshot() && e.getDateCreated() != null
+				        && e.getDateCreated().equals(e.getEventDate())
+				        && e.getDateCreated().equals(dbzmEvent.getDateCreated());
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
@@ -143,11 +140,11 @@ public class ChangeEventHandlerTest {
 		
 		verify(mockRepository).save(argThat(dbzmEvent -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && uuid.equals(dbzmEvent.getEvent().getIdentifier())
-				        && op.equals(dbzmEvent.getEvent().getOperation()) && !dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getDateCreated() != null;
+				Event e = dbzmEvent.getEvent();
+				return tableName.equals(e.getTableName()) && id.equals(e.getPrimaryKeyId()) && uuid.equals(e.getIdentifier())
+				        && op.equals(e.getOperation()) && !e.getSnapshot() && e.getDateCreated() != null
+				        && e.getDateCreated().equals(e.getEventDate())
+				        && e.getDateCreated().equals(dbzmEvent.getDateCreated());
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
@@ -176,11 +173,11 @@ public class ChangeEventHandlerTest {
 		
 		verify(mockRepository).save(argThat(dbzmEvent -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && uuid.equals(dbzmEvent.getEvent().getIdentifier())
-				        && op.equals(dbzmEvent.getEvent().getOperation()) && !dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getDateCreated() != null;
+				Event e = dbzmEvent.getEvent();
+				return tableName.equals(e.getTableName()) && id.equals(e.getPrimaryKeyId()) && uuid.equals(e.getIdentifier())
+				        && op.equals(e.getOperation()) && !e.getSnapshot() && e.getDateCreated() != null
+				        && e.getDateCreated().equals(e.getEventDate())
+				        && e.getDateCreated().equals(dbzmEvent.getDateCreated());
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
@@ -209,11 +206,11 @@ public class ChangeEventHandlerTest {
 		
 		verify(mockRepository).save(argThat(dbzmEvent -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && uuid.equals(dbzmEvent.getEvent().getIdentifier())
-				        && op.equals(dbzmEvent.getEvent().getOperation()) && !dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getDateCreated() != null;
+				Event e = dbzmEvent.getEvent();
+				return tableName.equals(e.getTableName()) && id.equals(e.getPrimaryKeyId()) && uuid.equals(e.getIdentifier())
+				        && op.equals(e.getOperation()) && !e.getSnapshot() && e.getDateCreated() != null
+				        && e.getDateCreated().equals(e.getEventDate())
+				        && e.getDateCreated().equals(dbzmEvent.getDateCreated());
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
@@ -235,10 +232,11 @@ public class ChangeEventHandlerTest {
 		
 		verify(mockRepository).save(argThat(dbzmEvent -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && op.equals(dbzmEvent.getEvent().getOperation()) && !dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getEvent().getIdentifier() == null && dbzmEvent.getDateCreated() != null;
+				Event e = dbzmEvent.getEvent();
+				return tableName.equals(e.getTableName()) && id.equals(e.getPrimaryKeyId()) && op.equals(e.getOperation())
+				        && !e.getSnapshot() && e.getIdentifier() == null && e.getDateCreated() != null
+				        && e.getDateCreated().equals(e.getEventDate())
+				        && e.getDateCreated().equals(dbzmEvent.getDateCreated());
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
