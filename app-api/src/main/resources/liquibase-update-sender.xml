@@ -8,20 +8,20 @@
 
     <changeSet author="wluyima" id="20240102-1945">
         <preConditions onFail="MARK_RAN">
-            <columnExists columnName="date_created" tableName="debezium_event_queue" />
+            <columnExists columnName="date_created" tableName="debezium_event_queue"/>
         </preConditions>
         <comment>Adding not null constraint to debezium_event_queue.date_created column</comment>
 
-        <addNotNullConstraint columnName="date_created" tableName="debezium_event_queue" columnDataType="DATETIME(3)" />
+        <addNotNullConstraint columnName="date_created" tableName="debezium_event_queue" columnDataType="DATETIME(3)"/>
     </changeSet>
 
     <changeSet author="wluyima" id="20240102-1946">
         <preConditions onFail="MARK_RAN">
-            <columnExists columnName="date_created" tableName="sender_retry_queue" />
+            <columnExists columnName="date_created" tableName="sender_retry_queue"/>
         </preConditions>
         <comment>Adding not null constraint to sender_retry_queue.date_created column</comment>
 
-        <addNotNullConstraint columnName="date_created" tableName="sender_retry_queue" columnDataType="DATETIME(3)" />
+        <addNotNullConstraint columnName="date_created" tableName="sender_retry_queue" columnDataType="DATETIME(3)"/>
     </changeSet>
 
     <changeSet author="wluyima" id="20240105-0831">
@@ -46,7 +46,7 @@
             <column name="snapshot" type="BOOLEAN">
                 <constraints nullable="false"/>
             </column>
-            <column name="request_uuid" type="VARCHAR(38)" />
+            <column name="request_uuid" type="VARCHAR(38)"/>
             <column name="date_created" type="DATETIME(3)">
                 <constraints nullable="false"/>
             </column>
@@ -70,7 +70,7 @@
                                  baseTableName="debezium_event_queue"
                                  baseColumnNames="event_id"
                                  referencedTableName="sender_event"
-                                 referencedColumnNames="id" />
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet author="wluyima" id="20240108-0832">
@@ -90,7 +90,7 @@
                                  baseTableName="sender_retry_queue"
                                  baseColumnNames="event_id"
                                  referencedTableName="sender_event"
-                                 referencedColumnNames="id" />
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet author="wluyima" id="20240108-0833">
@@ -110,7 +110,7 @@
                                  baseTableName="sender_sync_message"
                                  baseColumnNames="event_id"
                                  referencedTableName="sender_event"
-                                 referencedColumnNames="id" />
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet author="wluyima" id="20240108-0834">
@@ -129,10 +129,10 @@
 
     <changeSet author="wluyima" id="20240108-0835">
         <preConditions onFail="MARK_RAN">
-            <columnExists columnName="event_id" tableName="debezium_event_queue" />
+            <columnExists columnName="event_id" tableName="debezium_event_queue"/>
         </preConditions>
         <comment>Adding not null constraint to debezium_event_queue.event_id column</comment>
-        <addNotNullConstraint columnName="event_id" tableName="debezium_event_queue" columnDataType="BIGINT" />
+        <addNotNullConstraint columnName="event_id" tableName="debezium_event_queue" columnDataType="BIGINT"/>
     </changeSet>
 
     <changeSet author="wluyima" id="20240108-0836">
@@ -151,10 +151,10 @@
 
     <changeSet author="wluyima" id="20240108-0837">
         <preConditions onFail="MARK_RAN">
-            <columnExists columnName="event_id" tableName="sender_retry_queue" />
+            <columnExists columnName="event_id" tableName="sender_retry_queue"/>
         </preConditions>
         <comment>Adding not null constraint to sender_retry_queue.event_id column</comment>
-        <addNotNullConstraint columnName="event_id" tableName="sender_retry_queue" columnDataType="BIGINT" />
+        <addNotNullConstraint columnName="event_id" tableName="sender_retry_queue" columnDataType="BIGINT"/>
     </changeSet>
 
     <changeSet author="wluyima" id="20240108-0838">
@@ -172,10 +172,83 @@
 
     <changeSet author="wluyima" id="20240108-0839">
         <preConditions onFail="MARK_RAN">
-            <columnExists columnName="event_id" tableName="sender_sync_message" />
+            <columnExists columnName="event_id" tableName="sender_sync_message"/>
         </preConditions>
         <comment>Adding not null constraint to sender_sync_message.event_id column</comment>
-        <addNotNullConstraint columnName="event_id" tableName="sender_sync_message" columnDataType="BIGINT" />
+        <addNotNullConstraint columnName="event_id" tableName="sender_sync_message" columnDataType="BIGINT"/>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240109-0901">
+        <preConditions onFail="MARK_RAN">
+            <or>
+                <columnExists columnName="table_name" tableName="debezium_event_queue"/>
+                <columnExists columnName="identifier" tableName="debezium_event_queue"/>
+                <columnExists columnName="operation" tableName="debezium_event_queue"/>
+                <columnExists columnName="snapshot" tableName="debezium_event_queue"/>
+                <columnExists columnName="request_uuid" tableName="debezium_event_queue"/>
+                <columnExists columnName="primary_key_id" tableName="debezium_event_queue"/>
+            </or>
+        </preConditions>
+        <comment>
+            Removing table_name, identifier, operation, snapshot, request_uuid, primary_key_id columns from
+            debezium_event_queue table
+        </comment>
+        <dropColumn tableName="debezium_event_queue">
+            <column name="table_name"/>
+            <column name="identifier"/>
+            <column name="operation"/>
+            <column name="snapshot"/>
+            <column name="request_uuid"/>
+            <column name="primary_key_id"/>
+        </dropColumn>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240109-0902">
+        <preConditions onFail="MARK_RAN">
+            <or>
+                <columnExists columnName="table_name" tableName="sender_retry_queue"/>
+                <columnExists columnName="identifier" tableName="sender_retry_queue"/>
+                <columnExists columnName="operation" tableName="sender_retry_queue"/>
+                <columnExists columnName="snapshot" tableName="sender_retry_queue"/>
+                <columnExists columnName="request_uuid" tableName="sender_retry_queue"/>
+                <columnExists columnName="primary_key_id" tableName="sender_retry_queue"/>
+            </or>
+        </preConditions>
+        <comment>
+            Removing table_name, identifier, operation, snapshot, request_uuid, primary_key_id columns from
+            sender_retry_queue table
+        </comment>
+        <dropColumn tableName="sender_retry_queue">
+            <column name="table_name"/>
+            <column name="identifier"/>
+            <column name="operation"/>
+            <column name="snapshot"/>
+            <column name="request_uuid"/>
+            <column name="primary_key_id"/>
+        </dropColumn>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240109-0903">
+        <preConditions onFail="MARK_RAN">
+            <or>
+                <columnExists columnName="table_name" tableName="sender_sync_message"/>
+                <columnExists columnName="identifier" tableName="sender_sync_message"/>
+                <columnExists columnName="operation" tableName="sender_sync_message"/>
+                <columnExists columnName="snapshot" tableName="sender_sync_message"/>
+                <columnExists columnName="request_uuid" tableName="sender_sync_message"/>
+            </or>
+        </preConditions>
+        <comment>
+            Removing table_name, identifier, operation, snapshot, request_uuid, primary_key_id columns from
+            sender_sync_message table
+        </comment>
+        <dropColumn tableName="sender_sync_message">
+            <column name="table_name"/>
+            <column name="identifier"/>
+            <column name="operation"/>
+            <column name="snapshot"/>
+            <column name="request_uuid"/>
+        </dropColumn>
     </changeSet>
 
 </databaseChangeLog>
