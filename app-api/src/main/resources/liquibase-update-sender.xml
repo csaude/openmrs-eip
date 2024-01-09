@@ -65,6 +65,12 @@
                 <constraints unique="true"/>
             </column>
         </addColumn>
+
+        <addForeignKeyConstraint constraintName="debezium_event_queue_event_fk"
+                                 baseTableName="debezium_event_queue"
+                                 baseColumnNames="event_id"
+                                 referencedTableName="sender_event"
+                                 referencedColumnNames="id" />
     </changeSet>
 
     <changeSet author="wluyima" id="20240108-0832">
@@ -79,6 +85,12 @@
                 <constraints unique="true"/>
             </column>
         </addColumn>
+
+        <addForeignKeyConstraint constraintName="sender_retry_queue_event_fk"
+                                 baseTableName="sender_retry_queue"
+                                 baseColumnNames="event_id"
+                                 referencedTableName="sender_event"
+                                 referencedColumnNames="id" />
     </changeSet>
 
     <changeSet author="wluyima" id="20240108-0833">
@@ -93,6 +105,12 @@
                 <constraints unique="true"/>
             </column>
         </addColumn>
+
+        <addForeignKeyConstraint constraintName="sender_sync_message_event_fk"
+                                 baseTableName="sender_sync_message"
+                                 baseColumnNames="event_id"
+                                 referencedTableName="sender_event"
+                                 referencedColumnNames="id" />
     </changeSet>
 
     <changeSet author="wluyima" id="20240108-0834">
@@ -114,7 +132,6 @@
             <columnExists columnName="event_id" tableName="debezium_event_queue" />
         </preConditions>
         <comment>Adding not null constraint to debezium_event_queue.event_id column</comment>
-
         <addNotNullConstraint columnName="event_id" tableName="debezium_event_queue" columnDataType="BIGINT" />
     </changeSet>
 
@@ -137,7 +154,6 @@
             <columnExists columnName="event_id" tableName="sender_retry_queue" />
         </preConditions>
         <comment>Adding not null constraint to sender_retry_queue.event_id column</comment>
-
         <addNotNullConstraint columnName="event_id" tableName="sender_retry_queue" columnDataType="BIGINT" />
     </changeSet>
 
@@ -159,7 +175,6 @@
             <columnExists columnName="event_id" tableName="sender_sync_message" />
         </preConditions>
         <comment>Adding not null constraint to sender_sync_message.event_id column</comment>
-
         <addNotNullConstraint columnName="event_id" tableName="sender_sync_message" columnDataType="BIGINT" />
     </changeSet>
 
