@@ -219,7 +219,7 @@ public class ChangeEventHandlerTest {
 	}
 	
 	@Test
-	public void handle_shouldNotSetIdentifierForASubclassTableEVent() {
+	public void handle_shouldNotSetIdentifierForASubclassTableEvent() {
 		final String tableName = "patient";
 		final String id = "1";
 		final String op = "c";

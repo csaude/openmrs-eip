@@ -60,13 +60,15 @@
                         </setProperty>
                         <script>
                             <spel>
+                                #{getProperty('debeziumEvent').setDateCreated(new java.util.Date())}
                                 #{getProperty('debeziumEvent').setEvent(new org.openmrs.eip.app.management.entity.sender.Event())}
                                 #{getProperty('debeziumEvent').event.setPrimaryKeyId(getProperty('reqEntityPrimaryKeyId'))}
                                 #{getProperty('debeziumEvent').event.setTableName(getProperty('syncRequest').tableName)}
                                 #{getProperty('debeziumEvent').event.setIdentifier(getProperty('syncRequest').identifier)}
                                 #{getProperty('debeziumEvent').event.setOperation('r')}
                                 #{getProperty('debeziumEvent').event.setRequestUuid(getProperty('syncRequest').requestUuid)}
-                                #{getProperty('debeziumEvent').setDateCreated(new java.util.Date())}
+                                #{getProperty('debeziumEvent').event.setEventDate(getProperty('debeziumEvent').dateCreated)}
+                                #{getProperty('debeziumEvent').event.setDateCreated(getProperty('debeziumEvent').dateCreated)}
                             </spel>
                         </script>
                         <setBody>

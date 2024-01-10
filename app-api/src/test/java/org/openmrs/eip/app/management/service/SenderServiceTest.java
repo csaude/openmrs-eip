@@ -69,13 +69,15 @@ public class SenderServiceTest extends BaseSenderTest {
 		event.setIdentifier(identifier);
 		event.setOperation(op);
 		event.setSnapshot(snapshot);
+		event.setEventDate(new Date());
+		event.setDateCreated(event.getEventDate());
 		return event;
 	}
 	
 	protected DebeziumEvent createDebeziumEvent(String table, String pkId, String uuid, String op, boolean snapshot) {
 		DebeziumEvent dbzmEvent = new DebeziumEvent();
 		dbzmEvent.setEvent(createEvent(table, pkId, uuid, op, snapshot));
-		dbzmEvent.setDateCreated(new Date());
+		dbzmEvent.setDateCreated(dbzmEvent.getEvent().getEventDate());
 		return eventRepo.save(dbzmEvent);
 	}
 	
@@ -169,7 +171,7 @@ public class SenderServiceTest extends BaseSenderTest {
 		final String op = "c";
 		SenderRetryQueueItem retry = new SenderRetryQueueItem();
 		retry.setEvent(createEvent(table, "101", uuid, op, false));
-		retry.setDateCreated(new Date());
+		retry.setDateCreated(retry.getEvent().getEventDate());
 		retry.setAttemptCount(1);
 		retry.setExceptionType(EIPException.class.getName());
 		retry = retryRepo.save(retry);
@@ -226,7 +228,7 @@ public class SenderServiceTest extends BaseSenderTest {
 	@Test
 	@Sql(scripts = "classpath:mgt_sender_sync_message.sql", config = @SqlConfig(dataSource = MGT_DATASOURCE_NAME, transactionManager = MGT_TX_MGR))
 	public void archiveSyncedMessage_shouldMoveTheSyncedMessageToTheArchiveQueue() {
-		final Long id = 1L;
+		final Long id = 4L;
 		SenderSyncMessage msg = syncRepo.findById(id).get();
 		assertEquals(0, archiveRepo.count());
 		long timestamp = System.currentTimeMillis();

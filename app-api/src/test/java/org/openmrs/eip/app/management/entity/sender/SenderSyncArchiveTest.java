@@ -18,11 +18,11 @@ public class SenderSyncArchiveTest {
 	
 	@Test
 	public void shouldCreateASenderArchiveFromASyncMessage() throws Exception {
-		PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors(SenderSyncMessage.class);
 		SenderSyncMessage syncMessage = new SenderSyncMessage();
 		syncMessage.setId(1L);
 		syncMessage.setDateCreated(new Date());
 		Event event = TestUtils.createEvent("person", "uuid", "c");
+		event.setPrimaryKeyId("1");
 		event.setDateCreated(new Date());
 		event.setSnapshot(true);
 		event.setRequestUuid("request-uuid");
@@ -40,13 +40,26 @@ public class SenderSyncArchiveTest {
 		ignored.add("class");
 		ignored.add("dateCreated");
 		ignored.add("status");
-		for (PropertyDescriptor descriptor : descriptors) {
+		ignored.add("event");
+		for (PropertyDescriptor descriptor : BeanUtils.getPropertyDescriptors(SenderSyncMessage.class)) {
 			if (ignored.contains(descriptor.getName())) {
 				continue;
 			}
 			
 			String getter = descriptor.getReadMethod().getName();
 			assertEquals(invokeMethod(syncMessage, getter), invokeMethod(archive, getter));
+		}
+		
+		ignored.add("beforeState");
+		ignored.add("afterState");
+		ignored.add("primaryKeyId");
+		for (PropertyDescriptor descriptor : BeanUtils.getPropertyDescriptors(Event.class)) {
+			if (ignored.contains(descriptor.getName())) {
+				continue;
+			}
+			
+			String getter = descriptor.getReadMethod().getName();
+			assertEquals(invokeMethod(event, getter), invokeMethod(archive, getter));
 		}
 	}
 	

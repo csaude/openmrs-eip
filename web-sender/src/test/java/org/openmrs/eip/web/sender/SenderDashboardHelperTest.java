@@ -13,16 +13,8 @@ public class SenderDashboardHelperTest {
 	
 	@Test
 	public void getCategorizationProperty_shouldReturnTableName() {
-		assertEquals("tableName", helper.getCategorizationProperty(SenderSyncMessage.class.getSimpleName()));
-	}
-	
-	@Test
-	public void getCategorizationProperty_shouldReturnEventTableNameForDebeziumEvent() {
+		assertEquals("event.tableName", helper.getCategorizationProperty(SenderSyncMessage.class.getSimpleName()));
 		assertEquals("event.tableName", helper.getCategorizationProperty(DebeziumEvent.class.getSimpleName()));
-	}
-	
-	@Test
-	public void getCategorizationProperty_shouldReturnEventTableNameForARetry() {
 		assertEquals("event.tableName", helper.getCategorizationProperty(SenderRetryQueueItem.class.getSimpleName()));
 	}
 	

@@ -16,6 +16,7 @@ public class SenderSyncArchive extends BaseSenderArchive {
 	
 	public SenderSyncArchive(SenderSyncMessage syncMessage) {
 		BeanUtils.copyProperties(syncMessage, this, "id", "dateCreated");
+		BeanUtils.copyProperties(syncMessage.getEvent(), this, "id", "dateCreated");
 	}
 	
 }

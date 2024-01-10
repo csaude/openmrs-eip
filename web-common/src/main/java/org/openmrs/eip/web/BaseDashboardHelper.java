@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.camel.ProducerTemplate;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
 import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
+import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.component.SyncOperation;
 import org.openmrs.eip.web.controller.DashboardHelper;
 
@@ -32,7 +33,8 @@ public abstract class BaseDashboardHelper implements DashboardHelper {
 		
 		String opProp = "operation";
 		if (DebeziumEvent.class.getSimpleName().equals(entityType)
-		        || SenderRetryQueueItem.class.getSimpleName().equals(entityType)) {
+		        || SenderRetryQueueItem.class.getSimpleName().equals(entityType)
+		        || SenderSyncMessage.class.getSimpleName().equals(entityType)) {
 			opProp = "event." + opProp;
 		}
 		

@@ -1,9 +1,11 @@
 package org.openmrs.eip.app.route.sender;
 
+import java.util.Date;
+
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
+import org.openmrs.eip.app.management.entity.sender.Event;
 import org.openmrs.eip.app.route.BaseRouteTest;
 import org.openmrs.eip.component.SyncProfiles;
-import org.openmrs.eip.app.management.entity.sender.Event;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles(SyncProfiles.SENDER)
@@ -16,6 +18,8 @@ public abstract class BaseSenderRouteTest extends BaseRouteTest {
 		event.setIdentifier(identifier);
 		event.setOperation(op);
 		event.setSnapshot(false);
+		event.setEventDate(new Date());
+		event.setDateCreated(event.getEventDate());
 		return event;
 	}
 	

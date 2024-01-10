@@ -1,8 +1,6 @@
 package org.openmrs.eip.web;
 
 import org.apache.camel.ProducerTemplate;
-import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
-import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
 
 public class TestDashboardHelper extends BaseDashboardHelper {
 	
@@ -19,12 +17,7 @@ public class TestDashboardHelper extends BaseDashboardHelper {
 			return "modelClassName";
 		}
 		
-		if (DebeziumEvent.class.getSimpleName().equals(entityType)
-		        || SenderRetryQueueItem.class.getSimpleName().equals(entityType)) {
-			return "event.tableName";
-		}
-		
-		return "tableName";
+		return "event.tableName";
 	}
 	
 }
