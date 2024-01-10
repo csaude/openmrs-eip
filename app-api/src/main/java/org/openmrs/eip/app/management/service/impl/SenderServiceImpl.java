@@ -38,17 +38,17 @@ public class SenderServiceImpl implements SenderService {
 	
 	private SenderPrunedArchiveRepository prunedRepo;
 	
-	private DebeziumEventRepository eventRepo;
+	private DebeziumEventRepository dbzmEventRepo;
 	
 	private SenderSyncMessageRepository syncRepo;
 	
 	private SenderRetryRepository retryRepo;
 	
 	public SenderServiceImpl(SenderSyncArchiveRepository archiveRepo, SenderPrunedArchiveRepository prunedRepo,
-	    DebeziumEventRepository eventRepo, SenderSyncMessageRepository syncRepo, SenderRetryRepository retryRepo) {
+	    DebeziumEventRepository dbzmEventRepo, SenderSyncMessageRepository syncRepo, SenderRetryRepository retryRepo) {
 		this.archiveRepo = archiveRepo;
 		this.prunedRepo = prunedRepo;
-		this.eventRepo = eventRepo;
+		this.dbzmEventRepo = dbzmEventRepo;
 		this.syncRepo = syncRepo;
 		this.retryRepo = retryRepo;
 	}
@@ -91,7 +91,7 @@ public class SenderServiceImpl implements SenderService {
 			log.debug("Removing item from the event queue");
 		}
 		
-		eventRepo.delete(debeziumEvent);
+		dbzmEventRepo.delete(debeziumEvent);
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Successfully removed item from the event queue");
@@ -143,7 +143,7 @@ public class SenderServiceImpl implements SenderService {
 			log.debug("Removing item from the event queue");
 		}
 		
-		eventRepo.delete(debeziumEvent);
+		dbzmEventRepo.delete(debeziumEvent);
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Successfully removed item from the event queue");

@@ -2,7 +2,6 @@ package org.openmrs.eip.app.management.entity.sender;
 
 import org.openmrs.eip.app.management.entity.BaseRetryQueueItem;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -15,7 +14,7 @@ public class SenderRetryQueueItem extends BaseRetryQueueItem {
 	
 	private static final long serialVersionUID = 1;
 	
-	@OneToOne(optional = false, cascade = CascadeType.ALL)
+	@OneToOne(optional = false)
 	@JoinColumn(name = "event_id", unique = true, nullable = false, updatable = false)
 	@NotNull
 	private Event event;

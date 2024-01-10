@@ -30,7 +30,7 @@ public class SenderSyncMessage extends AbstractEntity {
 		NEW, SENT
 	}
 	
-	@OneToOne(optional = false, cascade = CascadeType.ALL)
+	@OneToOne(optional = false, cascade = CascadeType.REMOVE)
 	@JoinColumn(name = "event_id", unique = true, nullable = false, updatable = false)
 	@NotNull
 	@Getter

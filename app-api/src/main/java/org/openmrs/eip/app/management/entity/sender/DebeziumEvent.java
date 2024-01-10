@@ -15,7 +15,7 @@ public class DebeziumEvent extends AbstractEntity {
 	
 	private static final long serialVersionUID = -1884382844867650350L;
 	
-	@OneToOne(optional = false, cascade = CascadeType.ALL)
+	@OneToOne(optional = false, cascade = CascadeType.PERSIST)
 	@JoinColumn(name = "event_id", unique = true, nullable = false, updatable = false)
 	@NotNull
 	private Event event;
