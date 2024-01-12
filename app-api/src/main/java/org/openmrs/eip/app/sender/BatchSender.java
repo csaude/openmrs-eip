@@ -1,11 +1,14 @@
 package org.openmrs.eip.app.sender;
 
+import static org.openmrs.eip.app.SyncConstants.MGT_DATASOURCE_NAME;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
-import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
+import org.openmrs.eip.component.camel.utils.CamelUtils;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.slf4j.Logger;
@@ -29,9 +32,6 @@ public class BatchSender {
 	@Autowired
 	private ConnectionFactory activeMqConnFactory;
 	
-	@Autowired
-	private SenderSyncMessageRepository msgRepo;
-	
 	@Value("db-sync.senderId")
 	private String senderId;
 	
@@ -44,11 +44,13 @@ public class BatchSender {
 		
 		List<String> messages = new ArrayList<>(items.size());
 		LocalDateTime dateSent = LocalDateTime.now();
+		List<Long> ids = new ArrayList<>(items.size());
 		for (SenderSyncMessage m : items) {
 			SyncModel model = JsonUtils.unmarshalSyncModel(m.getData());
 			model.getMetadata().setSourceIdentifier(senderId);
 			model.getMetadata().setDateSent(dateSent);
 			messages.add(JsonUtils.marshall(model));
+			ids.add(m.getId());
 		}
 		
 		try (Connection conn = activeMqConnFactory.createConnection();
@@ -74,10 +76,9 @@ public class BatchSender {
 		
 		log.info("Successfully sent " + messages.size() + " sync messages");
 		
-		for (SenderSyncMessage m : items) {
-			m.markAsSent(dateSent);
-			msgRepo.save(m);
-		}
+		String myIds = StringUtils.join(ids, ",");
+		CamelUtils.send("sql:UPDATE sender_sync_message set status = 'SENT', date_sent = now() where id in (" + myIds
+		        + ")?dataSource=#" + MGT_DATASOURCE_NAME);
 		
 		log.info("Successfully updated the statuses of " + messages.size() + " sync messages");
 	}
