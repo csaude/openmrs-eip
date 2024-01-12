@@ -20,7 +20,8 @@
                     <simple>${body.size()} > 0</simple>
                     <log message="Fetched ${body.size()} sender sync message(s)" />
 
-                    <process ref="senderSyncMsgProcessor" />
+                    <!--<process ref="senderSyncMsgProcessor" />-->
+                    <bean ref="batchSender" method="sendBatch(${body})" />
                 </when>
                 <otherwise>
                     <setProperty name="${routeId}-endLoop">
