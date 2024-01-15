@@ -24,10 +24,10 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Queue;
 import jakarta.jms.Session;
 
-@Component("batchSender")
-public class BatchSender {
+@Component("batchCommitter")
+public class BatchCommitter {
 	
-	private static final Logger log = LoggerFactory.getLogger(BatchSender.class);
+	private static final Logger log = LoggerFactory.getLogger(BatchCommitter.class);
 	
 	@Autowired
 	private ConnectionFactory activeMqConnFactory;

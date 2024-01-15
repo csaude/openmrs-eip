@@ -21,7 +21,7 @@
                     <log message="Fetched ${body.size()} sender sync message(s)" />
 
                     <!--<process ref="senderSyncMsgProcessor" />-->
-                    <bean ref="batchSender" method="sendBatch(${body})" />
+                    <bean ref="batchCommitter" method="sendBatch(${body})" />
                 </when>
                 <otherwise>
                     <setProperty name="${routeId}-endLoop">
