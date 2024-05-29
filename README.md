@@ -18,8 +18,9 @@
 13. [Binary Log Purging](#binary-log-purging)
 14. [Requesting An Entity To Be Synced](#requesting-an-entity-to-be-synced)
 15. [Reconciliation](#reconciliation)
-15. [Handling OpenMRS Upgrades](#handling-openmrs-upgrades)
-16. [Developer Guide](#developer-guide)
+16. [Handling OpenMRS Upgrades](#handling-openmrs-upgrades)
+17. [Adding A New Remote Facility](#adding-a-new-remote-facility)
+18. [Developer Guide](#developer-guide)
     1. [Build](#build)
     2. [Tests](#tests)
 
@@ -362,6 +363,15 @@ Below are known things that would need to be taken care of to update DBsync to w
 * Compare the database schemas to determine changes i.e. the schema of the current supported OpenMRS version and that 
 one you wish to upgrade to, any database changes need to be applied to the associated entity classes.
 * Verify that cached and indexed tables both in OpenMRS and DB sync match otherwise update DBsync.
+
+# Adding A New Remote Facility
+Below is the process to onboard a new remote site,
+* Register the remote site with the receiver for the province by inserting a new row for the site in the `site_info` 
+table.
+* Install the sender instance, please see [Sender Installation Guide](distribution/docs/README.md#sender)
+* It's highly recommended to perform initial loading of all existing data, to achieve this set `debezium.snapshotMode` 
+to `initial` in the sender `application.properties` file, be sure to set it back to `schema_only` after initial loading 
+has completed.
 
 # Developer Guide
 ## Build
