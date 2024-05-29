@@ -695,13 +695,13 @@
 		<unit id="reconcile-generating-report">
 			<segment>
 				<source>Generating Report</source>
-				<target>Generating Report</target>
+				<target>Gerando Relatório</target>
 			</segment>
 		</unit>
 		<unit id="receiver-reconcile-completed-sites">
 			<segment>
 				<source>Completed Sites</source>
-				<target>Sites processados</target>
+				<target>Sites finalizados</target>
 			</segment>
 		</unit>
 		<unit id="receiver-reconcile-show-facility-breakdown">
@@ -713,7 +713,7 @@
 		<unit id="receiver-completed-tables">
 			<segment>
 				<source>Completed Tables</source>
-				<target>Tabelas processadas</target>
+				<target>Tabelas Finalizadas</target>
 			</segment>
 		</unit>
 		<unit id="common-of">
@@ -725,13 +725,13 @@
 		<unit id="common-view-incomplete-tables">
 			<segment>
 				<source>View Incomplete Tables</source>
-				<target>Visualizar tabelas não processadas</target>
+				<target>Visualizar tableas com processamento Incompleto</target>
 			</segment>
 		</unit>
 		<unit id="common-completed-rows">
 			<segment>
 				<source>Completed Rows</source>
-				<target>linhas processadas</target>
+				<target>Linhas finalizadas</target>
 			</segment>
 		</unit>
 		<unit id="receiver-start-at-facility">
@@ -761,7 +761,7 @@
 		<unit id="common-incomplete-tables">
 			<segment>
 				<source>Incomplete Tables</source>
-				<target>Tabelas não processadas</target>
+				<target>Tabelas Incompletas</target>
 			</segment>
 		</unit>
 		<unit id="common-unknown">
@@ -779,13 +779,13 @@
 		<unit id="sender-sending-deleted-rows">
 			<segment>
 				<source>Sending Deleted Rows</source>
-				<target>Enviando linhas excluídas</target>
+				<target>Enviando linhas removidas</target>
 			</segment>
 		</unit>
 		<unit id="sender-incomplete-tables">
 			<segment>
 				<source>Incomplete Tables</source>
-				<target>Tabelas não processadas<</target>
+				<target>Tabelas incompletas</target>
 			</segment>
 		</unit>
 		<unit id="common-started">
@@ -875,7 +875,7 @@
 		<unit id="common-select">
 			<segment>
 				<source>Select</source>
-				<target>selecione</target>
+				<target>Selecionar</target>
 			</segment>
 		</unit>
 		<unit id="common-clear-filter">
