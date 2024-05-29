@@ -18,6 +18,7 @@
 13. [Binary Log Purging](#binary-log-purging)
 14. [Requesting An Entity To Be Synced](#requesting-an-entity-to-be-synced)
 15. [Reconciliation](#reconciliation)
+15. [Handling OpenMRS Upgrades](#handling-openmrs-upgrades)
 16. [Developer Guide](#developer-guide)
     1. [Build](#build)
     2. [Tests](#tests)
@@ -355,6 +356,12 @@ refer to spring's documentation on cron expressions, you can also refer to the [
 
 The reconciliation task can also be triggered manually by inserting a row in the 'receiver_reconcile' table, the value 
 of the identifier column is required to be unique.
+
+# Handling OpenMRS Upgrades
+Below are known things that would need to be taken care of to update DBsync to work with later versions of OpenMRS,
+* Compare the database schemas to determine changes i.e. the schema of the current supported OpenMRS version and that 
+one you wish to upgrade to, any database changes need to be applied to the associated entity classes.
+* Verify that cached and indexed tables both in OpenMRS and DB sync match otherwise update DBsync.
 
 # Developer Guide
 ## Build
