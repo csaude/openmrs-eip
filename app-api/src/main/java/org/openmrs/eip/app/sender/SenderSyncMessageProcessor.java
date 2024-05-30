@@ -11,11 +11,13 @@ import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
 import org.openmrs.eip.component.SyncProfiles;
+import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -34,6 +36,9 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 	private JmsTemplate jmsTemplate;
 	
 	private SenderSyncMessageRepository repo;
+	
+	@Autowired
+	private SenderSyncBatchManager batchManager;
 	
 	public SenderSyncMessageProcessor(@Qualifier(BEAN_NAME_SYNC_EXECUTOR) ThreadPoolExecutor executor,
 	    JmsTemplate jmsTemplate, SenderSyncMessageRepository repo) {
@@ -87,24 +92,39 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 			LOG.debug("Sync payload -> " + syncData);
 		}
 		
-		jmsTemplate.send(SenderUtils.getQueueName(), new SyncMessageCreator(syncData, senderId));
-		
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Sync payload sent!");
+		//TODO Replace with application property
+		if (true) {
+			batchManager.add(syncMsg);
+		} else {
+			jmsTemplate.send(SenderUtils.getQueueName(), new SyncMessageCreator(syncData, senderId));
+			
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Sync payload sent!");
+			}
+			
+			syncMsg.setData(syncData);
+			syncMsg.setSyncVersion(syncModel.getMetadata().getSyncVersion());
+			syncMsg.markAsSent(syncModel.getMetadata().getDateSent());
+			
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Updating sender sync message status to " + syncMsg.getStatus());
+			}
+			
+			repo.save(syncMsg);
+			
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Successfully sent and updated status for sync message");
+			}
 		}
-		
-		syncMsg.setData(syncData);
-		syncMsg.setSyncVersion(syncModel.getMetadata().getSyncVersion());
-		syncMsg.markAsSent(syncModel.getMetadata().getDateSent());
-		
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Updating sender sync message status to " + syncMsg.getStatus());
+	}
+	
+	@Override
+	protected void flush() {
+		try {
+			batchManager.send();
 		}
-		
-		repo.save(syncMsg);
-		
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Successfully sent and updated status for sync message");
+		catch (Exception e) {
+			throw new EIPException("Error occurred while sending batch", e);
 		}
 	}
 	

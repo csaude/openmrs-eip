@@ -376,7 +376,7 @@ has completed.
 
 # Backups
 It's highly recommended to backup the following,
-* The management database both for the sender and receiver.
+* The management databases both for the sender and receiver.
 * The debezium offset and history file for all remote sites.
 
 # Developer Guide

@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.AbstractEntity;
+import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
@@ -63,6 +64,14 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	public void add(I item) {
 		getItems().add(convert(item));
 		getItemIds().add(item.getId());
+		if (getItemIds().size() >= getBatchSize()) {
+			try {
+				send();
+			}
+			catch (Exception e) {
+				throw new EIPException("Error occurred while sending batch", e);
+			}
+		}
 	}
 	
 	/**
@@ -70,9 +79,9 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	 * 
 	 * @throws JMSException
 	 */
-	public void send() throws JMSException, IOException {
+	public synchronized void send() throws JMSException, IOException {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Sending batch of " + items.size() + " items(s)");
+			LOG.debug("Sending batch of {} items(s)", items.size());
 		}
 		
 		//TODO Reuse Session and MessageProducer

@@ -113,10 +113,19 @@ public abstract class BaseQueueProcessor<T extends AbstractEntity> extends BaseP
 		if (futures.size() > 0) {
 			waitForFutures(futures);
 		}
+		
+		flush();
 	}
 	
 	private void setThreadName(T item) {
 		Thread.currentThread().setName(Thread.currentThread().getName() + ":" + getQueueName() + ":" + getThreadName(item));
+	}
+	
+	/**
+	 * Subclasses can override this method to apply some useful logic after all items are processes in
+	 * the current iteration.
+	 */
+	protected void flush() {
 	}
 	
 	/**
