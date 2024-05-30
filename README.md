@@ -20,7 +20,8 @@
 15. [Reconciliation](#reconciliation)
 16. [Handling OpenMRS Upgrades](#handling-openmrs-upgrades)
 17. [Adding A New Remote Facility](#adding-a-new-remote-facility)
-18. [Developer Guide](#developer-guide)
+18. [Backups](#backups)
+19. [Developer Guide](#developer-guide)
     1. [Build](#build)
     2. [Tests](#tests)
 
@@ -372,6 +373,11 @@ table.
 * It's highly recommended to perform initial loading of all existing data, to achieve this set `debezium.snapshotMode` 
 to `initial` in the sender `application.properties` file, be sure to set it back to `schema_only` after initial loading 
 has completed.
+
+# Backups
+It's highly recommended to backup the following,
+* The management database both for the sender and receiver.
+* The debezium offset and history file for all remote sites.
 
 # Developer Guide
 ## Build

@@ -41,7 +41,8 @@ The DB sync sender and receiver applications MUST be running in the same calenda
 to run both the sender and receiver in UTC. If another time zone is preferred, it would be best to run both of them in
 the same time zone. With that said, the application should be able to sync data between a sender and receiver in different
 time zones by converting the datetime field values to the receiver's time zone. This conversion is not done for time ONLY
-fields and date fields with no time component.
+fields and date fields with no time component. It's also highly recommended that the receiver and sender applications 
+run on the same timezone. Please pay attention to person birthdates to be sure they are synced correctly.
 
 #### OpenMRS Instances are already installed
 This guide doesn't cover installation of the sender and receiver OpenMRS instances and databases, if not, please refer 
@@ -253,8 +254,12 @@ properties that take directory paths as values e.g. log file, complex obs data d
     ```shell
     java -jar -Dspring.profiles.active=sender openmrs-eip-app-{VERSION}.jar
     ```
-    Make sure no errors are reported when the application starts, you can find the logs in the configured directory which
-    defaults to `{eip.home}/logs/openmrs-eip.log`, where {eip.home} is the path to your installation directory.
+    8. If initial loading of existing data is not performed via DB sync, please be sure to run the sender the first 
+       time to capture the initial offset and history file, this MUST be done immediately after data imported and before 
+       the associated OpenMRS database is used to avoid missing synchronizing any events which would create gaps.
+
+   Make sure no errors are reported when the application starts, you can find the logs in the configured directory which
+   defaults to `{eip.home}/logs/openmrs-eip.log`, where {eip.home} is the path to your installation directory.
 
 ## Console
 
