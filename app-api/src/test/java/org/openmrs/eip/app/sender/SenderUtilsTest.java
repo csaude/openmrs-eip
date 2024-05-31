@@ -1,35 +1,74 @@
 package org.openmrs.eip.app.sender;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.openmrs.eip.app.sender.SenderConstants.PROP_ACTIVEMQ_ENDPOINT;
+
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.openmrs.eip.app.SyncConstants;
+import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.repository.PersonRepository;
+import org.openmrs.eip.component.utils.JsonUtils;
+import org.openmrs.eip.component.utils.Utils;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.core.env.Environment;
 
+import jakarta.jms.BytesMessage;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
+import jakarta.jms.StreamMessage;
+
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(SyncContext.class)
 public class SenderUtilsTest {
 	
+	private static final String QUEUE_NAME = "test";
+	
 	@Mock
 	private Environment mockEnv;
+	
+	@Mock
+	private ConnectionFactory mockConnFactory;
+	
+	@Mock
+	private Connection mockConnection;
+	
+	@Mock
+	private Session mockSession;
+	
+	@Mock
+	private Queue mockQueue;
+	
+	@Mock
+	private MessageProducer mockMsgProducer;
+	
+	@Mock
+	private BytesMessage mockBytesMsg;
 	
 	@Before
 	public void setup() {
 		PowerMockito.mockStatic(SyncContext.class);
 		when(SyncContext.getBean(Environment.class)).thenReturn(mockEnv);
+		when(mockEnv.getProperty(PROP_ACTIVEMQ_ENDPOINT)).thenReturn("activemq:" + QUEUE_NAME);
 	}
 	
 	@Test
@@ -51,10 +90,7 @@ public class SenderUtilsTest {
 	
 	@Test
 	public void getQueueName_shouldReturnTheNameOfTheJmsQueue() {
-		final String queueName = "activemq:openmrs.sync";
-		final String endpoint = "activemq:" + queueName;
-		when(mockEnv.getProperty(PROP_ACTIVEMQ_ENDPOINT)).thenReturn(endpoint);
-		assertEquals(queueName, SenderUtils.getQueueName());
+		assertEquals(QUEUE_NAME, SenderUtils.getQueueName());
 	}
 	
 	@Test
@@ -66,6 +102,74 @@ public class SenderUtilsTest {
 		when(SyncContext.getBean(PersonRepository.class)).thenReturn(mockRepo);
 		when(mockRepo.getUuid(patientId)).thenReturn(expectedUuid);
 		assertEquals(expectedUuid, SenderUtils.getUuidFromParentTable(table, patientId));
+	}
+	
+	@Test
+	public void sendBatch_shouldSendTheItemsInTheBatchBuffer() throws Exception {
+		when(mockConnFactory.createConnection()).thenReturn(mockConnection);
+		when(mockConnection.createSession()).thenReturn(mockSession);
+		when(mockSession.createQueue(QUEUE_NAME)).thenReturn(mockQueue);
+		when(mockSession.createProducer(mockQueue)).thenReturn(mockMsgProducer);
+		when(mockSession.createBytesMessage()).thenReturn(mockBytesMsg);
+		final Long id = 3L;
+		SenderSyncMessage msg = new SenderSyncMessage();
+		msg.setId(id);
+		byte[] expectedSentBytes = JsonUtils.marshalToBytes(List.of(msg));
+		
+		SenderUtils.sendBatch(mockConnFactory, List.of(msg), SyncConstants.DEFAULT_LARGE_MSG_SIZE);
+		
+		verify(mockBytesMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
+		verify(mockBytesMsg).writeBytes(bytesCaptor.capture());
+		assertTrue(Arrays.equals(expectedSentBytes, bytesCaptor.getValue()));
+		verify(mockMsgProducer).send(mockBytesMsg);
+		verify(mockMsgProducer).send(mockBytesMsg);
+	}
+	
+	@Test
+	public void sendBatch_shouldCompressAndSendALargeMessage() throws Exception {
+		when(mockConnFactory.createConnection()).thenReturn(mockConnection);
+		when(mockConnection.createSession()).thenReturn(mockSession);
+		when(mockSession.createQueue(QUEUE_NAME)).thenReturn(mockQueue);
+		when(mockSession.createProducer(mockQueue)).thenReturn(mockMsgProducer);
+		when(mockSession.createBytesMessage()).thenReturn(mockBytesMsg);
+		final Long id = 3L;
+		SenderSyncMessage msg = new SenderSyncMessage();
+		msg.setId(id);
+		byte[] msgBytes = JsonUtils.marshalToBytes(List.of(msg));
+		byte[] expectedSentBytes = Utils.compress(msgBytes);
+		
+		SenderUtils.sendBatch(mockConnFactory, List.of(msg), msgBytes.length - 1);
+		
+		verify(mockBytesMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
+		verify(mockBytesMsg).writeBytes(bytesCaptor.capture());
+		assertTrue(Arrays.equals(expectedSentBytes, bytesCaptor.getValue()));
+		verify(mockMsgProducer).send(mockBytesMsg);
+		verify(mockMsgProducer).send(mockBytesMsg);
+	}
+	
+	@Test
+	public void sendBatch_shouldCompressAndSendALargeMessageAsAStream() throws Exception {
+		StreamMessage mockStreamMsg = Mockito.mock(StreamMessage.class);
+		when(mockConnFactory.createConnection()).thenReturn(mockConnection);
+		when(mockConnection.createSession()).thenReturn(mockSession);
+		when(mockSession.createQueue(QUEUE_NAME)).thenReturn(mockQueue);
+		when(mockSession.createProducer(mockQueue)).thenReturn(mockMsgProducer);
+		when(mockSession.createStreamMessage()).thenReturn(mockStreamMsg);
+		final Long id = 3L;
+		SenderSyncMessage msg = new SenderSyncMessage();
+		msg.setId(id);
+		byte[] expectedSentBytes = Utils.compress(JsonUtils.marshalToBytes(List.of(msg)));
+		
+		SenderUtils.sendBatch(mockConnFactory, List.of(msg), expectedSentBytes.length - 1);
+		
+		verify(mockStreamMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
+		verify(mockStreamMsg).writeBytes(bytesCaptor.capture());
+		assertTrue(Arrays.equals(expectedSentBytes, bytesCaptor.getValue()));
+		verify(mockMsgProducer).send(mockStreamMsg);
+		verify(mockMsgProducer).send(mockStreamMsg);
 	}
 	
 }
