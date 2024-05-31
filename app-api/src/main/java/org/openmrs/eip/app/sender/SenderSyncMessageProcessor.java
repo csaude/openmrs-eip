@@ -11,13 +11,11 @@ import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
 import org.openmrs.eip.component.SyncProfiles;
-import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -37,14 +35,14 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 	
 	private SenderSyncMessageRepository repo;
 	
-	@Autowired
 	private SenderSyncBatchManager batchManager;
 	
 	public SenderSyncMessageProcessor(@Qualifier(BEAN_NAME_SYNC_EXECUTOR) ThreadPoolExecutor executor,
-	    JmsTemplate jmsTemplate, SenderSyncMessageRepository repo) {
+	    JmsTemplate jmsTemplate, SenderSyncMessageRepository repo, SenderSyncBatchManager batchManager) {
 		super(executor);
 		this.jmsTemplate = jmsTemplate;
 		this.repo = repo;
+		this.batchManager = batchManager;
 	}
 	
 	@Override
@@ -120,12 +118,7 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 	
 	@Override
 	protected void flush() {
-		try {
-			batchManager.send();
-		}
-		catch (Exception e) {
-			throw new EIPException("Error occurred while sending batch", e);
-		}
+		batchManager.send(true);
 	}
 	
 }

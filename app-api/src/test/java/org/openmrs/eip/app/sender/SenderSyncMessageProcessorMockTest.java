@@ -6,18 +6,26 @@ import static org.powermock.reflect.Whitebox.setInternalState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+@RunWith(PowerMockRunner.class)
 public class SenderSyncMessageProcessorMockTest {
 	
 	private SenderSyncMessageProcessor processor;
 	
+	@Mock
+	private SenderSyncBatchManager mockBatchManager;
+	
 	@Before
 	public void setup() {
 		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
-		processor = new SenderSyncMessageProcessor(null, null, null);
+		processor = new SenderSyncMessageProcessor(null, null, null, mockBatchManager);
 	}
 	
 	@After
@@ -68,6 +76,12 @@ public class SenderSyncMessageProcessorMockTest {
 	@Test
 	public void getQueueName_shouldReturnTheQueueName() {
 		assertEquals("sync-msg", processor.getQueueName());
+	}
+	
+	@Test
+	public void flush_shouldSubmitTheBatch() {
+		processor.flush();
+		Mockito.verify(mockBatchManager).send(true);
 	}
 	
 }

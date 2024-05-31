@@ -3,7 +3,6 @@ package org.openmrs.eip.app.sender;
 import static org.openmrs.eip.app.SyncConstants.DEFAULT_LARGE_MSG_SIZE;
 import static org.openmrs.eip.app.SyncConstants.PROP_LARGE_MSG_SIZE;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,14 +63,7 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	public void add(I item) {
 		getItems().add(convert(item));
 		getItemIds().add(item.getId());
-		if (getItemIds().size() >= getBatchSize()) {
-			try {
-				send();
-			}
-			catch (Exception e) {
-				throw new EIPException("Error occurred while sending batch", e);
-			}
-		}
+		send(false);
 	}
 	
 	/**
@@ -79,49 +71,70 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	 * 
 	 * @throws JMSException
 	 */
-	public synchronized void send() throws JMSException, IOException {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Sending batch of {} items(s)", items.size());
-		}
-		
-		//TODO Reuse Session and MessageProducer
-		try (Connection conn = connectionFactory.createConnection(); Session session = conn.createSession()) {
-			Queue queue = session.createQueue(getQueueName());
-			try (MessageProducer p = session.createProducer(queue)) {
-				//TODO Exclude JMSMessageId and timestamp by disabling them
-				byte[] bytes = JsonUtils.marshalToBytes(getItems());
-				Message msg;
-				if (bytes.length < largeMsgSize) {
-					BytesMessage bytesMsg = session.createBytesMessage();
-					bytesMsg.writeBytes(bytes);
-					msg = bytesMsg;
-				} else {
-					byte[] compressedBytes = Utils.compress(bytes);
-					if (compressedBytes.length < largeMsgSize) {
-						BytesMessage bytesMsg = session.createBytesMessage();
-						bytesMsg.writeBytes(compressedBytes);
-						msg = bytesMsg;
-					} else {
-						StreamMessage streamMsg = session.createStreamMessage();
-						streamMsg.writeBytes(compressedBytes);
-						msg = streamMsg;
-					}
+	public void send(boolean force) {
+		synchronized (getItems()) {
+			if (getItems().size() == 0) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No items in the batch to send");
 				}
 				
-				msg.setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, getItems().size());
-				p.send(msg);
+				return;
 			}
+			
+			if (getItems().size() < getBatchSize() && !force) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Waiting for more items before sending batch, current size is {}", getItems().size());
+				}
+				
+				return;
+			}
+			
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Sending batch of {} items(s)", getItems().size());
+			}
+			
+			//TODO Reuse Session and MessageProducer
+			try (Connection conn = connectionFactory.createConnection(); Session session = conn.createSession()) {
+				Queue queue = session.createQueue(getQueueName());
+				try (MessageProducer p = session.createProducer(queue)) {
+					//TODO Exclude JMSMessageId and timestamp by disabling them
+					byte[] bytes = JsonUtils.marshalToBytes(getItems());
+					Message msg;
+					if (bytes.length < largeMsgSize) {
+						BytesMessage bytesMsg = session.createBytesMessage();
+						bytesMsg.writeBytes(bytes);
+						msg = bytesMsg;
+					} else {
+						byte[] compressedBytes = Utils.compress(bytes);
+						if (compressedBytes.length < largeMsgSize) {
+							BytesMessage bytesMsg = session.createBytesMessage();
+							bytesMsg.writeBytes(compressedBytes);
+							msg = bytesMsg;
+						} else {
+							StreamMessage streamMsg = session.createStreamMessage();
+							streamMsg.writeBytes(compressedBytes);
+							msg = streamMsg;
+						}
+					}
+					
+					msg.setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, getItems().size());
+					p.send(msg);
+				}
+			}
+			catch (Exception e) {
+				throw new EIPException("Error occurred while sending batch", e);
+			}
+			
+			LOG.info("Successfully sent a sync batch of " + getItems().size() + " item(s)");
+			
+			updateItems(getItemIds());
+			
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Successfully updated " + getItemIds().size() + " items(s)");
+			}
+			
+			reset();
 		}
-		
-		LOG.info("Successfully sent a sync batch of " + getItems().size() + " item(s)");
-		
-		updateItems(getItemIds());
-		
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Successfully updated " + getItemIds().size() + " items(s)");
-		}
-		
-		reset();
 	}
 	
 	/**
