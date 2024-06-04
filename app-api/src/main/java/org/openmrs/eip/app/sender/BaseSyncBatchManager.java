@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import jakarta.jms.ConnectionFactory;
-import jakarta.jms.JMSException;
 
 public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	
@@ -35,7 +34,7 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	/**
 	 * Clears all the batch contents.
 	 */
-	public void reset() {
+	private void reset() {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Resetting batch");
 		}
@@ -49,44 +48,41 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	 * 
 	 * @param item the item to add
 	 */
-	public void add(I item) {
+	public synchronized void add(I item) {
 		getItems().add(convert(item));
 		getItemIds().add(item.getId());
 		send(false);
 	}
 	
 	/**
-	 * Sends all the messages contained in the batch to the message broker.
-	 * 
-	 * @throws JMSException
+	 * Sends all the messages contained in the batch to the message broker, this message should not be
+	 * called in parallel by multiple threads.
 	 */
-	public void send(boolean force) {
-		synchronized (getItems()) {
-			if (getItems().size() == 0) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No items in the batch to send");
-				}
-				
-				return;
-			}
-			
-			if (getItems().size() < getBatchSize() && !force) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Waiting for more items before sending batch, current size is {}", getItems().size());
-				}
-				
-				return;
-			}
-			
-			SenderUtils.sendBatch(connectionFactory, getItems(), largeMsgSize);
-			updateItems(getItemIds());
-			
+	public synchronized void send(boolean force) {
+		if (getItems().size() == 0) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Successfully updated " + getItemIds().size() + " items(s)");
+				LOG.debug("No items in the batch to send");
 			}
 			
-			reset();
+			return;
 		}
+		
+		if (getItems().size() < getBatchSize() && !force) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Waiting for more items before sending batch, current size is {}", getItems().size());
+			}
+			
+			return;
+		}
+		
+		SenderUtils.sendBatch(connectionFactory, getItems(), largeMsgSize);
+		updateItems(getItemIds());
+		
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Successfully updated " + getItemIds().size() + " items(s)");
+		}
+		
+		reset();
 	}
 	
 	/**
