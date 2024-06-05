@@ -91,7 +91,7 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 		}
 		
 		//TODO Replace with application property
-		if (true) {
+		if (false) {
 			batchManager.add(syncMsg);
 		} else {
 			jmsTemplate.send(SenderUtils.getQueueName(), new SyncMessageCreator(syncData, senderId));
