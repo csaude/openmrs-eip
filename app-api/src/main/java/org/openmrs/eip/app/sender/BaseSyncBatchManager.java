@@ -21,7 +21,7 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	@Value("${" + PROP_LARGE_MSG_SIZE + ":" + DEFAULT_LARGE_MSG_SIZE + "}")
 	private int largeMsgSize;
 	
-	private List<O> items;
+	private List<O> buffer;
 	
 	private List<Long> itemIds;
 	
@@ -115,15 +115,15 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	protected abstract void updateItems(List<Long> itemIds);
 	
 	private List<O> getItems() {
-		if (items == null) {
+		if (buffer == null) {
 			synchronized (this) {
-				if (items == null) {
-					items = Collections.synchronizedList(new ArrayList<>(getBatchSize()));
+				if (buffer == null) {
+					buffer = Collections.synchronizedList(new ArrayList<>(getBatchSize()));
 				}
 			}
 		}
 		
-		return items;
+		return buffer;
 	}
 	
 	private List<Long> getItemIds() {

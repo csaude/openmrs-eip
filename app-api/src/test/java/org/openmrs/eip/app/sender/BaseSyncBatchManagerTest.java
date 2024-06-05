@@ -96,7 +96,7 @@ public class BaseSyncBatchManagerTest {
 		Mockito.doNothing().when(manager).send(false);
 		
 		manager.add(msg);
-		List<Object> items = Whitebox.getInternalState(manager, "items");
+		List<Object> items = Whitebox.getInternalState(manager, "buffer");
 		assertTrue(items.contains(msg));
 		List<Long> itemIds = Whitebox.getInternalState(manager, "itemIds");
 		assertTrue(itemIds.contains(id));
@@ -105,7 +105,7 @@ public class BaseSyncBatchManagerTest {
 	}
 	
 	@Test
-	public void add_shouldAddAndSendAllTheItemsIfTheyMatchTheBatchSizeInAThreadSafeWayAndResetItemCache() {
+	public void add_shouldAddAndSendAllTheItemsIfTheyMatchTheBatchSizeInAThreadSafeWayAndResetTheBuffer() {
 		final int count = 50;
 		ExecutorService executor = Executors.newFixedThreadPool(count);
 		List<CompletableFuture<Void>> futures = new ArrayList(count);
@@ -128,7 +128,7 @@ public class BaseSyncBatchManagerTest {
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).join();
 		assertEquals(count, expectedItems.size());
 		assertTrue(expectedItems.containsAll(msgs));
-		List<Long> items = Whitebox.getInternalState(manager, "items");
+		List<Long> items = Whitebox.getInternalState(manager, "buffer");
 		assertTrue(items.isEmpty());
 		List<Long> itemIds = Whitebox.getInternalState(manager, "itemIds");
 		assertTrue(itemIds.isEmpty());
@@ -141,9 +141,6 @@ public class BaseSyncBatchManagerTest {
 		final int count = 67;
 		ExecutorService executor = Executors.newFixedThreadPool(count);
 		List<CompletableFuture<Void>> futures = new ArrayList(count);
-		final MockSyncBatchManager manager = new MockSyncBatchManager(10);
-		Whitebox.setInternalState(manager, "largeMsgSize", DEFAULT_LARGE_MSG_SIZE);
-		List<SenderSyncMessage> expectedMsgs = new ArrayList<>();
 		List<List<SenderSyncMessage>> expectedBatches = new ArrayList<>();
 		PowerMockito.doAnswer(i -> expectedBatches.add(i.getArgument(1))).when(SenderUtils.class);
 		SenderUtils.sendBatch(eq(mockConnFactory), ArgumentMatchers.anyList(), eq(DEFAULT_LARGE_MSG_SIZE));
@@ -160,12 +157,88 @@ public class BaseSyncBatchManagerTest {
 		
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).join();
 		assertEquals(6, expectedBatches.size());
-		List<Long> items = Whitebox.getInternalState(manager, "items");
+		expectedBatches.forEach(l -> assertEquals(manager.getBatchSize(), l.size()));
+		List<Long> items = Whitebox.getInternalState(manager, "buffer");
 		assertEquals(7, items.size());
 		List<Long> itemIds = Whitebox.getInternalState(manager, "itemIds");
 		assertEquals(7, itemIds.size());
 		PowerMockito.verifyStatic(SenderUtils.class, Mockito.times(6));
 		SenderUtils.sendBatch(eq(mockConnFactory), anyList(), eq(DEFAULT_LARGE_MSG_SIZE));
+	}
+	
+	@Test
+	public void send_shouldSkipIfTheItemsBufferIsEmpty() {
+		manager.send(false);
+		PowerMockito.verifyZeroInteractions(SenderUtils.class);
+	}
+	
+	@Test
+	public void send_shouldSkipIfBufferSizeIsLessThanBatchSize() {
+		Whitebox.setInternalState(manager, "buffer", List.of(new SenderSyncMessage()));
+		
+		manager.send(false);
+		
+		PowerMockito.verifyZeroInteractions(SenderUtils.class);
+	}
+	
+	@Test
+	public void send_shouldSendItemsInTheBufferToTheMessageBrokerAndReset() {
+		final Long id1 = 1L;
+		final Long id2 = 2L;
+		List<SenderSyncMessage> items = new ArrayList<>();
+		SenderSyncMessage msg1 = new SenderSyncMessage();
+		msg1.setId(id1);
+		SenderSyncMessage msg2 = new SenderSyncMessage();
+		msg2.setId(id2);
+		items.add(msg1);
+		items.add(msg2);
+		List<Long> ids = new ArrayList<>();
+		ids.add(id1);
+		ids.add(id2);
+		manager = new MockSyncBatchManager(items.size());
+		Whitebox.setInternalState(manager, "buffer", items);
+		Whitebox.setInternalState(manager, "itemIds", ids);
+		Whitebox.setInternalState(manager, "largeMsgSize", DEFAULT_LARGE_MSG_SIZE);
+		
+		manager.send(false);
+		
+		PowerMockito.verifyStatic(SenderUtils.class);
+		SenderUtils.sendBatch(mockConnFactory, items, DEFAULT_LARGE_MSG_SIZE);
+		List<Long> buffer = Whitebox.getInternalState(manager, "buffer");
+		assertTrue(buffer.isEmpty());
+		List<Long> itemIds = Whitebox.getInternalState(manager, "itemIds");
+		assertTrue(itemIds.isEmpty());
+		assertEquals(List.of(id1, id2), manager.updatedItemIds);
+	}
+	
+	@Test
+	public void send_shouldSendItemsOfBufferSizeIsLessThanBatchSizeAndForceIsSetToTrue() {
+		final Long id1 = 1L;
+		final Long id2 = 2L;
+		List<SenderSyncMessage> items = new ArrayList<>();
+		SenderSyncMessage msg1 = new SenderSyncMessage();
+		msg1.setId(id1);
+		SenderSyncMessage msg2 = new SenderSyncMessage();
+		msg2.setId(id2);
+		items.add(msg1);
+		items.add(msg2);
+		List<Long> ids = new ArrayList<>();
+		ids.add(id1);
+		ids.add(id2);
+		manager = new MockSyncBatchManager(items.size() + 1);
+		Whitebox.setInternalState(manager, "buffer", items);
+		Whitebox.setInternalState(manager, "itemIds", ids);
+		Whitebox.setInternalState(manager, "largeMsgSize", DEFAULT_LARGE_MSG_SIZE);
+		
+		manager.send(true);
+		
+		PowerMockito.verifyStatic(SenderUtils.class);
+		SenderUtils.sendBatch(mockConnFactory, items, DEFAULT_LARGE_MSG_SIZE);
+		List<Long> buffer = Whitebox.getInternalState(manager, "buffer");
+		assertTrue(buffer.isEmpty());
+		List<Long> itemIds = Whitebox.getInternalState(manager, "itemIds");
+		assertTrue(itemIds.isEmpty());
+		assertEquals(List.of(id1, id2), manager.updatedItemIds);
 	}
 	
 }
