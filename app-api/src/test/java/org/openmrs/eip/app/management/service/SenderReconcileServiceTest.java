@@ -18,6 +18,7 @@ import org.openmrs.eip.app.management.entity.sender.SenderTableReconciliation;
 import org.openmrs.eip.app.management.repository.SenderReconcileRepository;
 import org.openmrs.eip.app.management.repository.SenderTableReconcileRepository;
 import org.openmrs.eip.app.sender.BaseSenderTest;
+import org.openmrs.eip.component.repository.PersonNameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
@@ -33,10 +34,14 @@ public class SenderReconcileServiceTest extends BaseSenderTest {
 	@Autowired
 	private SenderTableReconcileRepository tableRecRepo;
 	
+	@Autowired
+	private PersonNameRepository nameRepo;
+	
 	@Test
 	@Sql(scripts = { "classpath:openmrs_core_data.sql", "classpath:openmrs_patient.sql" })
 	public void takeSnapshot_shouldTakeInitialSnapshotForExistingRowsForEachSyncedTable() {
 		assertEquals(0, tableRecRepo.count());
+		assertEquals(2, nameRepo.count());
 		long timestamp = System.currentTimeMillis();
 		
 		List<SenderTableReconciliation> recs = service.takeSnapshot();
