@@ -31,6 +31,9 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 	@Value("${" + SenderConstants.PROP_SENDER_ID + "}")
 	private String senderId;
 	
+	@Value("${" + SenderConstants.PROP_JMS_SEND_BATCH_DISABLED + "}")
+	private Boolean batchDisabled;
+	
 	private JmsTemplate jmsTemplate;
 	
 	private SenderSyncMessageRepository repo;
@@ -90,8 +93,7 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 			LOG.debug("Sync payload -> " + syncData);
 		}
 		
-		//TODO Replace with application property
-		if (false) {
+		if (!batchDisabled) {
 			batchManager.add(syncMsg);
 		} else {
 			jmsTemplate.send(SenderUtils.getQueueName(), new SyncMessageCreator(syncData, senderId));
