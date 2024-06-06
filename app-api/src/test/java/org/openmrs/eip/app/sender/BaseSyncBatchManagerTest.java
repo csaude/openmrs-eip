@@ -145,8 +145,8 @@ public class BaseSyncBatchManagerTest {
 		final int count = 67;
 		ExecutorService executor = Executors.newFixedThreadPool(count);
 		List<CompletableFuture<Void>> futures = new ArrayList(count);
-		List<List<SenderSyncMessage>> expectedBatches = new ArrayList<>();
-		PowerMockito.doAnswer(i -> expectedBatches.add(i.getArgument(2))).when(SenderUtils.class);
+		List<List<SenderSyncMessage>> expectedBatches = Collections.synchronizedList(new ArrayList<>());
+		PowerMockito.doAnswer(i -> expectedBatches.add(new ArrayList<>(i.getArgument(2)))).when(SenderUtils.class);
 		SenderUtils.sendBatch(eq(mockConnFactory), eq(SITE_ID), ArgumentMatchers.anyList(), eq(DEFAULT_LARGE_MSG_SIZE));
 		for (long i = 0; i < count; i++) {
 			final Long id = i + 1;
