@@ -2,8 +2,11 @@ package org.openmrs.eip.app.sender;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType.SYNC;
 import static org.openmrs.eip.app.sender.SenderConstants.PROP_ACTIVEMQ_ENDPOINT;
 
 import java.util.Arrays;
@@ -16,6 +19,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.component.SyncContext;
@@ -42,6 +46,8 @@ import jakarta.jms.StreamMessage;
 public class SenderUtilsTest {
 	
 	private static final String QUEUE_NAME = "test";
+	
+	private static final String SITE_ID = "testSite";
 	
 	@Mock
 	private Environment mockEnv;
@@ -116,9 +122,13 @@ public class SenderUtilsTest {
 		msg.setId(id);
 		byte[] expectedSentBytes = JsonUtils.marshalToBytes(List.of(msg));
 		
-		SenderUtils.sendBatch(mockConnFactory, List.of(msg), SyncConstants.DEFAULT_LARGE_MSG_SIZE);
+		SenderUtils.sendBatch(mockConnFactory, SITE_ID, List.of(msg), SyncConstants.DEFAULT_LARGE_MSG_SIZE);
 		
 		verify(mockBytesMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		verify(mockBytesMsg).setStringProperty(eq(SyncConstants.JMS_HEADER_MSG_ID), anyString());
+		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
+		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_SITE, SITE_ID);
+		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_TYPE, SYNC.name());
 		ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
 		verify(mockBytesMsg).writeBytes(bytesCaptor.capture());
 		assertTrue(Arrays.equals(expectedSentBytes, bytesCaptor.getValue()));
@@ -139,9 +149,13 @@ public class SenderUtilsTest {
 		byte[] msgBytes = JsonUtils.marshalToBytes(List.of(msg));
 		byte[] expectedSentBytes = Utils.compress(msgBytes);
 		
-		SenderUtils.sendBatch(mockConnFactory, List.of(msg), msgBytes.length - 1);
+		SenderUtils.sendBatch(mockConnFactory, SITE_ID, List.of(msg), msgBytes.length - 1);
 		
 		verify(mockBytesMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		verify(mockBytesMsg).setStringProperty(eq(SyncConstants.JMS_HEADER_MSG_ID), anyString());
+		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
+		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_SITE, SITE_ID);
+		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_TYPE, SYNC.name());
 		ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
 		verify(mockBytesMsg).writeBytes(bytesCaptor.capture());
 		assertTrue(Arrays.equals(expectedSentBytes, bytesCaptor.getValue()));
@@ -162,9 +176,13 @@ public class SenderUtilsTest {
 		msg.setId(id);
 		byte[] expectedSentBytes = Utils.compress(JsonUtils.marshalToBytes(List.of(msg)));
 		
-		SenderUtils.sendBatch(mockConnFactory, List.of(msg), expectedSentBytes.length - 1);
+		SenderUtils.sendBatch(mockConnFactory, SITE_ID, List.of(msg), expectedSentBytes.length - 1);
 		
 		verify(mockStreamMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		verify(mockStreamMsg).setStringProperty(eq(SyncConstants.JMS_HEADER_MSG_ID), anyString());
+		verify(mockStreamMsg).setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
+		verify(mockStreamMsg).setStringProperty(SyncConstants.JMS_HEADER_SITE, SITE_ID);
+		verify(mockStreamMsg).setStringProperty(SyncConstants.JMS_HEADER_TYPE, SYNC.name());
 		ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
 		verify(mockStreamMsg).writeBytes(bytesCaptor.capture());
 		assertTrue(Arrays.equals(expectedSentBytes, bytesCaptor.getValue()));

@@ -3,8 +3,11 @@ package org.openmrs.eip.app.sender;
 import static org.openmrs.eip.app.sender.SenderConstants.PROP_ACTIVEMQ_ENDPOINT;
 
 import java.util.List;
+import java.util.UUID;
 
+import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.SyncConstants;
+import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.component.Constants;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.exception.EIPException;
@@ -126,7 +129,7 @@ public class SenderUtils {
 		throw new EIPException("Don't know how to resolve uuid from parent for table" + table);
 	}
 	
-	public static void sendBatch(ConnectionFactory cf, List<?> items, int largeMsgSize) {
+	public static void sendBatch(ConnectionFactory cf, String siteId, List<?> items, int largeMsgSize) {
 		if (log.isDebugEnabled()) {
 			log.debug("Sending batch of {} items(s)", items.size());
 		}
@@ -155,6 +158,10 @@ public class SenderUtils {
 					}
 				}
 				
+				msg.setStringProperty(SyncConstants.JMS_HEADER_MSG_ID, UUID.randomUUID().toString());
+				msg.setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
+				msg.setStringProperty(SyncConstants.JMS_HEADER_SITE, siteId);
+				msg.setStringProperty(SyncConstants.JMS_HEADER_TYPE, JmsMessage.MessageType.SYNC.name());
 				msg.setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, items.size());
 				p.send(msg);
 			}

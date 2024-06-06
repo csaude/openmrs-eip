@@ -21,6 +21,9 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 	@Value("${" + PROP_LARGE_MSG_SIZE + ":" + DEFAULT_LARGE_MSG_SIZE + "}")
 	private int largeMsgSize;
 	
+	@Value("${" + SenderConstants.PROP_SENDER_ID + "}")
+	private String siteId;
+	
 	private List<O> buffer;
 	
 	private List<Long> itemIds;
@@ -75,7 +78,7 @@ public abstract class BaseSyncBatchManager<I extends AbstractEntity, O> {
 			return;
 		}
 		
-		SenderUtils.sendBatch(connectionFactory, getItems(), largeMsgSize);
+		SenderUtils.sendBatch(connectionFactory, siteId, getItems(), largeMsgSize);
 		updateItems(getItemIds());
 		
 		if (LOG.isDebugEnabled()) {
