@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,12 +82,24 @@ public class BaseSyncBatchManagerTest {
 	
 	private MockSyncBatchManager manager;
 	
+	private int originalLargeMsgSize;
+	
+	private String originalSiteId;
+	
 	@Before
 	public void setup() {
 		PowerMockito.mockStatic(SenderUtils.class);
 		manager = new MockSyncBatchManager();
+		originalLargeMsgSize = Whitebox.getInternalState(manager, "largeMsgSize");
+		originalSiteId = Whitebox.getInternalState(manager, "siteId");
 		Whitebox.setInternalState(manager, "largeMsgSize", DEFAULT_LARGE_MSG_SIZE);
 		Whitebox.setInternalState(manager, "siteId", SITE_ID);
+	}
+	
+	@After
+	public void tearDown() {
+		Whitebox.setInternalState(manager, "largeMsgSize", originalLargeMsgSize);
+		Whitebox.setInternalState(manager, "siteId", originalSiteId);
 	}
 	
 	@Test

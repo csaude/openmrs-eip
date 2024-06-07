@@ -31,8 +31,8 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 	@Value("${" + SenderConstants.PROP_SENDER_ID + "}")
 	private String senderId;
 	
-	@Value("${" + SenderConstants.PROP_JMS_SEND_BATCH_DISABLED + "}")
-	private Boolean batchDisabled;
+	@Value("${" + SenderConstants.PROP_JMS_SEND_BATCH_DISABLED + ":false}")
+	private boolean batchDisabled;
 	
 	private JmsTemplate jmsTemplate;
 	
@@ -88,14 +88,14 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 		syncModel.getMetadata().setDateSent(LocalDateTime.now());
 		syncModel.getMetadata().setSourceIdentifier(senderId);
 		syncModel.getMetadata().setSyncVersion(AppUtils.getVersion());
-		String syncData = JsonUtils.marshall(syncModel);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Sync payload -> " + syncData);
-		}
 		
 		if (!batchDisabled) {
 			batchManager.add(syncMsg);
 		} else {
+			String syncData = JsonUtils.marshall(syncModel);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Sync payload -> " + syncData);
+			}
 			jmsTemplate.send(SenderUtils.getQueueName(), new SyncMessageCreator(syncData, senderId));
 			
 			if (LOG.isDebugEnabled()) {
@@ -120,7 +120,9 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 	
 	@Override
 	protected void flush() {
-		batchManager.send(true);
+		if (!batchDisabled) {
+			batchManager.send(true);
+		}
 	}
 	
 }

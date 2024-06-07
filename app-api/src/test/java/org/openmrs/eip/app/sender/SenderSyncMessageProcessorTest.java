@@ -33,6 +33,7 @@ import com.jayway.jsonpath.JsonPath;
 
 @TestPropertySource(properties = PROP_SENDER_ID + "=" + SenderSyncMessageProcessorTest.SENDER_ID)
 @TestPropertySource(properties = "camel.output.endpoint=" + SenderSyncMessageProcessorTest.URI_ACTIVEMQ_SYNC)
+@TestPropertySource(properties = SenderConstants.PROP_JMS_SEND_BATCH_DISABLED + "=true")
 public class SenderSyncMessageProcessorTest extends BaseSenderTest {
 	
 	protected static final String SENDER_ID = "test-sender-id";
@@ -51,7 +52,7 @@ public class SenderSyncMessageProcessorTest extends BaseSenderTest {
 	private JmsTemplate mockTemplate;
 	
 	@Test
-	public void shouldSubmitTheSyncMessageToActiveMqAndUpdateIt() {
+	public void processItem_shouldSubmitTheSyncMessageToActiveMqAndUpdateIt() {
 		final String table = "patient";
 		final String uuid = "patient-uuid";
 		final String msgUuid = "msg-uuid";
