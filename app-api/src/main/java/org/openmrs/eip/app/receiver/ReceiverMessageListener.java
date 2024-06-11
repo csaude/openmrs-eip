@@ -47,9 +47,7 @@ public class ReceiverMessageListener implements MessageListener {
 				return;
 			}
 			
-			//TODO Skip message if there is another message with the same id already exists.
-			JmsMessage jmsMsg = new JmsMessage();
-			jmsMsg.setMessageId(msgId);
+			//TODO Skip message if another message with the same id already exists.
 			byte[] body;
 			if (message instanceof TextMessage) {
 				body = message.getBody(String.class).getBytes(StandardCharsets.UTF_8);
@@ -57,23 +55,32 @@ public class ReceiverMessageListener implements MessageListener {
 				body = message.getBody(byte[].class);
 			}
 			
-			jmsMsg.setBody(body);
-			jmsMsg.setSiteId(message.getStringProperty(SyncConstants.JMS_HEADER_SITE));
-			jmsMsg.setSyncVersion(message.getStringProperty(SyncConstants.JMS_HEADER_VERSION));
+			final String siteId = message.getStringProperty(SyncConstants.JMS_HEADER_SITE);
+			final String version = message.getStringProperty(SyncConstants.JMS_HEADER_VERSION);
 			MessageType type = MessageType.SYNC;
 			String typeStr = message.getStringProperty(SyncConstants.JMS_HEADER_TYPE);
 			if (StringUtils.isNotBlank(typeStr)) {
 				type = MessageType.valueOf(typeStr);
 			}
 			
-			jmsMsg.setType(type);
-			jmsMsg.setDateCreated(new Date());
+			JmsMessage jmsMsg = createJmsMessage(msgId, body, siteId, version, type);
 			service.saveJmsMessage(jmsMsg);
 			ReceiverMessageListenerContainer.enableAcknowledgement();
 		}
 		catch (Throwable t) {
 			throw new EIPException("Failed to process incoming JMS message", t);
 		}
+	}
+	
+	private JmsMessage createJmsMessage(String msgId, byte[] body, String siteId, String version, MessageType type) {
+		JmsMessage jmsMsg = new JmsMessage();
+		jmsMsg.setMessageId(msgId);
+		jmsMsg.setBody(body);
+		jmsMsg.setSiteId(siteId);
+		jmsMsg.setSyncVersion(version);
+		jmsMsg.setType(type);
+		jmsMsg.setDateCreated(new Date());
+		return jmsMsg;
 	}
 	
 }
