@@ -124,7 +124,7 @@ public class SenderUtilsTest {
 		
 		SenderUtils.sendBatch(mockConnFactory, SITE_ID, List.of(msg), SyncConstants.DEFAULT_LARGE_MSG_SIZE);
 		
-		verify(mockBytesMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		verify(mockBytesMsg).setIntProperty(SyncConstants.JMS_HEADER_BATCH_SIZE, 1);
 		verify(mockBytesMsg).setStringProperty(eq(SyncConstants.JMS_HEADER_MSG_ID), anyString());
 		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
 		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_SITE, SITE_ID);
@@ -151,7 +151,7 @@ public class SenderUtilsTest {
 		
 		SenderUtils.sendBatch(mockConnFactory, SITE_ID, List.of(msg), msgBytes.length - 1);
 		
-		verify(mockBytesMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		verify(mockBytesMsg).setIntProperty(SyncConstants.JMS_HEADER_BATCH_SIZE, 1);
 		verify(mockBytesMsg).setStringProperty(eq(SyncConstants.JMS_HEADER_MSG_ID), anyString());
 		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
 		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_SITE, SITE_ID);
@@ -178,7 +178,7 @@ public class SenderUtilsTest {
 		
 		SenderUtils.sendBatch(mockConnFactory, SITE_ID, List.of(msg), expectedSentBytes.length - 1);
 		
-		verify(mockStreamMsg).setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, 1);
+		verify(mockStreamMsg).setIntProperty(SyncConstants.JMS_HEADER_BATCH_SIZE, 1);
 		verify(mockStreamMsg).setStringProperty(eq(SyncConstants.JMS_HEADER_MSG_ID), anyString());
 		verify(mockStreamMsg).setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
 		verify(mockStreamMsg).setStringProperty(SyncConstants.JMS_HEADER_SITE, SITE_ID);

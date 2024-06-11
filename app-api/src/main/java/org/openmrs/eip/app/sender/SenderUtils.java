@@ -162,7 +162,7 @@ public class SenderUtils {
 				msg.setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
 				msg.setStringProperty(SyncConstants.JMS_HEADER_SITE, siteId);
 				msg.setStringProperty(SyncConstants.JMS_HEADER_TYPE, JmsMessage.MessageType.SYNC.name());
-				msg.setIntProperty(SyncConstants.SYNC_BATCH_PROP_SIZE, items.size());
+				msg.setIntProperty(SyncConstants.JMS_HEADER_BATCH_SIZE, items.size());
 				p.send(msg);
 			}
 		}

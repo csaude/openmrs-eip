@@ -2,6 +2,7 @@ package org.openmrs.eip.app.receiver;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.app.SyncConstants;
@@ -11,6 +12,7 @@ import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
+import org.openmrs.eip.component.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -47,7 +49,6 @@ public class ReceiverMessageListener implements MessageListener {
 				return;
 			}
 			
-			//TODO Skip message if another message with the same id already exists.
 			byte[] body;
 			if (message instanceof TextMessage) {
 				body = message.getBody(String.class).getBytes(StandardCharsets.UTF_8);
@@ -63,8 +64,32 @@ public class ReceiverMessageListener implements MessageListener {
 				type = MessageType.valueOf(typeStr);
 			}
 			
-			JmsMessage jmsMsg = createJmsMessage(msgId, body, siteId, version, type);
-			service.saveJmsMessage(jmsMsg);
+			String batchSizeStr = null;
+			if (type == MessageType.SYNC) {
+				batchSizeStr = message.getStringProperty(SyncConstants.JMS_HEADER_BATCH_SIZE);
+			}
+			
+			if (batchSizeStr == null) {
+				JmsMessage jmsMsg = createJmsMessage(msgId, body, siteId, version, type);
+				service.saveJmsMessage(jmsMsg);
+			} else {
+				final int batchSize = Integer.valueOf(batchSizeStr);
+				List<Object> items = JsonUtils.unmarshalBytes(body, List.class);
+				if (batchSize != items.size()) {
+					throw new EIPException("Item count " + items.size() + " doesn't match the batch size " + batchSize);
+				}
+				
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Processing sync batch of {} items", batchSize);
+				}
+				
+				for (Object entry : items) {
+					JmsMessage jmsMsg = createJmsMessage(msgId, JsonUtils.marshalToBytes(entry), siteId, version, type);
+					//TODO Move to service and save as a batch
+					service.saveJmsMessage(jmsMsg);
+				}
+			}
+			
 			ReceiverMessageListenerContainer.enableAcknowledgement();
 		}
 		catch (Throwable t) {

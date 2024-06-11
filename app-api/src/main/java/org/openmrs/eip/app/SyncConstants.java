@@ -76,8 +76,6 @@ public class SyncConstants {
 	
 	public static final String PROP_DELAY_TABLE_RECONCILER = "reconcile.table.delay";
 	
-	public static final String SYNC_BATCH_PROP_SIZE = "batchSize";
-	
 	public static final String PROP_LARGE_MSG_SIZE = "jms.large.msg.size";
 	
 	public static final String RECONCILE_MSG_SEPARATOR = ",";
@@ -102,5 +100,7 @@ public class SyncConstants {
 	public static final String JMS_HEADER_MSG_ID = "eipMessageId";
 	
 	public static final String JMS_HEADER_VERSION = "eipVersion";
+	
+	public static final String JMS_HEADER_BATCH_SIZE = "eipBatchSize";
 	
 }

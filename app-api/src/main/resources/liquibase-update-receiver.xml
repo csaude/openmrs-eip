@@ -475,4 +475,12 @@
         </addColumn>
     </changeSet>
 
+    <changeSet author="wluyima" id="20240611-1616" labels="1.8.0">
+        <preConditions onFail="MARK_RAN">
+            <indexExists indexName="msg_id" tableName="jms_msg"/>
+        </preConditions>
+        <comment>Drop unique key constraint from jms_msg.msg_id column</comment>
+        <dropIndex indexName="msg_id" tableName="jms_msg"/>
+    </changeSet>
+
 </databaseChangeLog>
