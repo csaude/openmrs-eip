@@ -1,5 +1,7 @@
 package org.openmrs.eip.app.management.service;
 
+import java.util.List;
+
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverRetryQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncArchive;
@@ -97,6 +99,13 @@ public interface ReceiverService extends Service {
 	 * @param jmsMessage the message to save
 	 */
 	void saveJmsMessage(JmsMessage jmsMessage);
+	
+	/**
+	 * Saves a list of {@link JmsMessage} objects to the database
+	 *
+	 * @param jmsMessages the messages to save
+	 */
+	void saveJmsMessages(List<JmsMessage> jmsMessages);
 	
 	/**
 	 * Processes a {@link JmsMessage}

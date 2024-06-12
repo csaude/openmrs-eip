@@ -1,6 +1,7 @@
 package org.openmrs.eip.app.receiver;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -83,11 +84,12 @@ public class ReceiverMessageListener implements MessageListener {
 					LOG.debug("Processing sync batch of {} items", batchSize);
 				}
 				
+				List<JmsMessage> msgs = new ArrayList<>(items.size());
 				for (Object entry : items) {
-					JmsMessage jmsMsg = createJmsMessage(msgId, JsonUtils.marshalToBytes(entry), siteId, version, type);
-					//TODO Move to service and save as a batch
-					service.saveJmsMessage(jmsMsg);
+					msgs.add(createJmsMessage(msgId, JsonUtils.marshalToBytes(entry), siteId, version, type));
 				}
+				
+				service.saveJmsMessages(msgs);
 			}
 			
 			ReceiverMessageListenerContainer.enableAcknowledgement();

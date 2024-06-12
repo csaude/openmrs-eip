@@ -4,6 +4,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.openmrs.eip.app.SyncConstants.MGT_DATASOURCE_NAME;
 import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
@@ -501,6 +503,53 @@ public class ReceiverServiceTest extends BaseReceiverTest {
 		hash = service.getHash(uuid, PersonHash.class);
 		Assert.assertEquals("new hash", hash.getHash());
 		Assert.assertNotNull(hash.getDateChanged());
+	}
+	
+	@Test
+	@Sql(scripts = "classpath:mgt_site_info.sql", config = @SqlConfig(dataSource = MGT_DATASOURCE_NAME, transactionManager = MGT_TX_MGR))
+	public void saveJmsMessage_shouldSaveTheMessage() {
+		assertEquals(0, jmsMsgRepo.count());
+		JmsMessage jmsMsg = new JmsMessage();
+		jmsMsg.setMessageId("msg-id");
+		jmsMsg.setBody(new byte[] {});
+		jmsMsg.setSiteId(siteRepo.getReferenceById(1L).getIdentifier());
+		jmsMsg.setSyncVersion(AppUtils.getVersion());
+		jmsMsg.setType(MessageType.SYNC);
+		jmsMsg.setDateCreated(new Date());
+		assertNull(jmsMsg.getId());
+		
+		service.saveJmsMessage(jmsMsg);
+		
+		assertEquals(1, jmsMsgRepo.count());
+		assertNotNull(jmsMsg.getId());
+	}
+	
+	@Test
+	@Sql(scripts = "classpath:mgt_site_info.sql", config = @SqlConfig(dataSource = MGT_DATASOURCE_NAME, transactionManager = MGT_TX_MGR))
+	public void saveJmsMessages_shouldSaveTheMessages() {
+		assertEquals(0, jmsMsgRepo.count());
+		JmsMessage jmsMsg1 = new JmsMessage();
+		jmsMsg1.setMessageId("msg-id-1");
+		jmsMsg1.setBody(new byte[] {});
+		jmsMsg1.setSiteId(siteRepo.getReferenceById(1L).getIdentifier());
+		jmsMsg1.setSyncVersion(AppUtils.getVersion());
+		jmsMsg1.setType(MessageType.SYNC);
+		jmsMsg1.setDateCreated(new Date());
+		assertNull(jmsMsg1.getId());
+		JmsMessage jmsMsg2 = new JmsMessage();
+		jmsMsg2.setMessageId("msg-id-2");
+		jmsMsg2.setBody(new byte[] {});
+		jmsMsg2.setSiteId(siteRepo.getReferenceById(1L).getIdentifier());
+		jmsMsg2.setSyncVersion(AppUtils.getVersion());
+		jmsMsg2.setType(MessageType.SYNC);
+		jmsMsg2.setDateCreated(new Date());
+		assertNull(jmsMsg2.getId());
+		
+		service.saveJmsMessages(List.of(jmsMsg1, jmsMsg2));
+		
+		assertEquals(2, jmsMsgRepo.count());
+		assertNotNull(jmsMsg1.getId());
+		assertNotNull(jmsMsg2.getId());
 	}
 	
 }
