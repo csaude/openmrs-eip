@@ -65,7 +65,7 @@ public class JmsMessage extends AbstractEntity {
 	@Setter
 	private byte[] body;
 	
-	@Column(name = "msg_id", length = 38, updatable = false)
+	@Column(name = "msg_id", length = 38, unique = true, updatable = false)
 	@Getter
 	@Setter
 	private String messageId;
