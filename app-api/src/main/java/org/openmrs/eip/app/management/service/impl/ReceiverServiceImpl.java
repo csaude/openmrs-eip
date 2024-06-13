@@ -309,7 +309,9 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 			log.debug("Saving JMS messages");
 		}
 		
-		jmsMsgRepo.saveAll(jmsMessages);
+		//Intentionally not calling jmsMsgRepo.saveAll(jmsMessages) because the spring JPA does not explicitly
+		//guarantee insert oder in the documentation, but we want to be sure it is based on the list order. 
+		jmsMessages.forEach(m -> saveJmsMessage(m));
 	}
 	
 	@Override
