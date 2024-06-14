@@ -94,6 +94,7 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "initialDelayPruner", testInitialDelay);
 		setInternalState(listener, "delayPruner", testDelay);
 		setInternalState(listener, "jmsTaskDisabled", false);
+		setInternalState(listener, "disabledSiteIdentifiers", Collections.emptyList());
 		when(SyncContext.getBean(ReceiverActiveMqMessagePublisher.class)).thenReturn(mockPublisher);
 	}
 	
@@ -110,11 +111,16 @@ public class ReceiverCamelListenerTest {
 		siteInfo1.setIdentifier("site1");
 		siteInfo1.setDisabled(true);
 		SiteInfo siteInfo2 = new SiteInfo();
-		final String siteIdentifier = "site2";
-		siteInfo2.setIdentifier(siteIdentifier);
+		final String siteIdentifier2 = "site2";
+		siteInfo2.setIdentifier(siteIdentifier2);
 		siteInfo2.setDisabled(false);
-		when(mockPublisher.getCamelOutputEndpoint(siteIdentifier)).thenReturn("activemq:test");
-		Collection<SiteInfo> sites = Stream.of(siteInfo1, siteInfo2).collect(Collectors.toList());
+		final String siteIdentifier3 = "site3";
+		SiteInfo siteInfo3 = new SiteInfo();
+		siteInfo3.setDisabled(false);
+		siteInfo3.setIdentifier(siteIdentifier3);
+		setInternalState(listener, "disabledSiteIdentifiers", Collections.singletonList(siteIdentifier3));
+		when(mockPublisher.getCamelOutputEndpoint(siteIdentifier2)).thenReturn("activemq:test");
+		Collection<SiteInfo> sites = Stream.of(siteInfo1, siteInfo2, siteInfo3).collect(Collectors.toList());
 		when(ReceiverContext.getSites()).thenReturn(sites);
 		setInternalState(listener, "initialDelayMsgTsk", testInitialDelay);
 		setInternalState(listener, "delayMsgTask", testDelay);
