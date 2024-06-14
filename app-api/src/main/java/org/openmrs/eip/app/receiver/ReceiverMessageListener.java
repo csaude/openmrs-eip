@@ -48,6 +48,7 @@ public class ReceiverMessageListener implements MessageListener {
 					LOG.debug("Skipping duplicate incoming JMS message with the message id: " + msgId);
 				}
 				
+				ReceiverMessageListenerContainer.enableAcknowledgement();
 				return;
 			}
 			
