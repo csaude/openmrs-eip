@@ -56,6 +56,8 @@ public class ReceiverConstants {
 	
 	public static final String PROP_JMS_LISTENER_DISABLED = "jms.msg.listener.disabled";
 	
+	public static final String PROP_JMS_TASK_DISABLED = "jms.task.disabled";
+	
 	public static final String PROP_JMS_SKIP_DUPLICATES = "jms.skip.duplicates";
 	
 	public static final String ROUTE_ID_MSG_PROCESSOR = "message-processor";
