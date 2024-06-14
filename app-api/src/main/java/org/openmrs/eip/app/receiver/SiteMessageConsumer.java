@@ -68,6 +68,8 @@ public class SiteMessageConsumer implements Runnable {
 	
 	private static Pageable page;
 	
+	private static boolean orderById;
+	
 	/**
 	 * @param messageProcessorUri the camel endpoint URI to call to process a sync message
 	 * @param site sync messages from this site will be consumed by this instance
@@ -89,6 +91,7 @@ public class SiteMessageConsumer implements Runnable {
 				Environment e = SyncContext.getBean(Environment.class);
 				int pageSize = e.getProperty(PROP_SYNC_TASK_BATCH_SIZE, Integer.class, DEFAULT_TASK_BATCH_SIZE);
 				page = PageRequest.of(0, pageSize);
+				orderById = e.getProperty(ReceiverConstants.PROP_SYNC_ORDER_BY_ID, Boolean.class, false);
 				//This ensures there will only be a limited number of queued items for each thread
 				taskThreshold = executor.getMaximumPoolSize() * THREAD_THRESHOLD_MULTIPLIER;
 				PROCESSING_MSG_QUEUE = Collections.synchronizedSet(new HashSet<>(executor.getMaximumPoolSize()));
@@ -119,7 +122,13 @@ public class SiteMessageConsumer implements Runnable {
 			}
 			
 			try {
-				List<SyncMessage> syncMessages = syncMsgRepo.getSyncMessageBySiteOrderByDateCreated(site, page);
+				List<SyncMessage> syncMessages;
+				if (orderById) {
+					syncMessages = syncMsgRepo.getSyncMessageBySite(site, page);
+				} else {
+					syncMessages = syncMsgRepo.getSyncMessageBySiteOrderByDateCreated(site, page);
+				}
+				
 				if (syncMessages.isEmpty()) {
 					if (log.isTraceEnabled()) {
 						log.trace("No sync messages found from site: " + site);

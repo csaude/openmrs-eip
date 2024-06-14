@@ -26,6 +26,15 @@ public interface SyncMessageRepository extends JpaRepository<SyncMessage, Long> 
 	 * @param pageable {@link Pageable} instance
 	 * @return list of sync messages
 	 */
+	List<SyncMessage> getSyncMessageBySite(SiteInfo site, Pageable pageable);
+	
+	/**
+	 * Gets a page of sync messages for the specified site ordered by date created
+	 *
+	 * @param site the site to match
+	 * @param pageable {@link Pageable} instance
+	 * @return list of sync messages
+	 */
 	List<SyncMessage> getSyncMessageBySiteOrderByDateCreated(SiteInfo site, Pageable pageable);
 	
 	/**

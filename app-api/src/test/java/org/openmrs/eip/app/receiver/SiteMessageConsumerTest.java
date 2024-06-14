@@ -20,6 +20,7 @@ import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_ERR_MSG;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_ERR_TYPE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_FOUND_CONFLICT;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.EX_PROP_MSG_PROCESSED;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_ORDER_BY_ID;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_TASK_BATCH_SIZE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.ROUTE_ID_MSG_PROCESSOR;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.URI_MSG_PROCESSOR;
@@ -52,6 +53,7 @@ import org.mockito.Mockito;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.management.entity.receiver.SyncMessage;
 import org.openmrs.eip.app.management.entity.receiver.SyncedMessage.SyncOutcome;
+import org.openmrs.eip.app.management.repository.SyncMessageRepository;
 import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.camel.utils.CamelUtils;
@@ -90,18 +92,25 @@ public class SiteMessageConsumerTest {
 	private ReceiverService mockService;
 	
 	@Mock
+	private SyncMessageRepository mockSyncMsgRepo;
+	
+	@Mock
 	private Environment mockEnv;
+	
+	private boolean orderbyIdOriginal;
 	
 	@Before
 	public void setup() {
 		PowerMockito.mockStatic(SyncContext.class);
 		PowerMockito.mockStatic(ReceiverContext.class);
 		PowerMockito.mockStatic(CamelUtils.class);
+		orderbyIdOriginal = getInternalState(SiteMessageConsumer.class, "orderById");
 		setInternalState(SiteMessageConsumer.class, "initialized", true);
 		siteInfo = new SiteInfo();
 		siteInfo.setIdentifier("testSite");
 		Mockito.when(mockProducerTemplate.getCamelContext()).thenReturn(mockCamelContext);
 		Mockito.when(SyncContext.getBean(Environment.class)).thenReturn(mockEnv);
+		Mockito.when(SyncContext.getBean(SyncMessageRepository.class)).thenReturn(mockSyncMsgRepo);
 		setInternalState(SiteMessageConsumer.class, "PROCESSING_MSG_QUEUE", synchronizedSet(new HashSet<>()));
 	}
 	
@@ -109,6 +118,7 @@ public class SiteMessageConsumerTest {
 	public void tearDown() {
 		setInternalState(BaseSiteRunnable.class, "initialized", false);
 		setInternalState(SiteMessageConsumer.class, "page", (Object) null);
+		setInternalState(SiteMessageConsumer.class, "orderById", orderbyIdOriginal);
 		setInternalState(SiteMessageConsumer.class, "PROCESSING_MSG_QUEUE", (Object) null);
 	}
 	
@@ -141,9 +151,11 @@ public class SiteMessageConsumerTest {
 		setInternalState(SiteMessageConsumer.class, "initialized", false);
 		setInternalState(SiteMessageConsumer.class, "taskThreshold", 0);
 		setInternalState(SiteMessageConsumer.class, "page", (Object) null);
+		assertFalse(getInternalState(SiteMessageConsumer.class, "orderById"));
 		final int batchSize = 4;
 		Mockito.when(mockEnv.getProperty(PROP_SYNC_TASK_BATCH_SIZE, Integer.class, DEFAULT_TASK_BATCH_SIZE))
 		        .thenReturn(batchSize);
+		Mockito.when(mockEnv.getProperty(PROP_SYNC_ORDER_BY_ID, Boolean.class, false)).thenReturn(true);
 		
 		consumer.initIfNecessary();
 		
@@ -151,6 +163,7 @@ public class SiteMessageConsumerTest {
 		final int expected = executor.getMaximumPoolSize() * THREAD_THRESHOLD_MULTIPLIER;
 		assertEquals(expected, ((Integer) getInternalState(SiteMessageConsumer.class, "taskThreshold")).intValue());
 		assertEquals(PageRequest.of(0, 4), getInternalState(SiteMessageConsumer.class, "page"));
+		assertTrue(getInternalState(SiteMessageConsumer.class, "orderById"));
 	}
 	
 	@Test
@@ -788,6 +801,20 @@ public class SiteMessageConsumerTest {
 		
 		PowerMockito.verifyStatic(CamelUtils.class, never());
 		CamelUtils.send(eq(URI_MSG_PROCESSOR), any(Exchange.class));
+	}
+	
+	@Test
+	public void run_shouldLoadSyncItemsOrderedByDateCreated() {
+		createConsumer(1).run();
+		Mockito.verify(mockSyncMsgRepo).getSyncMessageBySiteOrderByDateCreated(siteInfo,
+		    PageRequest.of(0, DEFAULT_TASK_BATCH_SIZE));
+	}
+	
+	@Test
+	public void run_shouldLoadSyncItemsOrderedById() {
+		setInternalState(SiteMessageConsumer.class, "orderById", true);
+		createConsumer(1).run();
+		Mockito.verify(mockSyncMsgRepo).getSyncMessageBySite(siteInfo, PageRequest.of(0, DEFAULT_TASK_BATCH_SIZE));
 	}
 	
 }
