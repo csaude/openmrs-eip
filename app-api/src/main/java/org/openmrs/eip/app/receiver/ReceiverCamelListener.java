@@ -16,6 +16,7 @@ import static org.openmrs.eip.app.SyncConstants.PROP_PRUNER_ENABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.BEAN_NAME_SITE_EXECUTOR;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DELAY_JMS_MSG_TASK;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_INITIAL_DELAY_JMS_MSG_TASK;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_JMS_TASK_DISABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SITE_DISABLED_TASKS;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SITE_TASK_DELAY;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SITE_TASK_INITIAL_DELAY;
@@ -104,6 +105,9 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	
 	@Value("${" + PROP_DELAY_MSG_RECONCILER + ":" + DEFAULT_DELAY + "}")
 	private long delayMsgReconciler;
+	
+	@Value("${" + PROP_JMS_TASK_DISABLED + ":false}")
+	private boolean jmsTaskDisabled;
 	
 	@Value("${" + PROP_INITIAL_DELAY_RETRY_TASK + ":" + DEFAULT_INITIAL_DELAY_SYNC + "}")
 	private long initialDelayRetryTask;
@@ -198,8 +202,12 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	}
 	
 	private void startTasks() {
-		ReceiverJmsMessageTask jmsTask = new ReceiverJmsMessageTask();
-		siteExecutor.scheduleWithFixedDelay(jmsTask, initialDelayMsgTsk, delayMsgTask, MILLISECONDS);
+		if (!jmsTaskDisabled) {
+			log.info("Starting JMS task...");
+			ReceiverJmsMessageTask jmsTask = new ReceiverJmsMessageTask();
+			siteExecutor.scheduleWithFixedDelay(jmsTask, initialDelayMsgTsk, delayMsgTask, MILLISECONDS);
+		}
+		
 		ReceiverRetryTask retryTask = SyncContext.getBean(ReceiverRetryTask.class);
 		siteExecutor.scheduleWithFixedDelay(retryTask, initialDelayRetryTask, delayRetryTask, MILLISECONDS);
 		ReceiverReconcileTask recTask = new ReceiverReconcileTask();
