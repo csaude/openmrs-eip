@@ -1,6 +1,7 @@
 package org.openmrs.eip.app.receiver;
 
 import static org.mockito.Mockito.when;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_ORDER_BY_ID;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
+import org.springframework.core.env.Environment;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(SyncContext.class)
@@ -54,6 +56,9 @@ public class SiteParentTaskTest {
 	@Mock
 	private ReceiverActiveMqMessagePublisher mockPublisher;
 	
+	@Mock
+	private Environment mockEnv;
+	
 	@Before
 	public void setup() {
 		PowerMockito.mockStatic(SyncContext.class);
@@ -61,6 +66,8 @@ public class SiteParentTaskTest {
 		when(SyncContext.getBean(ReceiverActiveMqMessagePublisher.class)).thenReturn(mockPublisher);
 		when(mockSite.getIdentifier()).thenReturn(SITE_IDENTIFIER);
 		when(mockPublisher.getCamelOutputEndpoint(SITE_IDENTIFIER)).thenReturn("activemq:" + QUEUE_NAME);
+		Mockito.when(SyncContext.getBean(Environment.class)).thenReturn(mockEnv);
+		Mockito.when(mockEnv.getProperty(PROP_SYNC_ORDER_BY_ID, Boolean.class, false)).thenReturn(false);
 	}
 	
 	@After
