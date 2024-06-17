@@ -1,5 +1,7 @@
 package org.openmrs.eip.app.config;
 
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_JMS_LISTENER_DISABLED;
+
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.receiver.ReceiverConstants;
 import org.openmrs.eip.app.receiver.ReceiverMessageListener;
@@ -8,6 +10,7 @@ import org.openmrs.eip.component.SyncProfiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
@@ -23,6 +26,7 @@ public class ReceiverJmsConfig {
 	private String queueName;
 	
 	@Bean
+	@ConditionalOnProperty(value = PROP_JMS_LISTENER_DISABLED, havingValue = "false", matchIfMissing = true)
 	public DefaultMessageListenerContainer getListenerContainer(ConnectionFactory cf, ReceiverMessageListener listener) {
 		DefaultMessageListenerContainer container = new ReceiverMessageListenerContainer();
 		container.setConnectionFactory(cf);
