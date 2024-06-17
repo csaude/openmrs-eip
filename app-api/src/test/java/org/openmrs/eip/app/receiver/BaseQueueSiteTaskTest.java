@@ -1,5 +1,6 @@
 package org.openmrs.eip.app.receiver;
 
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_ORDER_BY_ID;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import org.openmrs.eip.component.SyncContext;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Pageable;
 
 @RunWith(PowerMockRunner.class)
@@ -31,6 +33,9 @@ public class BaseQueueSiteTaskTest {
 	@Mock
 	private Pageable mockPage;
 	
+	@Mock
+	private Environment mockEnv;
+	
 	private BaseQueueSiteTask task;
 	
 	@Before
@@ -39,6 +44,8 @@ public class BaseQueueSiteTaskTest {
 		Mockito.when(SyncContext.getBean(SyncMessageProcessor.class)).thenReturn(mockProcessor);
 		setInternalState(BaseSiteRunnable.class, "initialized", true);
 		setInternalState(BaseSiteRunnable.class, Pageable.class, mockPage);
+		Mockito.when(SyncContext.getBean(Environment.class)).thenReturn(mockEnv);
+		Mockito.when(mockEnv.getProperty(PROP_SYNC_ORDER_BY_ID, Boolean.class, false)).thenReturn(false);
 		task = Mockito.spy(new Synchronizer(null));
 	}
 	
