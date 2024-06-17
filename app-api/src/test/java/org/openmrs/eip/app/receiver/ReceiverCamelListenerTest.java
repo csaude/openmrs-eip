@@ -1,7 +1,9 @@
 package org.openmrs.eip.app.receiver;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.reflect.Whitebox.setInternalState;
@@ -97,6 +99,7 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "delayPruner", testDelay);
 		setInternalState(listener, "initialDelayRetryTask", testInitialDelay);
 		setInternalState(listener, "delayRetryTask", testDelay);
+		setInternalState(listener, "jmsTaskDisabled", false);
 		when(SyncContext.getBean(ReceiverActiveMqMessagePublisher.class)).thenReturn(mockPublisher);
 	}
 	
@@ -186,6 +189,24 @@ public class ReceiverCamelListenerTest {
 		AppUtils.shutdownExecutor(mockSyncExecutor, siteName2 + " " + ReceiverConstants.CHILD_TASK_NAME, true);
 		PowerMockito.verifyStatic(AppUtils.class);
 		AppUtils.shutdownExecutor(mockSiteExecutor, ReceiverConstants.PARENT_TASK_NAME, false);
+	}
+	
+	@Test
+	public void applicationStarted_shouldNotStartJmsTaskIfDisabled() {
+		setInternalState(listener, "jmsTaskDisabled", true);
+		setInternalState(listener, "initDelayReconciler", testInitialDelay);
+		setInternalState(listener, "delayReconciler", testDelay);
+		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
+		setInternalState(listener, "delayMsgReconciler", testDelay);
+		
+		listener.applicationStarted();
+		
+		Mockito.verify(mockSiteExecutor, never()).scheduleWithFixedDelay(any(ReceiverJmsMessageTask.class), anyLong(),
+		    anyLong(), any());
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 	}
 	
 }
