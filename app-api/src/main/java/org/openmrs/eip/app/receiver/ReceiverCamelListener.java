@@ -15,6 +15,7 @@ import static org.openmrs.eip.app.SyncConstants.PROP_INITIAL_DELAY_RETRY_TASK;
 import static org.openmrs.eip.app.SyncConstants.PROP_PRUNER_ENABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.BEAN_NAME_SITE_EXECUTOR;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DELAY_JMS_MSG_TASK;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DISABLED_SITES;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_INITIAL_DELAY_JMS_MSG_TASK;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_JMS_TASK_DISABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SITE_DISABLED_TASKS;
@@ -109,6 +110,9 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	@Value("${" + PROP_JMS_TASK_DISABLED + ":false}")
 	private boolean jmsTaskDisabled;
 	
+	@Value("${" + PROP_DISABLED_SITES + ":}")
+	private List<String> disabledSiteIdentifiers;
+	
 	@Value("${" + PROP_INITIAL_DELAY_RETRY_TASK + ":" + DEFAULT_INITIAL_DELAY_SYNC + "}")
 	private long initialDelayRetryTask;
 	
@@ -156,10 +160,17 @@ public class ReceiverCamelListener extends BaseCamelListener {
 		
 		SyncContext.setAdminUser(userLightRepo.findById(optional.get().getId()).get());
 		
-		log.info("Starting tasks");
-		
-		Collection<SiteInfo> sites = ReceiverContext.getSites().stream().filter(s -> !s.getDisabled())
+		Collection<SiteInfo> sites = ReceiverContext.getSites().stream()
+		        .filter(s -> !s.getDisabled() && !disabledSiteIdentifiers.contains(s.getIdentifier()))
 		        .collect(Collectors.toList());
+		
+		log.info("There are {} enabled sites", sites.size());
+		
+		if (log.isDebugEnabled()) {
+			log.debug("Enabled sites: " + sites);
+		}
+		
+		log.info("Starting tasks");
 		
 		startTasks();
 		startSiteParentTasks(sites);

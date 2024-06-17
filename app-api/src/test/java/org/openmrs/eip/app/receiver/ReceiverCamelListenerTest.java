@@ -100,6 +100,7 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "initialDelayRetryTask", testInitialDelay);
 		setInternalState(listener, "delayRetryTask", testDelay);
 		setInternalState(listener, "jmsTaskDisabled", false);
+		setInternalState(listener, "disabledSiteIdentifiers", Collections.emptyList());
 		when(SyncContext.getBean(ReceiverActiveMqMessagePublisher.class)).thenReturn(mockPublisher);
 	}
 	
@@ -115,11 +116,16 @@ public class ReceiverCamelListenerTest {
 		siteInfo1.setIdentifier("site1");
 		siteInfo1.setDisabled(true);
 		SiteInfo siteInfo2 = new SiteInfo();
-		final String siteIdentifier = "site2";
-		siteInfo2.setIdentifier(siteIdentifier);
+		final String siteIdentifier2 = "site2";
+		siteInfo2.setIdentifier(siteIdentifier2);
 		siteInfo2.setDisabled(false);
-		when(mockPublisher.getCamelOutputEndpoint(siteIdentifier)).thenReturn("activemq:test");
-		Collection<SiteInfo> sites = Stream.of(siteInfo1, siteInfo2).collect(Collectors.toList());
+		final String siteIdentifier3 = "site3";
+		SiteInfo siteInfo3 = new SiteInfo();
+		siteInfo3.setDisabled(false);
+		siteInfo3.setIdentifier(siteIdentifier3);
+		setInternalState(listener, "disabledSiteIdentifiers", Collections.singletonList(siteIdentifier3));
+		when(mockPublisher.getCamelOutputEndpoint(siteIdentifier2)).thenReturn("activemq:test");
+		Collection<SiteInfo> sites = Stream.of(siteInfo1, siteInfo2, siteInfo3).collect(Collectors.toList());
 		when(ReceiverContext.getSites()).thenReturn(sites);
 		setInternalState(listener, "initialDelayMsgTsk", testInitialDelay);
 		setInternalState(listener, "delayMsgTask", testDelay);
@@ -127,19 +133,16 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "delayReconciler", testDelay);
 		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
 		setInternalState(listener, "delayMsgReconciler", testDelay);
-		when(SyncContext.getBean(ReceiverRetryTask.class)).thenReturn(mockRetryTask);
 		
 		listener.applicationStarted();
 		
-		verify(mockSiteExecutor).scheduleWithFixedDelay(any(SiteParentTask.class), eq(testInitialDelay), eq(testDelay),
-		    eq(TimeUnit.MILLISECONDS));
-		verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverJmsMessageTask.class), eq(testInitialDelay),
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(SiteParentTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
-		verify(mockSiteExecutor).scheduleWithFixedDelay(eq(mockRetryTask), eq(testInitialDelay), eq(testDelay),
-		    eq(TimeUnit.MILLISECONDS));
-		verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileTask.class), eq(testInitialDelay),
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverJmsMessageTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
-		verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 	}
 	
