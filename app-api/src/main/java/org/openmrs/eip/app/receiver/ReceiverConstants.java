@@ -58,6 +58,8 @@ public class ReceiverConstants {
 	
 	public static final String PROP_JMS_SKIP_DUPLICATES = "jms.skip.duplicates";
 	
+	public static final String PROP_DISABLED_SITES = "disabled.sites";
+	
 	public static final String ERROR_HANDLER_REF = "inBoundErrorHandler";
 	
 	public static final String ROUTE_ID_REQUEST_PROCESSOR = "receiver-request-processor";
