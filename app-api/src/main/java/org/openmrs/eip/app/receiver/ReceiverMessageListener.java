@@ -13,6 +13,7 @@ import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,9 @@ public class ReceiverMessageListener implements MessageListener {
 	
 	private ReceiverService service;
 	
+	@Value("${" + ReceiverConstants.PROP_JMS_SKIP_DUPLICATES + ":true}")
+	private boolean skipDuplicates;
+	
 	public ReceiverMessageListener(JmsMessageRepository repo, ReceiverService service) {
 		this.repo = repo;
 		this.service = service;
@@ -39,7 +43,7 @@ public class ReceiverMessageListener implements MessageListener {
 	public void onMessage(Message message) {
 		try {
 			final String msgId = message.getStringProperty(SyncConstants.JMS_HEADER_MSG_ID);
-			if (StringUtils.isNotBlank(msgId) && repo.existsByMessageId(msgId)) {
+			if (skipDuplicates && StringUtils.isNotBlank(msgId) && repo.existsByMessageId(msgId)) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Skipping duplicate incoming JMS message with the message id: " + msgId);
 				}

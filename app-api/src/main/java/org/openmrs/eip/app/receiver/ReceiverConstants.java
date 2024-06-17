@@ -51,6 +51,8 @@ public class ReceiverConstants {
 	public static final String PROP_COUNT_CACHE_TTL = "sync.prioritize.count.cache.ttl";
 	
 	public static final String PROP_SYNC_ORDER_BY_ID = "sync.order.by.id";
+
+    public static final String PROP_JMS_SKIP_DUPLICATES = "jms.skip.duplicates";
 	
 	public static final String ERROR_HANDLER_REF = "inBoundErrorHandler";
 	
