@@ -1,7 +1,9 @@
 package org.openmrs.eip.app.sender;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.time.ZoneId;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -9,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.component.model.SyncMetadata;
 import org.openmrs.eip.component.model.SyncModel;
@@ -46,10 +49,14 @@ public class SenderSyncBatchManagerTest {
 		Map<String, Object> syncData = Map.of("metadata", metadata);
 		SenderSyncMessage msg = new SenderSyncMessage();
 		msg.setData(JsonUtils.marshall(syncData));
+		long timestamp = System.currentTimeMillis();
 		
 		SyncModel model = manager.convert(msg);
 		
 		assertEquals(senderId, model.getMetadata().getSourceIdentifier());
+		assertEquals(AppUtils.getVersion(), model.getMetadata().getSyncVersion());
+		long dateSent = model.getMetadata().getDateSent().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+		assertTrue(dateSent == timestamp || dateSent > timestamp);
 	}
 	
 }

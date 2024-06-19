@@ -1,8 +1,10 @@
 package org.openmrs.eip.app.sender;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.component.SyncProfiles;
@@ -45,6 +47,8 @@ public class SenderSyncBatchManager extends BaseSyncBatchManager<SenderSyncMessa
 	protected SyncModel convert(SenderSyncMessage message) {
 		SyncModel syncModel = JsonUtils.unmarshalSyncModel(message.getData());
 		syncModel.getMetadata().setSourceIdentifier(senderId);
+		syncModel.getMetadata().setDateSent(LocalDateTime.now());
+		syncModel.getMetadata().setSyncVersion(AppUtils.getVersion());
 		return syncModel;
 	}
 	
