@@ -88,10 +88,9 @@ public class ReceiverMessageListener implements MessageListener {
 				for (Map entry : items) {
 					String msgUid = ((Map) (entry).get("metadata")).get("messageUuid").toString();
 					JmsMessage msg = createJmsMessage(msgUid, JsonUtils.marshalToBytes(entry), siteId, version, type);
-					if (msg == null) {
-						continue;
+					if (msg != null) {
+						msgs.add(msg);
 					}
-					msgs.add(msg);
 				}
 				
 				service.saveJmsMessages(msgs);
