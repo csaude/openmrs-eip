@@ -98,6 +98,7 @@ public class SenderSyncMessageProcessorTest extends BaseSenderTest {
 		Mockito.verify(mockTemplate).send(ArgumentMatchers.eq(QUEUE_NAME), argCaptor.capture());
 		SyncMessageCreator messageCreator = argCaptor.getValue();
 		assertEquals(syncPayload, messageCreator.getBody());
+		assertEquals(msgUuid, argCaptor.getValue().getMessageUuid());
 		assertEquals(SENDER_ID, argCaptor.getValue().getSiteId());
 	}
 	

@@ -96,7 +96,8 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Sync payload -> " + syncData);
 			}
-			jmsTemplate.send(SenderUtils.getQueueName(), new SyncMessageCreator(syncData, senderId));
+			jmsTemplate.send(SenderUtils.getQueueName(),
+			    new SyncMessageCreator(syncData, syncMsg.getMessageUuid(), senderId));
 			
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Sync payload sent!");

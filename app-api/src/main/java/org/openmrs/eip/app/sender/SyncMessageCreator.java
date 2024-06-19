@@ -1,7 +1,5 @@
 package org.openmrs.eip.app.sender;
 
-import java.util.UUID;
-
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
@@ -22,17 +20,21 @@ public class SyncMessageCreator implements MessageCreator {
 	private String body;
 	
 	@Getter
+	private String messageUuid;
+	
+	@Getter
 	private String siteId;
 	
-	SyncMessageCreator(String body, String siteId) {
+	SyncMessageCreator(String body, String messageUuid, String siteId) {
 		this.body = body;
+		this.messageUuid = messageUuid;
 		this.siteId = siteId;
 	}
 	
 	@Override
 	public Message createMessage(Session session) throws JMSException {
 		TextMessage message = session.createTextMessage(body);
-		message.setStringProperty(SyncConstants.JMS_HEADER_MSG_ID, UUID.randomUUID().toString());
+		message.setStringProperty(SyncConstants.JMS_HEADER_MSG_ID, messageUuid);
 		message.setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
 		message.setStringProperty(SyncConstants.JMS_HEADER_SITE, siteId);
 		message.setStringProperty(SyncConstants.JMS_HEADER_TYPE, MessageType.SYNC.name());
