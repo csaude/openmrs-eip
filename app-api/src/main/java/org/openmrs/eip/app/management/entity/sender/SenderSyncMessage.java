@@ -66,7 +66,7 @@ public class SenderSyncMessage extends AbstractEntity {
 	@Column(name = "event_date", updatable = false)
 	private Date eventDate;
 	
-	@Column(name = "sync_version", length = 20, updatable = false)
+	@Column(name = "sync_version", length = 20)
 	@Getter
 	@Setter
 	private String syncVersion;
