@@ -18,6 +18,7 @@ import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +35,9 @@ public class ReceiverMessageListener implements MessageListener {
 	private JmsMessageRepository repo;
 	
 	private ReceiverService service;
+	
+	@Value("${" + ReceiverConstants.PROP_JMS_SKIP_DUPLICATES + ":true}")
+	private boolean skipDuplicates;
 	
 	public ReceiverMessageListener(JmsMessageRepository repo, ReceiverService service) {
 		this.repo = repo;
@@ -102,7 +106,7 @@ public class ReceiverMessageListener implements MessageListener {
 	
 	private JmsMessage createJmsMessage(String msgId, byte[] body, String siteId, String version, MessageType type) {
 		//TODO Add global property to disable this check for performance
-		if (StringUtils.isNotBlank(msgId) && repo.existsByMessageId(msgId)) {
+		if (skipDuplicates && StringUtils.isNotBlank(msgId) && repo.existsByMessageId(msgId)) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Skipping duplicate incoming JMS message with the message id: " + msgId);
 			}
