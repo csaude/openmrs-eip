@@ -4,8 +4,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DISABLED_SITES;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_ENABLED_SITES;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
 import java.util.Arrays;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +37,7 @@ import org.openmrs.eip.component.Constants;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.entity.User;
 import org.openmrs.eip.component.entity.light.UserLight;
+import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.repository.UserRepository;
 import org.openmrs.eip.component.repository.light.UserLightRepository;
 import org.powermock.api.mockito.PowerMockito;
@@ -42,7 +47,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Example;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SyncContext.class, ReceiverContext.class, AppUtils.class })
+@PrepareForTest({ SyncContext.class, ReceiverContext.class, AppUtils.class, ReceiverUtils.class })
 public class ReceiverCamelListenerTest {
 	
 	private static final String TEST_OPENMRS_USERNAME = "openmrs_user";
@@ -65,9 +70,6 @@ public class ReceiverCamelListenerTest {
 	private ThreadPoolExecutor mockSyncExecutor;
 	
 	@Mock
-	private ReceiverActiveMqMessagePublisher mockPublisher;
-	
-	@Mock
 	private ReceiverRetryTask mockRetryTask;
 	
 	private ReceiverCamelListener listener;
@@ -81,6 +83,7 @@ public class ReceiverCamelListenerTest {
 		PowerMockito.mockStatic(SyncContext.class);
 		PowerMockito.mockStatic(ReceiverContext.class);
 		PowerMockito.mockStatic(AppUtils.class);
+		PowerMockito.mockStatic(ReceiverUtils.class);
 		when(SyncContext.getBean(Environment.class)).thenReturn(mockEnv);
 		User testAppUser = new User();
 		testAppUser.setId(TEST_OPENMRS_USER_ID);
@@ -100,8 +103,8 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "initialDelayRetryTask", testInitialDelay);
 		setInternalState(listener, "delayRetryTask", testDelay);
 		setInternalState(listener, "jmsTaskDisabled", false);
+		setInternalState(listener, "enabledSiteIdentifiers", Collections.emptyList());
 		setInternalState(listener, "disabledSiteIdentifiers", Collections.emptyList());
-		when(SyncContext.getBean(ReceiverActiveMqMessagePublisher.class)).thenReturn(mockPublisher);
 	}
 	
 	@After
@@ -124,7 +127,6 @@ public class ReceiverCamelListenerTest {
 		siteInfo3.setDisabled(false);
 		siteInfo3.setIdentifier(siteIdentifier3);
 		setInternalState(listener, "disabledSiteIdentifiers", Collections.singletonList(siteIdentifier3));
-		when(mockPublisher.getCamelOutputEndpoint(siteIdentifier2)).thenReturn("activemq:test");
 		Collection<SiteInfo> sites = Stream.of(siteInfo1, siteInfo2, siteInfo3).collect(Collectors.toList());
 		when(ReceiverContext.getSites()).thenReturn(sites);
 		setInternalState(listener, "initialDelayMsgTsk", testInitialDelay);
@@ -152,7 +154,6 @@ public class ReceiverCamelListenerTest {
 		SiteInfo site = new SiteInfo();
 		site.setIdentifier(siteIdentifier);
 		site.setDisabled(false);
-		when(mockPublisher.getCamelOutputEndpoint(siteIdentifier)).thenReturn("activemq:test");
 		Collection<SiteInfo> sites = Collections.singletonList(site);
 		when(ReceiverContext.getSites()).thenReturn(sites);
 		setInternalState(listener, "prunerEnabled", true);
@@ -165,6 +166,53 @@ public class ReceiverCamelListenerTest {
 		
 		verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverArchivePruningTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+	}
+	
+	@Test
+	public void applicationStarted_shouldOnlyStartSiteTasksForEnabledSitesViaAppProperty() {
+		final String siteIdentifier1 = "site1";
+		final String siteIdentifier2 = "site2";
+		SiteInfo siteInfo1 = new SiteInfo();
+		siteInfo1.setIdentifier(siteIdentifier1);
+		siteInfo1.setDisabled(false);
+		SiteInfo siteInfo2 = new SiteInfo();
+		siteInfo2.setIdentifier(siteIdentifier2);
+		siteInfo2.setDisabled(false);
+		SiteInfo siteInfo3 = new SiteInfo();
+		siteInfo3.setDisabled(false);
+		siteInfo3.setIdentifier("site3");
+		setInternalState(listener, "enabledSiteIdentifiers", Arrays.asList(siteIdentifier1, siteIdentifier2));
+		Collection<SiteInfo> sites = Stream.of(siteInfo1, siteInfo2, siteInfo3).collect(Collectors.toList());
+		when(ReceiverContext.getSites()).thenReturn(sites);
+		setInternalState(listener, "initialDelayMsgTsk", testInitialDelay);
+		setInternalState(listener, "delayMsgTask", testDelay);
+		setInternalState(listener, "initDelayReconciler", testInitialDelay);
+		setInternalState(listener, "delayReconciler", testDelay);
+		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
+		setInternalState(listener, "delayMsgReconciler", testDelay);
+		
+		listener.applicationStarted();
+		
+		Mockito.verify(mockSiteExecutor, times(2)).scheduleWithFixedDelay(any(SiteParentTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverJmsMessageTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+	}
+	
+	@Test
+	public void applicationStarted_shouldFailIfEnabledAndDisabledSitesAreBothSet() {
+		setInternalState(listener, "enabledSiteIdentifiers", Arrays.asList("site1"));
+		setInternalState(listener, "disabledSiteIdentifiers", Arrays.asList("site2"));
+		Exception thrown = Assert.assertThrows(EIPException.class, () -> {
+			listener.applicationStarted();
+		});
+		
+		Assert.assertEquals("You can only set " + PROP_ENABLED_SITES + " or " + PROP_DISABLED_SITES + " but not both",
+		    thrown.getMessage());
 	}
 	
 	@Test
