@@ -5,14 +5,13 @@ import static org.openmrs.eip.app.SyncConstants.BEAN_NAME_SYNC_EXECUTOR;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
 import org.openmrs.eip.app.management.service.ReceiverReconcileService;
 import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.component.SyncProfiles;
-import org.openmrs.eip.component.model.SyncModel;
-import org.openmrs.eip.component.utils.JsonUtils;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +58,7 @@ public class ReceiverJmsMessageProcessor extends BaseQueueProcessor<JmsMessage> 
 		
 		if (item.getType() == MessageType.SYNC) {
 			//Process events for different entities in parallel
-			return JsonUtils.unmarshalBytes(item.getBody(), SyncModel.class).getModel().getUuid();
+			return item.getSyncModel().getModel().getUuid();
 		}
 		
 		//Process all messages serially
@@ -69,13 +68,15 @@ public class ReceiverJmsMessageProcessor extends BaseQueueProcessor<JmsMessage> 
 	
 	@Override
 	public String getThreadName(JmsMessage item) {
-		return item.getId().toString();
+		String name = StringUtils.isNotBlank(item.getSiteId()) ? item.getSiteId() + "-" : "";
+		name += (item.getId().toString());
+		return name;
 	}
 	
 	@Override
 	public String getLogicalType(JmsMessage item) {
 		if (item.getType() == MessageType.SYNC) {
-			return JsonUtils.unmarshalBytes(item.getBody(), SyncModel.class).getTableToSyncModelClass().getName();
+			return item.getSyncModel().getTableToSyncModelClass().getName();
 		}
 		
 		return item.getType().name();

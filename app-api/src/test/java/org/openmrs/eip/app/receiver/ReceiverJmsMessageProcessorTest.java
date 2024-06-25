@@ -90,6 +90,24 @@ public class ReceiverJmsMessageProcessorTest {
 	}
 	
 	@Test
+	public void getThreadName_shouldReturnTheThreadName() {
+		final Long id = 2L;
+		final String siteId = "test";
+		JmsMessage msg = new JmsMessage();
+		msg.setId(id);
+		msg.setSiteId(siteId);
+		assertEquals(siteId + "-" + id, processor.getThreadName(msg));
+	}
+	
+	@Test
+	public void getThreadName_shouldReturnTheThreadNameWhenSiteIsNull() {
+		final Long id = 2L;
+		JmsMessage msg = new JmsMessage();
+		msg.setId(id);
+		assertEquals(id.toString(), processor.getThreadName(msg));
+	}
+	
+	@Test
 	public void processItem_shouldProcessASyncMessage() {
 		JmsMessage msg = new JmsMessage();
 		msg.setType(SYNC);
