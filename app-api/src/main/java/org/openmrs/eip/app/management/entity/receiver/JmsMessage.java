@@ -10,7 +10,10 @@
  */
 package org.openmrs.eip.app.management.entity.receiver;
 
+import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.AbstractEntity;
+import org.openmrs.eip.component.model.SyncModel;
+import org.openmrs.eip.component.utils.JsonUtils;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -23,6 +26,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -69,5 +73,33 @@ public class JmsMessage extends AbstractEntity {
 	@Getter
 	@Setter
 	private String messageId;
+	
+	@Transient
+	private SyncModel syncModel;
+	
+	/**
+	 * Gets the sync model
+	 *
+	 * @return the sync model in case of a sync message otherwise null
+	 */
+	public SyncModel getSyncModel() {
+		if (syncModel == null && getType() == MessageType.SYNC) {
+			syncModel = JsonUtils.unmarshalBytes(getBody(), SyncModel.class);
+		}
+		
+		return syncModel;
+	}
+	
+	@Override
+	public String toString() {
+		if (getType() == MessageType.RECONCILE) {
+			return super.toString();
+		}
+		
+		SyncModel m = getSyncModel();
+		return "{site=" + siteId + ", model=" + AppUtils.getSimpleName(m.getTableToSyncModelClass().getName()) + ", uuid="
+		        + m.getModel().getUuid() + ", op=" + m.getMetadata().getOperation() + ", snapshot="
+		        + m.getMetadata().getSnapshot() + ", msgUuid=" + m.getMetadata().getMessageUuid() + "}";
+	}
 	
 }
