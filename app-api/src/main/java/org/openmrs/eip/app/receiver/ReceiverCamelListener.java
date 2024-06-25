@@ -14,6 +14,7 @@ import static org.openmrs.eip.app.SyncConstants.PROP_PRUNER_ENABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.BEAN_NAME_SITE_EXECUTOR;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DELAY_JMS_MSG_TASK;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DISABLED_SITES;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_ENABLED_SITES;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_INITIAL_DELAY_JMS_MSG_TASK;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_JMS_TASK_DISABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SITE_DISABLED_TASKS;
@@ -107,6 +108,9 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	@Value("${" + PROP_JMS_TASK_DISABLED + ":false}")
 	private boolean jmsTaskDisabled;
 	
+	@Value("${" + PROP_ENABLED_SITES + ":}")
+	private List<String> enabledSiteIdentifiers;
+	
 	@Value("${" + PROP_DISABLED_SITES + ":}")
 	private List<String> disabledSiteIdentifiers;
 	
@@ -120,6 +124,11 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	
 	@Override
 	public void applicationStarted() {
+		if (!enabledSiteIdentifiers.isEmpty() && !disabledSiteIdentifiers.isEmpty()) {
+			throw new EIPException(
+			        "You can only set " + PROP_ENABLED_SITES + " or " + PROP_DISABLED_SITES + " but not both");
+		}
+		
 		log.info("Loading OpenMRS user account");
 		String username = SyncContext.getBean(Environment.class).getProperty(Constants.PROP_OPENMRS_USER);
 		if (StringUtils.isBlank(username)) {
@@ -151,9 +160,15 @@ public class ReceiverCamelListener extends BaseCamelListener {
 		
 		SyncContext.setAdminUser(userLightRepo.findById(optional.get().getId()).get());
 		
-		Collection<SiteInfo> sites = ReceiverContext.getSites().stream()
-		        .filter(s -> !s.getDisabled() && !disabledSiteIdentifiers.contains(s.getIdentifier()))
+		Collection<SiteInfo> sites = ReceiverContext.getSites().stream().filter(s -> !s.getDisabled())
 		        .collect(Collectors.toList());
+		if (!enabledSiteIdentifiers.isEmpty()) {
+			sites = sites.stream().filter(s -> enabledSiteIdentifiers.contains(s.getIdentifier()))
+			        .collect(Collectors.toList());
+		} else if (!disabledSiteIdentifiers.isEmpty()) {
+			sites = sites.stream().filter(s -> !disabledSiteIdentifiers.contains(s.getIdentifier()))
+			        .collect(Collectors.toList());
+		}
 		
 		log.info("There are {} enabled sites", sites.size());
 		
