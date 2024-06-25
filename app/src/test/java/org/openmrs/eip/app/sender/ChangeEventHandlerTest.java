@@ -3,6 +3,7 @@ package org.openmrs.eip.app.sender;
 import static java.util.Collections.singletonList;
 import static org.apache.kafka.connect.data.Schema.Type.STRUCT;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -212,6 +213,7 @@ public class ChangeEventHandlerTest {
 		beforeState.put(uuidField, uuid);
 		message.setHeader(DebeziumConstants.HEADER_BEFORE, beforeState);
 		exchange.setMessage(message);
+		long timestamp = System.currentTimeMillis();
 		
 		handler.handle(tableName, id, false, null, exchange);
 		
@@ -234,6 +236,8 @@ public class ChangeEventHandlerTest {
 		Assert.assertEquals(tableName, deletedEntity.getTableName());
 		Assert.assertEquals(id, deletedEntity.getPrimaryKeyId());
 		Assert.assertEquals(uuid, deletedEntity.getIdentifier());
+		final long dateCreatedMills = deletedEntity.getDateCreated().getTime();
+		assertTrue(dateCreatedMills == timestamp || dateCreatedMills > timestamp);
 	}
 	
 	@Test
