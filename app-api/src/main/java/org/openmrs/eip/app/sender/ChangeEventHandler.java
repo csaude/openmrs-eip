@@ -111,6 +111,7 @@ public class ChangeEventHandler {
 			de.setTableName(tableName);
 			de.setPrimaryKeyId(id);
 			de.setIdentifier(uuid);
+			de.setDateCreated(new Date());
 			if (log.isDebugEnabled()) {
 				log.debug("Saving deleted entity");
 			}
