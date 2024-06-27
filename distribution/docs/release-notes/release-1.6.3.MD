@@ -1,4 +1,4 @@
-# Release Notes - DB Sync Version 1.6.0
+# Release Notes - DB Sync Version 1.6.3
 
 ### Receiver Application Properties
 
