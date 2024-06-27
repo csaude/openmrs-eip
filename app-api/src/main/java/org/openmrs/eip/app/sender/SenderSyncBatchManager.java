@@ -47,7 +47,6 @@ public class SenderSyncBatchManager extends BaseSyncBatchManager<SenderSyncMessa
 	@Override
 	protected SyncModel convert(SenderSyncMessage message) {
 		SyncModel syncModel = JsonUtils.unmarshalSyncModel(message.getData());
-		syncModel.getMetadata().setSourceIdentifier(senderId);
 		syncModel.getMetadata().setDateSent(LocalDateTime.now());
 		syncModel.getMetadata().setSyncVersion(AppUtils.getVersion());
 		return syncModel;

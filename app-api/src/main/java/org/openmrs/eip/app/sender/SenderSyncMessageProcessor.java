@@ -11,6 +11,8 @@ import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
 import org.openmrs.eip.component.SyncProfiles;
+import org.openmrs.eip.component.model.SyncModel;
+import org.openmrs.eip.component.utils.JsonUtils;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,19 +87,23 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 		if (!batchDisabled) {
 			batchManager.add(syncMsg);
 		} else {
+			SyncModel syncModel = JsonUtils.unmarshalSyncModel(syncMsg.getData());
+			syncModel.getMetadata().setDateSent(LocalDateTime.now());
+			syncModel.getMetadata().setSyncVersion(AppUtils.getVersion());
+			String syncData = JsonUtils.marshall(syncModel);
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Sync payload -> " + syncMsg.getData());
+				LOG.debug("Sync payload -> " + syncData);
 			}
 			
 			jmsTemplate.send(SenderUtils.getQueueName(),
-			    new SyncMessageCreator(syncMsg.getData(), syncMsg.getMessageUuid(), senderId));
+			    new SyncMessageCreator(syncData, syncMsg.getMessageUuid(), senderId));
 			
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Sync payload sent!");
 			}
 			
-			syncMsg.setSyncVersion(AppUtils.getVersion());
-			syncMsg.markAsSent(LocalDateTime.now());
+			syncMsg.setSyncVersion(syncModel.getMetadata().getSyncVersion());
+			syncMsg.markAsSent(syncModel.getMetadata().getDateSent());
 			
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Updating sender sync message status to " + syncMsg.getStatus());

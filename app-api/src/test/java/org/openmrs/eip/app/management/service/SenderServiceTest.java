@@ -128,7 +128,7 @@ public class SenderServiceTest extends BaseSenderTest {
 		assertEquals(uuid, JsonPath.read(msg.getData(), "model.uuid"));
 		assertEquals(op, JsonPath.read(msg.getData(), "metadata.operation"));
 		assertEquals(msg.getMessageUuid(), JsonPath.read(msg.getData(), "metadata.messageUuid"));
-        assertEquals(SENDER_ID, JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
+		assertEquals(SENDER_ID, JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
 		assertTrue(JsonPath.read(msg.getData(), "metadata.snapshot"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.dateSent"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.requestUuid"));

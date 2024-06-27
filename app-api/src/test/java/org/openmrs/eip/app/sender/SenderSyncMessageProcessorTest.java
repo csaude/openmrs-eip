@@ -1,11 +1,15 @@
 package org.openmrs.eip.app.sender;
 
+import static java.time.ZoneId.systemDefault;
+import static java.time.ZonedDateTime.parse;
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.openmrs.eip.app.management.entity.sender.SenderSyncMessage.SenderSyncMessageStatus.SENT;
 import static org.openmrs.eip.app.sender.SenderConstants.PROP_SENDER_ID;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
@@ -88,7 +92,10 @@ public class SenderSyncMessageProcessorTest extends BaseSenderTest {
 		ArgumentCaptor<SyncMessageCreator> argCaptor = ArgumentCaptor.forClass(SyncMessageCreator.class);
 		Mockito.verify(mockTemplate).send(ArgumentMatchers.eq(QUEUE_NAME), argCaptor.capture());
 		SyncMessageCreator messageCreator = argCaptor.getValue();
-		assertEquals(syncPayload, messageCreator.getBody());
+		assertEquals(AppUtils.getVersion(), JsonPath.read(messageCreator.getBody(), "metadata.syncVersion"));
+		Instant dateSent = parse(JsonPath.read(messageCreator.getBody(), "metadata.dateSent"), ISO_OFFSET_DATE_TIME)
+		        .withZoneSameInstant(systemDefault()).toInstant();
+		assertEquals(msg.getDateSent(), Date.from(dateSent));
 		assertEquals(msgUuid, argCaptor.getValue().getMessageUuid());
 		assertEquals(SENDER_ID, argCaptor.getValue().getSiteId());
 	}
