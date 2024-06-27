@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
+import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.route.TestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -33,16 +34,20 @@ public class SenderSyncBatchManagerIntegrationTest extends BaseSenderTest {
 		final String table = "sender_sync_message";
 		assertEquals(NEW.name(), TestUtils.getRowById(table, id1).get("status"));
 		assertNull(TestUtils.getRowById(table, id1).get("date_sent"));
+		assertNull(TestUtils.getRowById(table, id1).get("sync_version"));
 		assertEquals(NEW.name(), TestUtils.getRowById(table, id3).get("status"));
 		assertNull(TestUtils.getRowById(table, id3).get("date_sent"));
+		assertNull(TestUtils.getRowById(table, id3).get("sync_version"));
 		long timestamp = System.currentTimeMillis();
 		
 		manager.updateItems(List.of(id1, id3));
 		
 		assertEquals(SENT.name(), TestUtils.getRowById(table, id1).get("status"));
+		assertEquals(AppUtils.getVersion(), TestUtils.getRowById(table, id1).get("sync_version"));
 		Date dateSent1 = (Date) TestUtils.getRowById(table, id1).get("date_sent");
 		assertTrue(dateSent1.getTime() == timestamp || dateSent1.getTime() > timestamp);
 		assertEquals(SENT.name(), TestUtils.getRowById(table, id3).get("status"));
+		assertEquals(AppUtils.getVersion(), TestUtils.getRowById(table, id3).get("sync_version"));
 		Date dateSent3 = (Date) TestUtils.getRowById(table, id3).get("date_sent");
 		assertTrue(dateSent3.getTime() == timestamp || dateSent3.getTime() > timestamp);
 	}

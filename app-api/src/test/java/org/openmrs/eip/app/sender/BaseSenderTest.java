@@ -8,6 +8,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 @ActiveProfiles(SyncProfiles.SENDER)
-@TestPropertySource(properties = PROP_SENDER_ID + "=")
+@TestPropertySource(properties = PROP_SENDER_ID + "=" + BaseSenderTest.SENDER_ID)
 @TestPropertySource(properties = SenderConstants.PROP_ACTIVEMQ_ENDPOINT + "=")
-public abstract class BaseSenderTest extends BaseDbBackedCamelTest {}
+public abstract class BaseSenderTest extends BaseDbBackedCamelTest {
+	
+	protected static final String SENDER_ID = "test-sender-id";
+	
+}

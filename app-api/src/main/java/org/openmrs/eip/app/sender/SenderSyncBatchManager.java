@@ -1,11 +1,12 @@
 package org.openmrs.eip.app.sender;
 
+import static org.openmrs.eip.app.SyncConstants.MGT_DATASOURCE_NAME;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.app.AppUtils;
-import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.camel.utils.CamelUtils;
@@ -55,8 +56,8 @@ public class SenderSyncBatchManager extends BaseSyncBatchManager<SenderSyncMessa
 	@Override
 	protected void updateItems(List<Long> messageIds) {
 		String myIds = StringUtils.join(messageIds, ",");
-		CamelUtils.send("sql:UPDATE sender_sync_message SET status = 'SENT', date_sent = now() WHERE id IN (" + myIds
-		        + ")?dataSource=#" + SyncConstants.MGT_DATASOURCE_NAME);
+		CamelUtils.send("sql:UPDATE sender_sync_message SET status = 'SENT', date_sent = now(), sync_version = '"
+		        + AppUtils.getVersion() + "' WHERE id IN (" + myIds + ")?dataSource=#" + MGT_DATASOURCE_NAME);
 	}
 	
 }

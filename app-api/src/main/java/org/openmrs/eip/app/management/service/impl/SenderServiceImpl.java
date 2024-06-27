@@ -17,6 +17,7 @@ import org.openmrs.eip.app.management.repository.SenderRetryRepository;
 import org.openmrs.eip.app.management.repository.SenderSyncArchiveRepository;
 import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
 import org.openmrs.eip.app.management.service.SenderService;
+import org.openmrs.eip.app.sender.SenderConstants;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.entity.Event;
 import org.openmrs.eip.component.model.SyncMetadata;
@@ -24,6 +25,7 @@ import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +45,9 @@ public class SenderServiceImpl implements SenderService {
 	private SenderSyncMessageRepository syncRepo;
 	
 	private SenderRetryRepository retryRepo;
+	
+	@Value("${" + SenderConstants.PROP_SENDER_ID + "}")
+	private String senderId;
 	
 	public SenderServiceImpl(SenderSyncArchiveRepository archiveRepo, SenderPrunedArchiveRepository prunedRepo,
 	    DebeziumEventRepository eventRepo, SenderSyncMessageRepository syncRepo, SenderRetryRepository retryRepo) {
@@ -162,6 +167,7 @@ public class SenderServiceImpl implements SenderService {
 		syncModel.getMetadata().setOperation(event.getOperation());
 		syncModel.getMetadata().setSnapshot(event.getSnapshot());
 		syncModel.getMetadata().setRequestUuid(event.getRequestUuid());
+		syncModel.getMetadata().setSourceIdentifier(senderId);
 		
 		SenderSyncMessage msg = new SenderSyncMessage();
 		msg.setTableName(event.getTableName());
