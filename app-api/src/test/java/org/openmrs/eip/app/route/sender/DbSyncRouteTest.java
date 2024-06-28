@@ -86,7 +86,7 @@ public class DbSyncRouteTest extends BaseSenderRouteTest {
 		assertEquals(op, JsonPath.read(msg.getData(), "metadata.operation"));
 		assertEquals(msg.getMessageUuid(), JsonPath.read(msg.getData(), "metadata.messageUuid"));
 		assertTrue(JsonPath.read(msg.getData(), "metadata.snapshot"));
-		assertNull(JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
+		assertEquals(SENDER_ID, JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.dateSent"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.requestUuid"));
 	}
@@ -127,7 +127,7 @@ public class DbSyncRouteTest extends BaseSenderRouteTest {
 		assertEquals(op, JsonPath.read(msg.getData(), "metadata.operation"));
 		assertEquals(msg.getMessageUuid(), JsonPath.read(msg.getData(), "metadata.messageUuid"));
 		assertTrue(JsonPath.read(msg.getData(), "metadata.snapshot"));
-		assertNull(JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
+		assertEquals(SENDER_ID, JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.dateSent"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.requestUuid"));
 	}
@@ -166,7 +166,7 @@ public class DbSyncRouteTest extends BaseSenderRouteTest {
 		assertEquals(op, JsonPath.read(msg.getData(), "metadata.operation"));
 		assertEquals(msg.getMessageUuid(), JsonPath.read(msg.getData(), "metadata.messageUuid"));
 		assertFalse(JsonPath.read(msg.getData(), "metadata.snapshot"));
-		assertNull(JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
+		assertEquals(SENDER_ID, JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.dateSent"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.requestUuid"));
 	}
@@ -205,7 +205,7 @@ public class DbSyncRouteTest extends BaseSenderRouteTest {
 		assertEquals(op, JsonPath.read(msg.getData(), "metadata.operation"));
 		assertEquals(msg.getMessageUuid(), JsonPath.read(msg.getData(), "metadata.messageUuid"));
 		assertFalse(JsonPath.read(msg.getData(), "metadata.snapshot"));
-		assertNull(JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
+		assertEquals(SENDER_ID, JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.dateSent"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.requestUuid"));
 	}
@@ -249,7 +249,7 @@ public class DbSyncRouteTest extends BaseSenderRouteTest {
 		assertEquals(op, JsonPath.read(msg.getData(), "metadata.operation"));
 		assertEquals(msg.getMessageUuid(), JsonPath.read(msg.getData(), "metadata.messageUuid"));
 		assertFalse(JsonPath.read(msg.getData(), "metadata.snapshot"));
-		assertNull(JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
+		assertEquals(SENDER_ID, JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.dateSent"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.requestUuid"));
 	}
@@ -337,7 +337,7 @@ public class DbSyncRouteTest extends BaseSenderRouteTest {
 		assertEquals(op, JsonPath.read(msg.getData(), "metadata.operation"));
 		assertEquals(msg.getMessageUuid(), JsonPath.read(msg.getData(), "metadata.messageUuid"));
 		assertFalse(JsonPath.read(msg.getData(), "metadata.snapshot"));
-		assertNull(JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
+		assertEquals(SENDER_ID, JsonPath.read(msg.getData(), "metadata.sourceIdentifier"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.dateSent"));
 		assertNull(JsonPath.read(msg.getData(), "metadata.requestUuid"));
 	}
