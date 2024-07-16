@@ -16,15 +16,17 @@ import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
+import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import jakarta.jms.BytesMessage;
 import jakarta.jms.Message;
 import jakarta.jms.MessageListener;
-import jakarta.jms.TextMessage;
+import jakarta.jms.StreamMessage;
 
 @Component
 @Profile(SyncProfiles.RECEIVER)
@@ -48,10 +50,20 @@ public class ReceiverMessageListener implements MessageListener {
 	public void onMessage(Message message) {
 		try {
 			byte[] body;
-			if (message instanceof TextMessage) {
-				body = message.getBody(String.class).getBytes(StandardCharsets.UTF_8);
+			if (message instanceof BytesMessage || message instanceof StreamMessage) {
+				if (message instanceof BytesMessage) {
+					body = message.getBody(byte[].class);
+				} else {
+					StreamMessage streamMsg = (StreamMessage) message;
+					body = new byte[] {};
+					streamMsg.readBytes(body);
+				}
+				
+				if (message.getBooleanProperty(SyncConstants.JMS_HEADER_COMPRESSED)) {
+					body = Utils.decompress(body);
+				}
 			} else {
-				body = message.getBody(byte[].class);
+				body = message.getBody(String.class).getBytes(StandardCharsets.UTF_8);
 			}
 			
 			final String siteId = message.getStringProperty(SyncConstants.JMS_HEADER_SITE);
