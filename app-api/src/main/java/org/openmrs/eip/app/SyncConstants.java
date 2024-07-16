@@ -103,4 +103,6 @@ public class SyncConstants {
 	
 	public static final String JMS_HEADER_BATCH_SIZE = "eipBatchSize";
 	
+	public static final String JMS_HEADER_COMPRESSED = "eipCompressed";
+	
 }

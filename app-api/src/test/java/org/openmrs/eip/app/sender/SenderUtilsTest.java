@@ -156,6 +156,7 @@ public class SenderUtilsTest {
 		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
 		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_SITE, SITE_ID);
 		verify(mockBytesMsg).setStringProperty(SyncConstants.JMS_HEADER_TYPE, SYNC.name());
+		verify(mockBytesMsg).setBooleanProperty(SyncConstants.JMS_HEADER_COMPRESSED, true);
 		ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
 		verify(mockBytesMsg).writeBytes(bytesCaptor.capture());
 		assertTrue(Arrays.equals(expectedSentBytes, bytesCaptor.getValue()));
@@ -183,6 +184,7 @@ public class SenderUtilsTest {
 		verify(mockStreamMsg).setStringProperty(SyncConstants.JMS_HEADER_VERSION, AppUtils.getVersion());
 		verify(mockStreamMsg).setStringProperty(SyncConstants.JMS_HEADER_SITE, SITE_ID);
 		verify(mockStreamMsg).setStringProperty(SyncConstants.JMS_HEADER_TYPE, SYNC.name());
+		verify(mockStreamMsg).setBooleanProperty(SyncConstants.JMS_HEADER_COMPRESSED, true);
 		ArgumentCaptor<byte[]> bytesCaptor = ArgumentCaptor.forClass(byte[].class);
 		verify(mockStreamMsg).writeBytes(bytesCaptor.capture());
 		assertTrue(Arrays.equals(expectedSentBytes, bytesCaptor.getValue()));

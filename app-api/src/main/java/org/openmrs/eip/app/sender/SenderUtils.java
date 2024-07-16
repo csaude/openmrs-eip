@@ -146,7 +146,15 @@ public class SenderUtils {
 					bytesMsg.writeBytes(bytes);
 					msg = bytesMsg;
 				} else {
+					if (log.isTraceEnabled()) {
+						log.trace("Compressing msg from {} bytes", bytes.length);
+					}
+					
 					byte[] compressedBytes = Utils.compress(bytes);
+					if (log.isTraceEnabled()) {
+						log.trace("Compressed msg to {} bytes", compressedBytes.length);
+					}
+					
 					if (compressedBytes.length < largeMsgSize) {
 						BytesMessage bytesMsg = session.createBytesMessage();
 						bytesMsg.writeBytes(compressedBytes);
@@ -156,6 +164,8 @@ public class SenderUtils {
 						streamMsg.writeBytes(compressedBytes);
 						msg = streamMsg;
 					}
+					
+					msg.setBooleanProperty(SyncConstants.JMS_HEADER_COMPRESSED, true);
 				}
 				
 				msg.setStringProperty(SyncConstants.JMS_HEADER_MSG_ID, UUID.randomUUID().toString());
