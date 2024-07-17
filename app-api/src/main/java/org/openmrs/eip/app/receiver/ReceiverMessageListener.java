@@ -55,7 +55,7 @@ public class ReceiverMessageListener implements MessageListener {
 					body = message.getBody(byte[].class);
 				} else {
 					StreamMessage streamMsg = (StreamMessage) message;
-					body = new byte[] {};
+					body = new byte[message.getIntProperty(SyncConstants.JMS_HEADER_MSG_LENGTH)];
 					streamMsg.readBytes(body);
 				}
 				

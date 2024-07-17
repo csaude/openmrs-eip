@@ -163,6 +163,7 @@ public class SenderUtils {
 						StreamMessage streamMsg = session.createStreamMessage();
 						streamMsg.writeBytes(compressedBytes);
 						msg = streamMsg;
+						msg.setIntProperty(SyncConstants.JMS_HEADER_MSG_LENGTH, compressedBytes.length);
 					}
 					
 					msg.setBooleanProperty(SyncConstants.JMS_HEADER_COMPRESSED, true);

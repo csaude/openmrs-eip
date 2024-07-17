@@ -3,6 +3,7 @@ package org.openmrs.eip.app.receiver;
 import static org.openmrs.eip.component.model.SyncModel.builder;
 import static org.openmrs.eip.component.utils.JsonUtils.marshall;
 
+import jakarta.jms.BytesMessage;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +47,7 @@ public class ReceiverMessageListenerMockTest {
 		SyncMetadata md = new SyncMetadata();
 		md.setMessageUuid("msg-uuid");
 		final String body = marshall(builder().tableToSyncModelClass(PersonModel.class).metadata(md).build());
-		Message msg = Mockito.mock(Message.class);
+		Message msg = Mockito.mock(BytesMessage.class);
 		Mockito.when(msg.getBody(byte[].class)).thenReturn(body.getBytes());
 		
 		listener.onMessage(msg);
@@ -63,7 +64,7 @@ public class ReceiverMessageListenerMockTest {
 		SyncMetadata md = new SyncMetadata();
 		md.setMessageUuid(msgId);
 		final String body = marshall(builder().tableToSyncModelClass(PersonModel.class).metadata(md).build());
-		Message msg = Mockito.mock(Message.class);
+		Message msg = Mockito.mock(BytesMessage.class);
 		Mockito.when(msg.getBody(byte[].class)).thenReturn(body.getBytes());
 		Mockito.when(msg.getStringProperty(SyncConstants.JMS_HEADER_MSG_ID)).thenReturn(msgId);
 		Mockito.when(mockRepo.existsByMessageId(msgId)).thenReturn(true);
