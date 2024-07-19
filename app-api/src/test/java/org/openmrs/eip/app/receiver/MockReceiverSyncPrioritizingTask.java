@@ -19,9 +19,8 @@ public class MockReceiverSyncPrioritizingTask extends BaseReceiverSyncPrioritizi
 	}
 	
 	@Override
-	public boolean doRun() {
+	public void doRun() {
 		doRunCalled = true;
-		return true;
 	}
 	
 	@Override

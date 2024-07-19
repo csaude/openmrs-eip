@@ -26,16 +26,6 @@ public class SenderReconcileTask extends BaseDelegatingQueueTask<SenderReconcili
 	}
 	
 	@Override
-	public boolean doRun() throws Exception {
-		invokeSuper();
-		return true;
-	}
-	
-	protected void invokeSuper() throws Exception {
-		super.doRun();
-	}
-	
-	@Override
 	public List<SenderReconciliation> getNextBatch() {
 		SenderReconciliation rec = repo.getReconciliation();
 		return rec == null ? Collections.emptyList() : List.of(rec);

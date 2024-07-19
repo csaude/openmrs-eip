@@ -1,6 +1,5 @@
 package org.openmrs.eip.app.sender.reconcile;
 
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.reflect.Whitebox.setInternalState;
@@ -12,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.openmrs.eip.app.management.entity.sender.SenderReconciliation;
 import org.openmrs.eip.app.management.repository.SenderReconcileRepository;
 import org.openmrs.eip.component.SyncContext;
@@ -55,16 +53,6 @@ public class SenderReconcileTaskTest {
 		
 		Assert.assertTrue(reconciliations.isEmpty());
 		verify(mockRepo).getReconciliation();
-	}
-	
-	@Test
-	public void doRun_shouldRunAndReturnFalse() throws Exception {
-		task = Mockito.spy(task);
-		doNothing().when(task).invokeSuper();
-		
-		Assert.assertTrue(task.doRun());
-		
-		Mockito.verify(task).invokeSuper();
 	}
 	
 }

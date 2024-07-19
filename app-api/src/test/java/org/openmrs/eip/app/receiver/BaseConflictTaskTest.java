@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,7 +71,7 @@ public class BaseConflictTaskTest {
 		when(mockRepo.findAllById(asList(5L, 6L))).thenReturn(asList(c5, c6));
 		when(mockRepo.findAllById(asList(7L))).thenReturn(asList(c7));
 		
-		Assert.assertTrue(task.doRun());
+		task.doRun();
 		
 		verify(mockProcessor).processWork(asList(c1, c2));
 		verify(mockProcessor).processWork(asList(c3, c4));
@@ -85,7 +84,7 @@ public class BaseConflictTaskTest {
 	public void doRun_shouldDoNothingIfAlreadyStarted() throws Exception {
 		setInternalState(task, "started", true);
 		
-		Assert.assertTrue(task.doRun());
+		task.doRun();
 		
 		Mockito.verifyNoInteractions(mockRepo);
 	}

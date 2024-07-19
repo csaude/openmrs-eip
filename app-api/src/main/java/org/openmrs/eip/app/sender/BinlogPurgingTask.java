@@ -25,9 +25,8 @@ public class BinlogPurgingTask extends BaseTask {
 	}
 	
 	@Override
-	public boolean doRun() throws Exception {
+	public void doRun() throws Exception {
 		BinlogUtils.purgeBinLogs(debeziumOffsetFile, maxKeepCount);
-		return true;
 	}
 	
 }

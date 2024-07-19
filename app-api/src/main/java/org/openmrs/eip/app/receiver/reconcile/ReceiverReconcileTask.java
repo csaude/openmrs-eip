@@ -26,16 +26,6 @@ public class ReceiverReconcileTask extends BaseReceiverSyncPrioritizingTask<Rece
 	}
 	
 	@Override
-	public boolean doRun() throws Exception {
-		invokeSuper();
-		return true;
-	}
-	
-	protected void invokeSuper() throws Exception {
-		super.doRun();
-	}
-	
-	@Override
 	public List<ReceiverReconciliation> getNextBatch() {
 		ReceiverReconciliation rec = repo.getReconciliation();
 		return rec == null ? Collections.emptyList() : List.of(rec);
