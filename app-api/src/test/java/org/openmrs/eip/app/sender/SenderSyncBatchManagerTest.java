@@ -42,10 +42,7 @@ public class SenderSyncBatchManagerTest {
 	
 	@Test
 	public void convert_shouldConvertSyncMessageToModel() {
-		final String senderId = "test";
-		Whitebox.setInternalState(manager, "senderId", senderId);
 		SyncMetadata metadata = new SyncMetadata();
-		Assert.assertNull(metadata.getSourceIdentifier());
 		Map<String, Object> syncData = Map.of("metadata", metadata);
 		SenderSyncMessage msg = new SenderSyncMessage();
 		msg.setData(JsonUtils.marshall(syncData));
@@ -53,7 +50,6 @@ public class SenderSyncBatchManagerTest {
 		
 		SyncModel model = manager.convert(msg);
 		
-		assertEquals(senderId, model.getMetadata().getSourceIdentifier());
 		assertEquals(AppUtils.getVersion(), model.getMetadata().getSyncVersion());
 		long dateSent = model.getMetadata().getDateSent().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 		assertTrue(dateSent == timestamp || dateSent > timestamp);

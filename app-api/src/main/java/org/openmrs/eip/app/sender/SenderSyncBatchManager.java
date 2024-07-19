@@ -24,9 +24,6 @@ public class SenderSyncBatchManager extends BaseSyncBatchManager<SenderSyncMessa
 	
 	protected static final int DEFAULT_BATCH_SIZE = 200;
 	
-	@Value("${" + SenderConstants.PROP_SENDER_ID + "}")
-	private String senderId;
-	
 	@Value("${" + SenderConstants.PROP_JMS_SEND_BATCH_SIZE + ":" + DEFAULT_BATCH_SIZE + "}")
 	private int batchSize;
 	
