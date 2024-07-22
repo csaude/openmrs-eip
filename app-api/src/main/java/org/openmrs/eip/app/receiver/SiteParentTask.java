@@ -79,7 +79,7 @@ public class SiteParentTask extends BaseTask {
 	}
 	
 	@Override
-	public void doRun() throws Exception {
+	public boolean doRun() throws Exception {
 		if (log.isTraceEnabled()) {
 			log.trace("Start");
 		}
@@ -97,6 +97,8 @@ public class SiteParentTask extends BaseTask {
 		if (log.isTraceEnabled()) {
 			log.trace("Stop");
 		}
+		
+		return true;
 	}
 	
 	private void runTask(Runnable task, List<CompletableFuture<Void>> futures) {

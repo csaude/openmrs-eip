@@ -15,8 +15,9 @@ public class MockBaseTask extends BaseTask {
 	}
 	
 	@Override
-	public void doRun() throws Exception {
+	public boolean doRun() throws Exception {
 		doRunCalled = true;
+		return true;
 	}
 	
 }

@@ -12,14 +12,14 @@ import org.openmrs.eip.app.management.entity.AbstractEntity;
 public abstract class BaseQueueTask<T extends AbstractEntity> extends BaseTask {
 	
 	@Override
-	public void doRun() throws Exception {
+	public boolean doRun() throws Exception {
 		List<T> items = getNextBatch();
 		if (items.isEmpty()) {
 			if (log.isTraceEnabled()) {
 				log.trace("No items found to process");
 			}
 			
-			return;
+			return true;
 		}
 		
 		if (log.isDebugEnabled()) {
@@ -27,6 +27,8 @@ public abstract class BaseQueueTask<T extends AbstractEntity> extends BaseTask {
 		}
 		
 		process(items);
+		
+		return false;
 	}
 	
 	/**

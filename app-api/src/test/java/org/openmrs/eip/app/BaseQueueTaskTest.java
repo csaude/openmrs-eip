@@ -42,7 +42,7 @@ public class BaseQueueTaskTest {
 	public void doRun_shouldDoNothingIfThereNoMessagesAreFound() throws Exception {
 		task = new MockBaseQueueTask(emptyList());
 		
-		task.doRun();
+		Assert.assertTrue(task.doRun());
 		
 		Assert.assertNull(task.processedItems);
 	}
@@ -52,7 +52,7 @@ public class BaseQueueTaskTest {
 		List items = Collections.singletonList(new Object());
 		task = new MockBaseQueueTask(items);
 		
-		task.doRun();
+		Assert.assertFalse(task.doRun());
 		
 		Assert.assertEquals(items, task.processedItems);
 	}

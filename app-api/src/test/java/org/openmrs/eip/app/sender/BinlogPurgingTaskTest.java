@@ -2,6 +2,7 @@ package org.openmrs.eip.app.sender;
 
 import java.io.File;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -22,7 +23,7 @@ public class BinlogPurgingTaskTest {
 		final int maxKeepCount = 5;
 		BinlogPurgingTask task = new BinlogPurgingTask(mockFile, maxKeepCount);
 		
-		task.doRun();
+		Assert.assertTrue(task.doRun());
 		
 		PowerMockito.verifyStatic(BinlogUtils.class);
 		BinlogUtils.purgeBinLogs(mockFile, maxKeepCount);

@@ -42,7 +42,7 @@ public abstract class BaseConflictTask<P extends BasePureParallelQueueProcessor<
 	}
 	
 	@Override
-	public void doRun() throws Exception {
+	public boolean doRun() throws Exception {
 		if (!started) {
 			log.info("Starting " + getTaskName());
 			
@@ -84,6 +84,8 @@ public abstract class BaseConflictTask<P extends BasePureParallelQueueProcessor<
 		} else {
 			log.info(getTaskName() + " is already started");
 		}
+		
+		return true;
 	}
 	
 }

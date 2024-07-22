@@ -10,6 +10,8 @@ public abstract class BaseTask implements Task {
 	
 	protected static final Logger log = LoggerFactory.getLogger(BaseTask.class);
 	
+	private boolean errorEncountered = false;
+	
 	@Override
 	public boolean skip() {
 		return false;
@@ -37,30 +39,40 @@ public abstract class BaseTask implements Task {
 				return;
 			}
 			
-			beforeStart();
-			
 			if (log.isDebugEnabled()) {
 				log.debug("Starting");
 			}
 			
-			try {
-				doRun();
-			}
-			catch (Throwable t) {
-				if (!AppUtils.isShuttingDown()) {
-					String msg = "An error has been encountered";
-					if (log.isDebugEnabled()) {
-						log.error(msg, t);
-					} else {
-						log.warn(msg);
+			beforeStart();
+			
+			do {
+				try {
+					boolean stop = doRun();
+					if (stop) {
+						break;
 					}
 				}
-			}
+				catch (Throwable t) {
+					if (!AppUtils.isShuttingDown()) {
+						errorEncountered = true;
+						String msg = "An error has been encountered";
+						if (log.isDebugEnabled()) {
+							log.error(msg, t);
+						} else {
+							log.warn(msg);
+						}
+						
+						break;
+					}
+				}
+			} while (!AppUtils.isShuttingDown() && !errorEncountered);
 			
 			beforeStop();
 			
-			if (log.isDebugEnabled()) {
-				log.debug("Stopping");
+			if (!errorEncountered) {
+				if (log.isDebugEnabled()) {
+					log.debug("Completed");
+				}
 			}
 		}
 		finally {
@@ -90,8 +102,9 @@ public abstract class BaseTask implements Task {
 	/**
 	 * Subclasses should add their implementation logic in this method
 	 * 
+	 * @return true if this runnable should stop otherwise false
 	 * @throws Exception
 	 */
-	public abstract void doRun() throws Exception;
+	public abstract boolean doRun() throws Exception;
 	
 }
