@@ -49,7 +49,7 @@ public abstract class BaseQueueSiteTask<T extends AbstractEntity, P extends Base
 		
 		processor.processWork(items);
 		
-		return false;
+		return true;
 	}
 	
 	/**

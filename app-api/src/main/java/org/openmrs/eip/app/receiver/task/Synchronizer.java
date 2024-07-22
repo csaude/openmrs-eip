@@ -43,4 +43,14 @@ public class Synchronizer extends BaseQueueSiteTask<SyncMessage, SyncMessageProc
 		}
 	}
 	
+	@Override
+	public boolean doRun() throws Exception {
+		invokeSuper();
+		return true;
+	}
+	
+	protected void invokeSuper() throws Exception {
+		super.doRun();
+	}
+	
 }

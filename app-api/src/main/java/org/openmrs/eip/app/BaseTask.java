@@ -38,12 +38,12 @@ public abstract class BaseTask implements Task {
 				
 				return;
 			}
-			
-			if (log.isDebugEnabled()) {
+
+            beforeStart();
+
+            if (log.isDebugEnabled()) {
 				log.debug("Starting");
 			}
-			
-			beforeStart();
 			
 			do {
 				try {

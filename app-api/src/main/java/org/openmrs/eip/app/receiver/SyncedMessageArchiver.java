@@ -54,7 +54,7 @@ public class SyncedMessageArchiver extends BaseSiteRunnable {
 		
 		processor.processWork(messages);
 		
-		return false;
+		return true;
 	}
 	
 }

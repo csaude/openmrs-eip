@@ -36,7 +36,7 @@ public abstract class BasePostSyncActionRunnable extends BaseSiteRunnable {
 		
 		process(messages);
 		
-		return false;
+		return true;
 	}
 	
 	/**

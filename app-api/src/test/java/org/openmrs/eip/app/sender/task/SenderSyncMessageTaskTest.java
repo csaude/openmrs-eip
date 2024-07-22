@@ -1,5 +1,6 @@
 package org.openmrs.eip.app.sender.task;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
@@ -49,6 +50,16 @@ public class SenderSyncMessageTaskTest {
 		List<SenderSyncMessage> actualMessages = task.getNextBatch();
 		
 		Assert.assertEquals(expectedMessages, actualMessages);
+	}
+	
+	@Test
+	public void doRun_shouldRunAndReturnFalse() throws Exception {
+		task = Mockito.spy(task);
+		doNothing().when(task).invokeSuper();
+		
+		Assert.assertTrue(task.doRun());
+		
+		Mockito.verify(task).invokeSuper();
 	}
 	
 }

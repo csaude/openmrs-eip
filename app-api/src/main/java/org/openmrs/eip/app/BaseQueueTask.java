@@ -28,7 +28,7 @@ public abstract class BaseQueueTask<T extends AbstractEntity> extends BaseTask {
 		
 		process(items);
 		
-		return false;
+		return true;
 	}
 	
 	/**

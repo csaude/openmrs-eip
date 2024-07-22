@@ -40,4 +40,14 @@ public class SenderSyncMessageTask extends BaseDelegatingQueueTask<SenderSyncMes
 		return repo.getNewSyncMessages(AppUtils.getTaskPage());
 	}
 	
+	@Override
+	public boolean doRun() throws Exception {
+		invokeSuper();
+		return true;
+	}
+	
+	protected void invokeSuper() throws Exception {
+		super.doRun();
+	}
+	
 }
