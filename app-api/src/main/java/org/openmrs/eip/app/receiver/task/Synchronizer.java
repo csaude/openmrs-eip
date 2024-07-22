@@ -43,4 +43,9 @@ public class Synchronizer extends BaseQueueSiteTask<SyncMessage, SyncMessageProc
 		}
 	}
 	
+	@Override
+	public boolean stopAfterEachBatch() {
+		return false;
+	}
+	
 }

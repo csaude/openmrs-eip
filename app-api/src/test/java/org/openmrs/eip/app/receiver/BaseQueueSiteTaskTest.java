@@ -60,7 +60,7 @@ public class BaseQueueSiteTaskTest {
 		List<SyncMessage> msgs = List.of(new SyncMessage());
 		Mockito.doReturn(msgs).when(task).getNextBatch(mockPage);
 		
-		Assert.assertTrue(task.doRun());
+		Assert.assertFalse(task.doRun());
 		
 		Mockito.verify(mockProcessor).processWork(msgs);
 	}

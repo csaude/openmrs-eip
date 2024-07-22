@@ -40,4 +40,9 @@ public class SenderSyncMessageTask extends BaseDelegatingQueueTask<SenderSyncMes
 		return repo.getNewSyncMessages(AppUtils.getTaskPage());
 	}
 	
+	@Override
+	public boolean stopAfterEachBatch() {
+		return false;
+	}
+	
 }

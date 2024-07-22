@@ -49,6 +49,10 @@ public abstract class BaseQueueSiteTask<T extends AbstractEntity, P extends Base
 		
 		processor.processWork(items);
 		
+		return stopAfterEachBatch();
+	}
+	
+	public boolean stopAfterEachBatch() {
 		return true;
 	}
 	

@@ -28,6 +28,10 @@ public abstract class BaseQueueTask<T extends AbstractEntity> extends BaseTask {
 		
 		process(items);
 		
+		return stopAfterEachBatch();
+	}
+	
+	public boolean stopAfterEachBatch() {
 		return true;
 	}
 	
