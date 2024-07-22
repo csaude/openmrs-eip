@@ -52,7 +52,7 @@ public class BaseQueueTaskTest {
 		List items = Collections.singletonList(new Object());
 		task = new MockBaseQueueTask(items);
 		
-		Assert.assertFalse(task.doRun());
+		Assert.assertTrue(task.doRun());
 		
 		Assert.assertEquals(items, task.processedItems);
 	}

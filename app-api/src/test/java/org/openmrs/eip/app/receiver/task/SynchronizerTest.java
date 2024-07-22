@@ -1,6 +1,5 @@
 package org.openmrs.eip.app.receiver.task;
 
-import static org.mockito.Mockito.doNothing;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_ORDER_BY_ID;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
@@ -70,16 +69,6 @@ public class SynchronizerTest {
 		Synchronizer synchronizer = new Synchronizer(mockSite);
 		setInternalState(synchronizer, "orderById", true);
 		Assert.assertEquals(messages, synchronizer.getNextBatch(mockPage));
-	}
-	
-	@Test
-	public void doRun_shouldRunAndReturnFalse() throws Exception {
-		Synchronizer synchronizer = Mockito.spy(new Synchronizer(mockSite));
-		doNothing().when(synchronizer).invokeSuper();
-		
-		Assert.assertTrue(synchronizer.doRun());
-		
-		Mockito.verify(synchronizer).invokeSuper();
 	}
 	
 }

@@ -65,7 +65,7 @@ public class SyncedMessageArchiverTest {
 		List<SyncedMessage> msgs = Collections.singletonList(new SyncedMessage());
 		when(mockRepo.getBatchOfMessagesForArchiving(mockSite, mockPage)).thenReturn(msgs);
 		
-		Assert.assertFalse(archiver.doRun());
+		Assert.assertTrue(archiver.doRun());
 		
 		Mockito.verify(mockProcessor).processWork(msgs);
 	}

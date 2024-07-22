@@ -56,7 +56,7 @@ public class BasePostSyncActionRunnableTest {
 		List<SyncedMessage> msgs = Collections.singletonList(new SyncedMessage());
 		when(runnable.getNextBatch()).thenReturn(msgs);
 		
-		Assert.assertFalse(runnable.doRun());
+		Assert.assertTrue(runnable.doRun());
 		
 		verify(runnable).process(msgs);
 	}

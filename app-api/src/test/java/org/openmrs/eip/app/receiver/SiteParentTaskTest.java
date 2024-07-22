@@ -100,7 +100,7 @@ public class SiteParentTaskTest {
 		setInternalState(task, "archiver", mockArchiver);
 		setInternalState(task, "deleter", mockDeleter);
 		
-		task.doRun();
+		Assert.assertTrue(task.doRun());
 		
 		Mockito.verify(mockSynchronizer).run();
 		Mockito.verify(mockEvictor).run();
@@ -120,7 +120,7 @@ public class SiteParentTaskTest {
 		setInternalState(task, "updater", mockUpdater);
 		setInternalState(task, "responseSender", mockResponseSender);
 		
-		task.doRun();
+		Assert.assertTrue(task.doRun());
 		
 		Mockito.verify(mockSynchronizer).run();
 		Mockito.verify(mockEvictor).run();
