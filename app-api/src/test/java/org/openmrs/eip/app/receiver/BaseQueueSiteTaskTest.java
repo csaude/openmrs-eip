@@ -1,5 +1,6 @@
 package org.openmrs.eip.app.receiver;
 
+import static org.openmrs.eip.app.SyncConstants.PROP_TASK_CONTINUOUS;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SYNC_ORDER_BY_ID;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
@@ -46,6 +47,7 @@ public class BaseQueueSiteTaskTest {
 		setInternalState(BaseSiteRunnable.class, Pageable.class, mockPage);
 		Mockito.when(SyncContext.getBean(Environment.class)).thenReturn(mockEnv);
 		Mockito.when(mockEnv.getProperty(PROP_SYNC_ORDER_BY_ID, Boolean.class, false)).thenReturn(false);
+		Mockito.when(mockEnv.getProperty(PROP_TASK_CONTINUOUS, Boolean.class, false)).thenReturn(false);
 		task = Mockito.spy(new Synchronizer(null));
 	}
 	
@@ -60,7 +62,7 @@ public class BaseQueueSiteTaskTest {
 		List<SyncMessage> msgs = List.of(new SyncMessage());
 		Mockito.doReturn(msgs).when(task).getNextBatch(mockPage);
 		
-		Assert.assertFalse(task.doRun());
+		Assert.assertTrue(task.doRun());
 		
 		Mockito.verify(mockProcessor).processWork(msgs);
 	}
@@ -73,6 +75,17 @@ public class BaseQueueSiteTaskTest {
 		Assert.assertTrue(task.doRun());
 		
 		Mockito.verifyNoInteractions(mockProcessor);
+	}
+	
+	@Test
+	public void doRun_shouldLoadAndSubmitTheItemsToTheProcessorAndContinueIfEnabled() throws Exception {
+		List<SyncMessage> msgs = List.of(new SyncMessage());
+		Mockito.doReturn(msgs).when(task).getNextBatch(mockPage);
+		Mockito.when(mockEnv.getProperty(PROP_TASK_CONTINUOUS, Boolean.class, false)).thenReturn(true);
+		
+		Assert.assertFalse(task.doRun());
+		
+		Mockito.verify(mockProcessor).processWork(msgs);
 	}
 	
 }

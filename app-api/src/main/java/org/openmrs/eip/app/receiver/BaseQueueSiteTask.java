@@ -1,12 +1,16 @@
 package org.openmrs.eip.app.receiver;
 
+import static org.openmrs.eip.app.SyncConstants.PROP_TASK_CONTINUOUS;
+
 import java.util.List;
 
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.AbstractEntity;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
+import org.openmrs.eip.component.SyncContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -22,6 +26,8 @@ public abstract class BaseQueueSiteTask<T extends AbstractEntity, P extends Base
 	protected static final Logger log = LoggerFactory.getLogger(BaseQueueSiteTask.class);
 	
 	private final P processor;
+	
+	private Boolean continuous;
 	
 	public BaseQueueSiteTask(SiteInfo site, P processor) {
 		super(site);
@@ -48,6 +54,14 @@ public abstract class BaseQueueSiteTask<T extends AbstractEntity, P extends Base
 		}
 		
 		processor.processWork(items);
+		
+		if (continuous == null) {
+			continuous = SyncContext.getBean(Environment.class).getProperty(PROP_TASK_CONTINUOUS, Boolean.class, false);
+		}
+		
+		if (!continuous) {
+			return true;
+		}
 		
 		return stopAfterEachBatch();
 	}

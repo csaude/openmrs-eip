@@ -62,6 +62,8 @@ public class SyncConstants {
 	
 	public static final String PROP_DELAY_RETRY_TASK = "inbound.retry.interval";
 	
+	public static final String PROP_TASK_CONTINUOUS = "task.continuous.mode.enabled";
+	
 	public static final int DEFAULT_DELAY_PRUNER = 86400000;
 	
 	public static final String PROP_INITIAL_DELAY_RECONCILER = "reconcile.initial.delay";
