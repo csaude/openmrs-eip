@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openmrs.eip.HashUtils;
 import org.openmrs.eip.TestConstants;
+import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverRetryQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
@@ -51,6 +52,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Sql(scripts = "classpath:openmrs_core_data.sql")
 @TestPropertySource(properties = "spring.openmrs-datasource.maximum-pool-size=34")
 @TestPropertySource(properties = "spring.mngt-datasource.maximum-pool-size=34")
+@TestPropertySource(properties = SyncConstants.PROP_TASK_CONTINUOUS + "=true")
 public class SyncMessageProcessorBehaviorTest extends BaseReceiverTest {
 	
 	private static final int MSG_COUNT = 32;
