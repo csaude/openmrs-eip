@@ -9,6 +9,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
+import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
 import org.openmrs.eip.app.receiver.BaseReceiverTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +45,18 @@ public class JmsMessageRepositoryTest extends BaseReceiverTest {
 		assertEquals(2, msgs.size());
 		assertEquals(3, msgs.get(0).getId().longValue());
 		assertEquals(1, msgs.get(1).getId().longValue());
+	}
+	
+	@Test
+	public void findByType_shouldGetJmsMessagesMatchingTheType() {
+		List<JmsMessage> msgs = repo.findByType(MessageType.SYNC, Pageable.ofSize(5));
+		assertEquals(2, msgs.size());
+		assertEquals(1, msgs.get(0).getId().longValue());
+		assertEquals(3, msgs.get(1).getId().longValue());
+		
+		msgs = repo.findByType(MessageType.SYNC, Pageable.ofSize(1));
+		assertEquals(1, msgs.size());
+		assertEquals(1, msgs.get(0).getId().longValue());
 	}
 	
 }
