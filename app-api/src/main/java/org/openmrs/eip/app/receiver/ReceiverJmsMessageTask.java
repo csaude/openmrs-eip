@@ -14,6 +14,7 @@ import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.BaseQueueTask;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
+import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
 import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.model.SyncMetadata;
@@ -47,7 +48,7 @@ public class ReceiverJmsMessageTask extends BaseQueueTask<JmsMessage> {
 	@Override
 	public List<JmsMessage> getNextBatch() {
 		//TODO Only process sync messages that are not requests
-		return repo.findAll(AppUtils.getTaskPage()).getContent();
+		return repo.findByType(MessageType.SYNC, AppUtils.getTaskPage());
 	}
 	
 	@Override
@@ -77,18 +78,18 @@ public class ReceiverJmsMessageTask extends BaseQueueTask<JmsMessage> {
 					insertStmt.addBatch();
 				}
 				
+				int count = items.size();
 				if (log.isDebugEnabled()) {
-					log.debug("Saving sync messages in batch");
+					log.debug("Saving sync messages in batch of {}", count);
 				}
 				
 				int[] rows = insertStmt.executeBatch();
-				int count = items.size();
 				if (rows.length != count) {
 					throw new Exception("Expected " + count + " sync items to be inserted but was " + rows.length);
 				}
 				
 				if (log.isDebugEnabled()) {
-					log.debug("Removing JMS message in batch");
+					log.debug("Removing JMS message in batch of {}", count);
 				}
 				
 				int deleted = deleteStmt
