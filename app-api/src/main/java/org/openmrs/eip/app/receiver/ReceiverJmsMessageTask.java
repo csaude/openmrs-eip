@@ -55,39 +55,51 @@ public class ReceiverJmsMessageTask extends BaseQueueTask<JmsMessage> {
 		try (Connection conn = dataSource.getConnection();
 		        PreparedStatement insertStmt = conn.prepareStatement(SYNC_INSERT);
 		        Statement deleteStmt = conn.createStatement()) {
-			//TODO Started a TX and commit everything inside it
-			List<Long> ids = new ArrayList<>();
-			for (JmsMessage jmsMessage : items) {
-				String body = new String(jmsMessage.getBody(), StandardCharsets.UTF_8);
-				SyncModel syncModel = JsonUtils.unmarshalSyncModel(body);
-				SyncMetadata md = syncModel.getMetadata();
-				insertStmt.setString(1, syncModel.getTableToSyncModelClass().getName());
-				insertStmt.setString(2, syncModel.getModel().getUuid());
-				insertStmt.setString(3, body);
-				insertStmt.setLong(4, ReceiverContext.getSiteInfo(md.getSourceIdentifier()).getId());
-				insertStmt.setBoolean(5, md.getSnapshot());
-				insertStmt.setString(6, md.getMessageUuid());
-				insertStmt.setObject(7, md.getDateSent());
-				insertStmt.setString(8, md.getOperation());
-				insertStmt.setObject(9, jmsMessage.getDateCreated());
-				insertStmt.setString(10, md.getSyncVersion());
-				ids.add(jmsMessage.getId());
-				insertStmt.addBatch();
+			boolean autoCommit = conn.getAutoCommit();
+			try {
+				conn.setAutoCommit(false);
+				List<Long> ids = new ArrayList<>();
+				for (JmsMessage jmsMessage : items) {
+					String body = new String(jmsMessage.getBody(), StandardCharsets.UTF_8);
+					SyncModel syncModel = JsonUtils.unmarshalSyncModel(body);
+					SyncMetadata md = syncModel.getMetadata();
+					insertStmt.setString(1, syncModel.getTableToSyncModelClass().getName());
+					insertStmt.setString(2, syncModel.getModel().getUuid());
+					insertStmt.setString(3, body);
+					insertStmt.setLong(4, ReceiverContext.getSiteInfo(md.getSourceIdentifier()).getId());
+					insertStmt.setBoolean(5, md.getSnapshot());
+					insertStmt.setString(6, md.getMessageUuid());
+					insertStmt.setObject(7, md.getDateSent());
+					insertStmt.setString(8, md.getOperation());
+					insertStmt.setObject(9, jmsMessage.getDateCreated());
+					insertStmt.setString(10, md.getSyncVersion());
+					ids.add(jmsMessage.getId());
+					insertStmt.addBatch();
+				}
+				
+				if (log.isDebugEnabled()) {
+					log.debug("Saving sync messages in batch");
+				}
+				
+				int[] rows = insertStmt.executeBatch();
+				int count = items.size();
+				if (rows.length != count) {
+					throw new Exception("Expected " + count + " sync items to be inserted but was " + rows.length);
+				}
+				
+				if (log.isDebugEnabled()) {
+					log.debug("Removing JMS message in batch");
+				}
+				
+				int deleted = deleteStmt
+				        .executeUpdate("DELETE FROM jms_msg WHERE id IN (" + StringUtils.join(ids, ",") + ")");
+				if (deleted != count) {
+					throw new Exception("Expected " + count + " JMS messages to be deleted but was " + deleted);
+				}
 			}
-			
-			if (log.isDebugEnabled()) {
-				log.debug("Saving sync messages in batch");
+			finally {
+				conn.setAutoCommit(autoCommit);
 			}
-			
-			int[] counts = insertStmt.executeBatch();
-			System.out.println("Batch returned: " + counts.length);
-			
-			if (log.isDebugEnabled()) {
-				log.debug("Removing JMS message in batch");
-			}
-			
-			int rows = deleteStmt.executeUpdate("DELETE FROM jms_msg WHERE id in (" + StringUtils.join(ids, ",") + ")");
-			System.out.println("Deleted rows: " + rows);
 		}
 	}
 	
