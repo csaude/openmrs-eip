@@ -35,7 +35,7 @@ import org.springframework.data.domain.Pageable;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SyncContext.class, AppUtils.class })
-public class ReceiverJmsMessageTaskTest {
+public class ReceiverJmsMessageTaskMockTest {
 	
 	@Mock
 	private JmsMessageRepository mockRepo;
