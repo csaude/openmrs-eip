@@ -11,12 +11,13 @@ import javax.sql.DataSource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.app.AppUtils;
-import org.openmrs.eip.app.BaseQueueTask;
+import org.openmrs.eip.app.BaseDelegatingQueueTask;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
 import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.component.SyncContext;
+import org.openmrs.eip.component.SyncOperation;
 import org.openmrs.eip.component.model.SyncMetadata;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
@@ -25,9 +26,9 @@ import org.openmrs.eip.component.utils.JsonUtils;
  * Reads a batch of JmsMessages and submits them to the {@link ReceiverJmsMessageProcessor} for
  * processing.
  */
-public class ReceiverJmsMessageTask extends BaseQueueTask<JmsMessage> {
+public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, ReceiverJmsMessageProcessor> {
 	
-	private static final String SYNC_INSERT = "INSERT INTO receiver_sync_msg (model_class_name,identifier,"
+	protected static final String SYNC_INSERT = "INSERT INTO receiver_sync_msg (model_class_name,identifier,"
 	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created,"
 	        + "date_received,sync_version) VALUES (?,?,?,?,?,?,?,?,now(),?,?)";
 	
@@ -36,6 +37,7 @@ public class ReceiverJmsMessageTask extends BaseQueueTask<JmsMessage> {
 	private DataSource dataSource;
 	
 	public ReceiverJmsMessageTask() {
+		super(SyncContext.getBean(ReceiverJmsMessageProcessor.class));
 		this.repo = SyncContext.getBean(JmsMessageRepository.class);
 		this.dataSource = SyncContext.getBean(SyncConstants.MGT_DATASOURCE_NAME);
 	}
@@ -47,12 +49,12 @@ public class ReceiverJmsMessageTask extends BaseQueueTask<JmsMessage> {
 	
 	@Override
 	public List<JmsMessage> getNextBatch() {
-		//TODO Only process sync messages that are not requests
 		return repo.findByType(MessageType.SYNC, AppUtils.getTaskPage());
 	}
 	
 	@Override
 	public void process(List<JmsMessage> items) throws Exception {
+		boolean containsRequest = false;
 		try (Connection conn = dataSource.getConnection();
 		        PreparedStatement insertStmt = conn.prepareStatement(SYNC_INSERT);
 		        Statement deleteStmt = conn.createStatement()) {
@@ -64,6 +66,10 @@ public class ReceiverJmsMessageTask extends BaseQueueTask<JmsMessage> {
 					String body = new String(jmsMessage.getBody(), StandardCharsets.UTF_8);
 					SyncModel syncModel = JsonUtils.unmarshalSyncModel(body);
 					SyncMetadata md = syncModel.getMetadata();
+					if (SyncOperation.r.name().equals(md.getOperation())) {
+						containsRequest = true;
+						break;
+					}
 					insertStmt.setString(1, syncModel.getTableToSyncModelClass().getName());
 					insertStmt.setString(2, syncModel.getModel().getUuid());
 					insertStmt.setString(3, body);
@@ -78,29 +84,39 @@ public class ReceiverJmsMessageTask extends BaseQueueTask<JmsMessage> {
 					insertStmt.addBatch();
 				}
 				
-				int count = items.size();
-				if (log.isDebugEnabled()) {
-					log.debug("Saving sync messages in batch of {}", count);
-				}
-				
-				int[] rows = insertStmt.executeBatch();
-				if (rows.length != count) {
-					throw new Exception("Expected " + count + " sync items to be inserted but was " + rows.length);
-				}
-				
-				if (log.isDebugEnabled()) {
-					log.debug("Removing JMS message in batch of {}", count);
-				}
-				
-				int deleted = deleteStmt
-				        .executeUpdate("DELETE FROM jms_msg WHERE id IN (" + StringUtils.join(ids, ",") + ")");
-				if (deleted != count) {
-					throw new Exception("Expected " + count + " JMS messages to be deleted but was " + deleted);
+				if (!containsRequest) {
+					int count = items.size();
+					if (log.isDebugEnabled()) {
+						log.debug("Saving sync messages in batch of {}", count);
+					}
+					
+					int[] rows = insertStmt.executeBatch();
+					if (rows.length != count) {
+						throw new Exception("Expected " + count + " sync items to be inserted but was " + rows.length);
+					}
+					
+					if (log.isDebugEnabled()) {
+						log.debug("Removing JMS message in batch of {}", count);
+					}
+					
+					int deleted = deleteStmt
+					        .executeUpdate("DELETE FROM jms_msg WHERE id IN (" + StringUtils.join(ids, ",") + ")");
+					if (deleted != count) {
+						throw new Exception("Expected " + count + " JMS messages to be deleted but was " + deleted);
+					}
 				}
 			}
 			finally {
 				conn.setAutoCommit(autoCommit);
 			}
+		}
+		
+		if (containsRequest) {
+			if (log.isTraceEnabled()) {
+				log.trace("JMS batch contains sync request(s), processing items individually");
+			}
+			
+			super.process(items);
 		}
 	}
 	
