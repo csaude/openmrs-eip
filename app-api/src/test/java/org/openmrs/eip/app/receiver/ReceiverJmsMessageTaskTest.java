@@ -85,7 +85,7 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 	}
 	
 	@Test
-	public void process_shouldRollbackChangesIfAnErrorIsEncountered() throws Exception {
+	public void process_shouldRollbackChangesIfAnErrorIsEncountered() {
 		Assert.assertEquals(0, synMsgRepo.count());
 		Assert.assertEquals(0, jmsMsgRepo.count());
 		final int COUNT = 5;
