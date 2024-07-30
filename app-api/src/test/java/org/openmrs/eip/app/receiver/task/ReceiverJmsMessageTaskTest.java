@@ -13,10 +13,10 @@ import org.junit.Test;
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.repository.JmsMessageRepository;
-import org.openmrs.eip.app.management.repository.SiteRepository;
 import org.openmrs.eip.app.management.repository.SyncMessageRepository;
 import org.openmrs.eip.app.receiver.BaseReceiverTest;
 import org.openmrs.eip.app.receiver.ReceiverJmsMessageTask;
+import org.openmrs.eip.app.route.TestUtils;
 import org.openmrs.eip.component.SyncOperation;
 import org.openmrs.eip.component.model.PersonModel;
 import org.openmrs.eip.component.model.SyncMetadata;
@@ -37,9 +37,6 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 	
 	@Autowired
 	private JmsMessageRepository jmsMsgRepo;
-	
-	@Autowired
-	private SiteRepository siteRepo;
 	
 	private JmsMessage createMessage(int index) {
 		JmsMessage msg = new JmsMessage();
@@ -68,6 +65,7 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 		for (int i = 0; i < COUNT; i++) {
 			msgs.add(createMessage(i));
 		}
+		TestUtils.flush();
 		Assert.assertEquals(COUNT, jmsMsgRepo.count());
 		task = new ReceiverJmsMessageTask();
 		
