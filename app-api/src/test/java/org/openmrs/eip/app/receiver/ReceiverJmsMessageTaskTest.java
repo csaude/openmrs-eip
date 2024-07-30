@@ -1,5 +1,6 @@
-package org.openmrs.eip.app.receiver.task;
+package org.openmrs.eip.app.receiver;
 
+import static org.junit.Assert.assertEquals;
 import static org.openmrs.eip.app.SyncConstants.MGT_DATASOURCE_NAME;
 import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
 
@@ -8,20 +9,21 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.app.management.repository.SyncMessageRepository;
-import org.openmrs.eip.app.receiver.BaseReceiverTest;
-import org.openmrs.eip.app.receiver.ReceiverJmsMessageTask;
 import org.openmrs.eip.app.route.TestUtils;
 import org.openmrs.eip.component.SyncOperation;
+import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.PersonModel;
 import org.openmrs.eip.component.model.SyncMetadata;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
+import org.powermock.reflect.Whitebox;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
@@ -37,6 +39,13 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 	
 	@Autowired
 	private JmsMessageRepository jmsMsgRepo;
+	
+	private final String ORIGINAL_DELETE_QUERY = ReceiverJmsMessageTask.JMS_DELETE;
+	
+	@After
+	public void tearDown() {
+		Whitebox.setInternalState(ReceiverJmsMessageTask.class, "JMS_DELETE", ORIGINAL_DELETE_QUERY);
+	}
 	
 	private JmsMessage createMessage(int index) {
 		JmsMessage msg = new JmsMessage();
@@ -73,6 +82,27 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 		
 		Assert.assertEquals(COUNT, synMsgRepo.count());
 		Assert.assertEquals(0, jmsMsgRepo.count());
+	}
+	
+	@Test
+	public void process_shouldRollbackChangesIfAnErrorIsEncountered() throws Exception {
+		Assert.assertEquals(0, synMsgRepo.count());
+		Assert.assertEquals(0, jmsMsgRepo.count());
+		final int COUNT = 5;
+		final List<JmsMessage> msgs = new ArrayList<>(COUNT);
+		for (int i = 0; i < COUNT; i++) {
+			msgs.add(createMessage(i));
+		}
+		TestUtils.flush();
+		Assert.assertEquals(COUNT, jmsMsgRepo.count());
+		task = new ReceiverJmsMessageTask();
+		Whitebox.setInternalState(ReceiverJmsMessageTask.class, "JMS_DELETE", "BAD QUERY");
+		
+		Throwable thrown = Assert.assertThrows(EIPException.class, () -> task.process(msgs));
+		
+		assertEquals("An error occurred while processing a batch of JMS messages", thrown.getMessage());
+		Assert.assertEquals(COUNT, jmsMsgRepo.count());
+		Assert.assertEquals(0, synMsgRepo.count());
 	}
 	
 }

@@ -18,6 +18,7 @@ import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
 import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.SyncOperation;
+import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.SyncMetadata;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
@@ -31,6 +32,10 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 	protected static final String SYNC_INSERT = "INSERT INTO receiver_sync_msg (model_class_name,identifier,"
 	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created,"
 	        + "date_received,sync_version) VALUES (?,?,?,?,?,?,?,?,now(),?,?)";
+	
+	protected static final String PLACE_HOLDER_IDS = "DELETE FROM jms_msg WHERE id IN (IDS)";
+	
+	protected static final String JMS_DELETE = "DELETE FROM jms_msg WHERE id IN (?)";
 	
 	private JmsMessageRepository repo;
 	
@@ -99,12 +104,18 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 						log.debug("Removing JMS message in batch of {}", count);
 					}
 					
-					int deleted = deleteStmt
-					        .executeUpdate("DELETE FROM jms_msg WHERE id IN (" + StringUtils.join(ids, ",") + ")");
+					final String deleteQuery = JMS_DELETE.replace(PLACE_HOLDER_IDS, StringUtils.join(ids, ","));
+					int deleted = deleteStmt.executeUpdate(deleteQuery);
 					if (deleted != count) {
 						throw new Exception("Expected " + count + " JMS messages to be deleted but was " + deleted);
 					}
+					
+					conn.commit();
 				}
+			}
+			catch (Throwable t) {
+				conn.rollback();
+				throw new EIPException("An error occurred while processing a batch of JMS messages", t);
 			}
 			finally {
 				conn.setAutoCommit(autoCommit);
