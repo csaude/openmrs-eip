@@ -8,7 +8,6 @@ import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncStatus;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.management.repository.SiteSyncStatusRepository;
 import org.openmrs.eip.component.SyncProfiles;
-import org.openmrs.eip.component.model.SyncMetadata;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +30,14 @@ public class SyncStatusProcessor {
 		this.statusRepo = statusRepo;
 	}
 	
-	public void process(SyncMetadata metadata) {
+	public void process(String siteId) {
 		Date dateReceived = new Date();
 		SiteInfo site = null;
 		try {
-			site = ReceiverContext.getSiteInfo(metadata.getSourceIdentifier());
+			site = ReceiverContext.getSiteInfo(siteId);
 			
 			if (site == null) {
-				logger.error("No site info found with identifier: " + metadata.getSourceIdentifier()
+				logger.error("No site info found with identifier: " + siteId
 				        + ", please create one in order to track its last sync date");
 				return;
 			}
@@ -47,7 +46,7 @@ public class SyncStatusProcessor {
 				siteIdAndStatusMap = new HashMap<>(ReceiverContext.getSites().size());
 			}
 			
-			ReceiverSyncStatus status = siteIdAndStatusMap.get(metadata.getSourceIdentifier());
+			ReceiverSyncStatus status = siteIdAndStatusMap.get(siteId);
 			boolean isStatusCached = false;
 			boolean flushIntervalElapsed = false;
 			if (status == null) {
@@ -68,7 +67,7 @@ public class SyncStatusProcessor {
 			} else if (!isStatusCached || flushIntervalElapsed) {
 				//A status that was read from the DB, or if the date we have in the cache is older than a minute, this 
 				//ensures that if we get multiple messages from the same site within a short negligible time interval, 
-				//this acts as a throttle to avoid multiple database updatessaveChanges = true;
+				//this acts as a throttle to avoid multiple database updates
 				status.setLastSyncDate(dateReceived);
 				saveChanges = true;
 				if (logger.isTraceEnabled()) {
@@ -84,7 +83,7 @@ public class SyncStatusProcessor {
 			}
 			
 			if (!isStatusCached) {
-				siteIdAndStatusMap.put(metadata.getSourceIdentifier(), status);
+				siteIdAndStatusMap.put(siteId, status);
 				if (logger.isTraceEnabled()) {
 					logger.trace("Added to cache site sync status -> " + status);
 				}
