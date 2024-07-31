@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.openmrs.eip.HashUtils;
 import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
@@ -31,7 +30,6 @@ import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.app.receiver.ReceiverActiveMqMessagePublisher;
 import org.openmrs.eip.app.receiver.ReceiverContext;
 import org.openmrs.eip.app.receiver.ReceiverUtils;
-import org.openmrs.eip.app.receiver.SyncStatusProcessor;
 import org.openmrs.eip.component.SyncOperation;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.management.hash.entity.BaseHashEntity;
@@ -80,8 +78,6 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 	
 	private ReceiverActiveMqMessagePublisher activeMqPublisher;
 	
-	private SyncStatusProcessor statusProcessor;
-	
 	@PersistenceContext(unitName = "mngt")
 	private EntityManager entityManager;
 	
@@ -89,7 +85,7 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 	    ReceiverSyncArchiveRepository archiveRepo, ReceiverRetryRepository retryRepo, ConflictRepository conflictRepo,
 	    ReceiverPrunedItemRepository prunedRepo, EntityServiceFacade serviceFacade,
 	    ReceiverSyncRequestRepository syncRequestRepo, JmsMessageRepository jmsMsgRepo,
-	    ReceiverActiveMqMessagePublisher activeMqPublisher, SyncStatusProcessor statusProcessor) {
+	    ReceiverActiveMqMessagePublisher activeMqPublisher) {
 		this.syncMsgRepo = syncMsgRepo;
 		this.syncedMsgRepo = syncedMsgRepo;
 		this.archiveRepo = archiveRepo;
@@ -100,7 +96,6 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 		this.syncRequestRepo = syncRequestRepo;
 		this.activeMqPublisher = activeMqPublisher;
 		this.jmsMsgRepo = jmsMsgRepo;
-		this.statusProcessor = statusProcessor;
 	}
 	
 	@Override
@@ -324,18 +319,6 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 		
 		String body = new String(jmsMessage.getBody(), StandardCharsets.UTF_8);
 		SyncModel syncModel = JsonUtils.unmarshalSyncModel(body);
-		try {
-			statusProcessor.process(syncModel.getMetadata());
-		}
-		catch (Throwable t) {
-			Throwable cause = ExceptionUtils.getRootCause(t);
-			if (cause == null) {
-				cause = t;
-			}
-			
-			log.warn("An error occurred while updating site last sync date, " + cause.getMessage());
-		}
-		
 		boolean isRequestWithNoEntity = false;
 		SyncMetadata md = syncModel.getMetadata();
 		if (SyncOperation.r.name().equals(md.getOperation())) {

@@ -24,6 +24,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.component.exception.EIPException;
@@ -51,16 +53,24 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 	@Autowired
 	private JmsMessageRepository repo;
 	
+	@Autowired
+	private SyncStatusProcessor statusProcessor;
+	
+	private SyncStatusProcessor mockStatusProcessor;
+	
 	private boolean skipDuplicatesOriginal;
 	
 	@Before
 	public void setup() {
+		mockStatusProcessor = Mockito.mock(SyncStatusProcessor.class);
 		skipDuplicatesOriginal = Whitebox.getInternalState(listener, "skipDuplicates");
+		Whitebox.setInternalState(listener, SyncStatusProcessor.class, mockStatusProcessor);
 	}
 	
 	@After
 	public void tearDown() {
 		Whitebox.setInternalState(listener, "skipDuplicates", skipDuplicatesOriginal);
+		Whitebox.setInternalState(listener, SyncStatusProcessor.class, statusProcessor);
 	}
 	
 	@Test
@@ -87,6 +97,7 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		assertEquals(messageUuid, msg.getMessageId());
 		assertEquals(siteId, msg.getSiteId());
 		assertEquals(SYNC, msg.getType());
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
 	}
 	
 	@Test
@@ -109,6 +120,7 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		listener.onMessage(bytesMsg);
 		
 		assertEquals(originalCount, repo.count());
+		Mockito.verifyNoInteractions(mockStatusProcessor);
 	}
 	
 	@Test
@@ -130,6 +142,7 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		
 		EIPException thrown = Assert.assertThrows(EIPException.class, () -> listener.onMessage(bytesMsg));
 		Assert.assertEquals(DataIntegrityViolationException.class, thrown.getCause().getClass());
+		Mockito.verifyNoInteractions(mockStatusProcessor);
 	}
 	
 	@Test
@@ -172,10 +185,12 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		assertEquals("msg-uuid-3", msg.getMessageId());
 		assertEquals(siteId, msg.getSiteId());
 		assertEquals(SYNC, msg.getType());
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
 	}
 	
 	@Test
 	public void onMessage_shouldProcessTextMessage() throws Exception {
+		final String siteId = "remote1";
 		assertEquals(0, repo.count());
 		SyncMetadata md = new SyncMetadata();
 		md.setMessageUuid("msg-uuid-1");
@@ -186,16 +201,19 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		textMsg.setStringProperty(JMS_HEADER_MSG_ID, "jms-msg-uuid");
 		textMsg.setStringProperty(JMS_HEADER_SITE, "remote1");
 		textMsg.setStringProperty(JMS_HEADER_TYPE, SYNC.name());
+		textMsg.setStringProperty(JMS_HEADER_SITE, siteId);
 		
 		listener.onMessage(textMsg);
 		
 		List<JmsMessage> msgs = repo.findAll();
 		assertEquals(1, msgs.size());
 		assertTrue(Arrays.equals(body.getBytes(), msgs.get(0).getBody()));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
 	}
 	
 	@Test
 	public void onMessage_shouldProcessStreamMessage() throws Exception {
+		final String siteId = "remote1";
 		assertEquals(0, repo.count());
 		SyncMetadata md = new SyncMetadata();
 		md.setMessageUuid("msg-uuid-1");
@@ -208,16 +226,19 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		streamMsg.setStringProperty(JMS_HEADER_MSG_ID, "jms-msg-uuid");
 		streamMsg.setStringProperty(JMS_HEADER_SITE, "remote1");
 		streamMsg.setStringProperty(JMS_HEADER_TYPE, SYNC.name());
+		streamMsg.setStringProperty(JMS_HEADER_SITE, siteId);
 		
 		listener.onMessage(streamMsg);
 		
 		List<JmsMessage> msgs = repo.findAll();
 		assertEquals(1, msgs.size());
 		assertTrue(Arrays.equals(body.getBytes(), msgs.get(0).getBody()));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
 	}
 	
 	@Test
 	public void onMessage_shouldProcessCompressedMessage() throws Exception {
+		final String siteId = "remote1";
 		assertEquals(0, repo.count());
 		SyncMetadata md = new SyncMetadata();
 		md.setMessageUuid("msg-uuid-1");
@@ -229,12 +250,14 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		bytesMsg.setStringProperty(JMS_HEADER_SITE, "remote1");
 		bytesMsg.setStringProperty(JMS_HEADER_TYPE, SYNC.name());
 		bytesMsg.setBooleanProperty(JMS_HEADER_COMPRESSED, true);
+		bytesMsg.setStringProperty(JMS_HEADER_SITE, siteId);
 		
 		listener.onMessage(bytesMsg);
 		
 		List<JmsMessage> msgs = repo.findAll();
 		assertEquals(1, msgs.size());
 		assertTrue(Arrays.equals(body.getBytes(), msgs.get(0).getBody()));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
 	}
 	
 }

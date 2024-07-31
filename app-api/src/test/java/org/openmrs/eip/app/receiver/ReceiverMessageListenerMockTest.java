@@ -1,9 +1,9 @@
 package org.openmrs.eip.app.receiver;
 
+import static org.mockito.Mockito.when;
 import static org.openmrs.eip.component.model.SyncModel.builder;
 import static org.openmrs.eip.component.utils.JsonUtils.marshall;
 
-import jakarta.jms.BytesMessage;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +21,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import jakarta.jms.BytesMessage;
 import jakarta.jms.Message;
 
 @RunWith(PowerMockRunner.class)
@@ -34,12 +35,15 @@ public class ReceiverMessageListenerMockTest {
 	private ReceiverService mockService;
 	
 	@Mock
+	private SyncStatusProcessor mockProcessor;
+	
+	@Mock
 	public ReceiverMessageListener listener;
 	
 	@Before
 	public void setup() {
 		PowerMockito.mockStatic(ReceiverMessageListenerContainer.class);
-		listener = new ReceiverMessageListener(mockRepo, mockService);
+		listener = new ReceiverMessageListener(mockRepo, mockService, mockProcessor);
 	}
 	
 	@Test
@@ -48,7 +52,8 @@ public class ReceiverMessageListenerMockTest {
 		md.setMessageUuid("msg-uuid");
 		final String body = marshall(builder().tableToSyncModelClass(PersonModel.class).metadata(md).build());
 		Message msg = Mockito.mock(BytesMessage.class);
-		Mockito.when(msg.getBody(byte[].class)).thenReturn(body.getBytes());
+		when(msg.getStringProperty(SyncConstants.JMS_HEADER_SITE)).thenReturn("testId");
+		when(msg.getBody(byte[].class)).thenReturn(body.getBytes());
 		
 		listener.onMessage(msg);
 		
@@ -65,16 +70,17 @@ public class ReceiverMessageListenerMockTest {
 		md.setMessageUuid(msgId);
 		final String body = marshall(builder().tableToSyncModelClass(PersonModel.class).metadata(md).build());
 		Message msg = Mockito.mock(BytesMessage.class);
-		Mockito.when(msg.getBody(byte[].class)).thenReturn(body.getBytes());
-		Mockito.when(msg.getStringProperty(SyncConstants.JMS_HEADER_MSG_ID)).thenReturn(msgId);
-		Mockito.when(mockRepo.existsByMessageId(msgId)).thenReturn(true);
+		when(msg.getBody(byte[].class)).thenReturn(body.getBytes());
+		when(msg.getStringProperty(SyncConstants.JMS_HEADER_MSG_ID)).thenReturn(msgId);
+		when(mockRepo.existsByMessageId(msgId)).thenReturn(true);
 		Whitebox.setInternalState(listener, "skipDuplicates", true);
 		
 		listener.onMessage(msg);
 		
+		Mockito.verifyNoInteractions(mockService);
+		Mockito.verifyNoInteractions(mockProcessor);
 		PowerMockito.verifyStatic(ReceiverMessageListenerContainer.class);
 		ReceiverMessageListenerContainer.enableAcknowledgement();
-		Mockito.verifyNoInteractions(mockService);
 	}
 	
 }

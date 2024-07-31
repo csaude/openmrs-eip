@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
@@ -14,7 +15,6 @@ import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
-import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
@@ -38,12 +38,15 @@ public class ReceiverMessageListener implements MessageListener {
 	
 	private ReceiverService service;
 	
+	private SyncStatusProcessor statusProcessor;
+	
 	@Value("${" + ReceiverConstants.PROP_JMS_SKIP_DUPLICATES + ":true}")
 	private boolean skipDuplicates;
 	
-	public ReceiverMessageListener(JmsMessageRepository repo, ReceiverService service) {
+	public ReceiverMessageListener(JmsMessageRepository repo, ReceiverService service, SyncStatusProcessor statusProcessor) {
 		this.repo = repo;
 		this.service = service;
+		this.statusProcessor = statusProcessor;
 	}
 	
 	@Override
@@ -66,7 +69,7 @@ public class ReceiverMessageListener implements MessageListener {
 				body = message.getBody(String.class).getBytes(StandardCharsets.UTF_8);
 			}
 			
-			final String siteId = message.getStringProperty(SyncConstants.JMS_HEADER_SITE);
+			String siteId = message.getStringProperty(SyncConstants.JMS_HEADER_SITE);
 			final String version = message.getStringProperty(SyncConstants.JMS_HEADER_VERSION);
 			MessageType type = MessageType.SYNC;
 			String typeStr = message.getStringProperty(SyncConstants.JMS_HEADER_TYPE);
@@ -79,11 +82,18 @@ public class ReceiverMessageListener implements MessageListener {
 				batchSizeStr = message.getStringProperty(SyncConstants.JMS_HEADER_BATCH_SIZE);
 			}
 			
+			boolean duplicate = false;
 			if (batchSizeStr == null) {
-				final String msgUid = JsonUtils.unmarshalBytes(body, SyncModel.class).getMetadata().getMessageUuid();
+				Map bodyMap = JsonUtils.unmarshalBytes(body, Map.class);
+				final String msgUid = ((Map) (bodyMap).get("metadata")).get("messageUuid").toString();
 				JmsMessage jmsMsg = createJmsMessage(msgUid, body, siteId, version, type);
 				if (jmsMsg != null) {
 					service.saveJmsMessage(jmsMsg);
+					if (siteId == null) {
+						siteId = bodyMap.get("sourceIdentifier").toString();
+					}
+				} else {
+					duplicate = true;
 				}
 			} else {
 				final int batchSize = Integer.valueOf(batchSizeStr);
@@ -93,7 +103,7 @@ public class ReceiverMessageListener implements MessageListener {
 				}
 				
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Processing sync batch of {} items", batchSize);
+					LOG.debug("Processing sync batch of {} items from site: {}", batchSize, siteId);
 				}
 				
 				List<JmsMessage> msgs = new ArrayList<>(items.size());
@@ -106,6 +116,20 @@ public class ReceiverMessageListener implements MessageListener {
 				}
 				
 				service.saveJmsMessages(msgs);
+			}
+			
+			if (!duplicate) {
+				try {
+					statusProcessor.process(siteId);
+				}
+				catch (Throwable t) {
+					Throwable cause = ExceptionUtils.getRootCause(t);
+					if (cause == null) {
+						cause = t;
+					}
+					
+					LOG.warn("An error occurred while updating site last sync date, " + cause.getMessage());
+				}
 			}
 			
 			ReceiverMessageListenerContainer.enableAcknowledgement();
