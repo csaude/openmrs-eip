@@ -40,11 +40,11 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 	@Autowired
 	private JmsMessageRepository jmsMsgRepo;
 	
-	private final String ORIGINAL_DELETE_QUERY = ReceiverJmsMessageTask.JMS_DELETE;
+	private final String ORIGINAL_DELETE_QUERY = ReceiverJmsMessageTask.jmsDeleteQuery;
 	
 	@After
 	public void tearDown() {
-		Whitebox.setInternalState(ReceiverJmsMessageTask.class, "JMS_DELETE", ORIGINAL_DELETE_QUERY);
+		Whitebox.setInternalState(ReceiverJmsMessageTask.class, "jmsDeleteQuery", ORIGINAL_DELETE_QUERY);
 	}
 	
 	private JmsMessage createMessage(int index) {
@@ -96,7 +96,7 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 		TestUtils.flush();
 		Assert.assertEquals(COUNT, jmsMsgRepo.count());
 		task = new ReceiverJmsMessageTask();
-		Whitebox.setInternalState(ReceiverJmsMessageTask.class, "JMS_DELETE", "BAD QUERY");
+		Whitebox.setInternalState(ReceiverJmsMessageTask.class, "jmsDeleteQuery", "BAD QUERY");
 		
 		Throwable thrown = Assert.assertThrows(EIPException.class, () -> task.process(msgs));
 		
