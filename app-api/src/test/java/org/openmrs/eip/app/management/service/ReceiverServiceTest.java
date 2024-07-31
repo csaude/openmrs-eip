@@ -19,7 +19,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.openmrs.eip.HashUtils;
 import org.openmrs.eip.TestConstants;
@@ -47,7 +46,6 @@ import org.openmrs.eip.app.management.repository.SyncMessageRepository;
 import org.openmrs.eip.app.management.repository.SyncedMessageRepository;
 import org.openmrs.eip.app.receiver.BaseReceiverTest;
 import org.openmrs.eip.app.receiver.ReceiverActiveMqMessagePublisher;
-import org.openmrs.eip.app.receiver.SyncStatusProcessor;
 import org.openmrs.eip.component.Constants;
 import org.openmrs.eip.component.SyncOperation;
 import org.openmrs.eip.component.exception.EIPException;
@@ -109,11 +107,6 @@ public class ReceiverServiceTest extends BaseReceiverTest {
 	private PatientService patientService;
 	
 	@Autowired
-	private SyncStatusProcessor statusProcessor;
-	
-	private SyncStatusProcessor mockStatusProcessor;
-	
-	@Autowired
 	private ReceiverActiveMqMessagePublisher publisher;
 	
 	private ReceiverActiveMqMessagePublisher mockPublisher;
@@ -123,15 +116,12 @@ public class ReceiverServiceTest extends BaseReceiverTest {
 	
 	@Before
 	public void setup() throws Exception {
-		mockStatusProcessor = Mockito.mock(SyncStatusProcessor.class);
 		mockPublisher = Mockito.mock(ReceiverActiveMqMessagePublisher.class);
-		Whitebox.setInternalState(getSingletonTarget(service), SyncStatusProcessor.class, mockStatusProcessor);
 		Whitebox.setInternalState(getSingletonTarget(service), ReceiverActiveMqMessagePublisher.class, mockPublisher);
 	}
 	
 	@After
 	public void tearDown() throws Exception {
-		Whitebox.setInternalState(getSingletonTarget(service), SyncStatusProcessor.class, statusProcessor);
 		Whitebox.setInternalState(getSingletonTarget(service), ReceiverActiveMqMessagePublisher.class, publisher);
 	}
 	
@@ -374,7 +364,6 @@ public class ReceiverServiceTest extends BaseReceiverTest {
 		assertEquals(AppUtils.getVersion(), msg.getSyncVersion());
 		assertTrue(msg.getDateCreated().getTime() == timestamp || msg.getDateCreated().getTime() > timestamp);
 		assertEquals(0, jmsMsgRepo.count());
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.any(SyncMetadata.class));
 		Mockito.verifyNoInteractions(mockPublisher);
 	}
 	
@@ -418,7 +407,6 @@ public class ReceiverServiceTest extends BaseReceiverTest {
 		assertEquals(1, syncMsgRepo.count());
 		assertEquals(ReceiverRequestStatus.RECEIVED, syncReqRepo.findByRequestUuid(requestUuid).getStatus());
 		assertEquals(0, jmsMsgRepo.count());
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.any(SyncMetadata.class));
 		Mockito.verifyNoInteractions(mockPublisher);
 	}
 	
@@ -458,7 +446,6 @@ public class ReceiverServiceTest extends BaseReceiverTest {
 		assertEquals(0, syncMsgRepo.count());
 		assertEquals(ReceiverRequestStatus.RECEIVED, syncReqRepo.findByRequestUuid(requestUuid).getStatus());
 		assertEquals(0, jmsMsgRepo.count());
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.any(SyncMetadata.class));
 		Mockito.verify(mockPublisher).sendSyncResponse(request, msgUuid);
 	}
 	
