@@ -33,9 +33,9 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created,"
 	        + "date_received,sync_version) VALUES (?,?,?,?,?,?,?,?,now(),?,?)";
 	
-	protected static final String PLACE_HOLDER_IDS = "DELETE FROM jms_msg WHERE id IN (IDS)";
+	private static final String PLACE_HOLDER_IDS = "IDS";
 	
-	protected static final String JMS_DELETE = "DELETE FROM jms_msg WHERE id IN (?)";
+	protected static String jmsDeleteQuery = "DELETE FROM jms_msg WHERE id IN (" + PLACE_HOLDER_IDS + ")";
 	
 	private JmsMessageRepository repo;
 	
@@ -104,7 +104,7 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 						log.debug("Removing JMS message in batch of {}", count);
 					}
 					
-					final String deleteQuery = JMS_DELETE.replace(PLACE_HOLDER_IDS, StringUtils.join(ids, ","));
+					final String deleteQuery = jmsDeleteQuery.replace(PLACE_HOLDER_IDS, StringUtils.join(ids, ","));
 					int deleted = deleteStmt.executeUpdate(deleteQuery);
 					if (deleted != count) {
 						throw new Exception("Expected " + count + " JMS messages to be deleted but was " + deleted);
