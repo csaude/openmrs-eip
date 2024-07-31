@@ -25,8 +25,6 @@ import org.mockito.Mockito;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncStatus;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.management.repository.SiteSyncStatusRepository;
-import org.openmrs.eip.component.model.SyncMetadata;
-import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.Utils;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -63,15 +61,11 @@ public class SyncStatusProcessorTest {
 	
 	@Test
 	public void process_shouldSaveChangesForAnExistingSiteStatusIfItWasNotInTheCacheAndThenCacheIt() {
-		SyncMetadata metadata = new SyncMetadata();
-		metadata.setSourceIdentifier(SITE_IDENTIFIER);
-		SyncModel syncModel = new SyncModel();
-		syncModel.setMetadata(metadata);
 		ReceiverSyncStatus status = new ReceiverSyncStatus();
 		status.setId(1L);
 		when(mockStatusRepo.findBySiteInfo(mockSite)).thenReturn(status);
 		
-		processor.process(metadata);
+		processor.process(SITE_IDENTIFIER);
 		
 		Mockito.verify(mockStatusRepo).save(status);
 		Map<String, ReceiverSyncStatus> cache = getInternalState(SyncStatusProcessor.class, "siteIdAndStatusMap");
@@ -82,17 +76,13 @@ public class SyncStatusProcessorTest {
 	public void process_shouldNotUpdateACachedSiteStatusIfDurationAfterLastSyncDateIsLessThanTheFlashInterval()
 	    throws Exception {
 		Date lastSyncDate = DATE_FORMAT.parse("2023-04-27 12:05:00");
-		SyncMetadata metadata = new SyncMetadata();
-		metadata.setSourceIdentifier(SITE_IDENTIFIER);
-		SyncModel syncModel = new SyncModel();
-		syncModel.setMetadata(metadata);
 		ReceiverSyncStatus status = new ReceiverSyncStatus(mockSite, lastSyncDate);
 		status.setId(1L);
 		when(mockStatusRepo.findBySiteInfo(mockSite)).thenReturn(status);
 		setInternalState(SyncStatusProcessor.class, "siteIdAndStatusMap", singletonMap(SITE_IDENTIFIER, status));
 		when(Utils.getMillisElapsed(eq(lastSyncDate), any(Date.class))).thenReturn(FLUSH_INTERVAL - 1);
 		
-		processor.process(metadata);
+		processor.process(SITE_IDENTIFIER);
 		
 		Mockito.verify(mockStatusRepo, never()).save(status);
 		assertEquals(lastSyncDate, status.getLastSyncDate());
@@ -102,17 +92,13 @@ public class SyncStatusProcessorTest {
 	public void process_shouldNotUpdateACachedSiteStatusIfDurationAfterLastSyncDateIsEqualToTheFlashInterval()
 	    throws Exception {
 		Date lastSyncDate = DATE_FORMAT.parse("2023-04-27 12:05:00");
-		SyncMetadata metadata = new SyncMetadata();
-		metadata.setSourceIdentifier(SITE_IDENTIFIER);
-		SyncModel syncModel = new SyncModel();
-		syncModel.setMetadata(metadata);
 		ReceiverSyncStatus status = new ReceiverSyncStatus(mockSite, lastSyncDate);
 		status.setId(1L);
 		when(mockStatusRepo.findBySiteInfo(mockSite)).thenReturn(status);
 		setInternalState(SyncStatusProcessor.class, "siteIdAndStatusMap", singletonMap(SITE_IDENTIFIER, status));
 		when(Utils.getMillisElapsed(eq(lastSyncDate), any(Date.class))).thenReturn(FLUSH_INTERVAL);
 		
-		processor.process(metadata);
+		processor.process(SITE_IDENTIFIER);
 		
 		Mockito.verify(mockStatusRepo, never()).save(status);
 		assertEquals(lastSyncDate, status.getLastSyncDate());
@@ -122,10 +108,6 @@ public class SyncStatusProcessorTest {
 	public void process_shouldSaveChangesForACachedSiteStatusIfDurationAfterLastSyncDateIsMoreThanTheFlashInterval()
 	    throws Exception {
 		Date lastSyncDate = DATE_FORMAT.parse("2023-04-27 12:05:00");
-		SyncMetadata metadata = new SyncMetadata();
-		metadata.setSourceIdentifier(SITE_IDENTIFIER);
-		SyncModel syncModel = new SyncModel();
-		syncModel.setMetadata(metadata);
 		ReceiverSyncStatus status = new ReceiverSyncStatus(mockSite, lastSyncDate);
 		status.setId(1L);
 		when(mockStatusRepo.findBySiteInfo(mockSite)).thenReturn(status);
@@ -133,7 +115,7 @@ public class SyncStatusProcessorTest {
 		when(Utils.getMillisElapsed(eq(lastSyncDate), any(Date.class))).thenReturn(FLUSH_INTERVAL + 1);
 		Date timestamp = new Date();
 		
-		processor.process(metadata);
+		processor.process(SITE_IDENTIFIER);
 		
 		Mockito.verify(mockStatusRepo).save(status);
 		assertTrue(status.getLastSyncDate().getTime() >= timestamp.getTime());
