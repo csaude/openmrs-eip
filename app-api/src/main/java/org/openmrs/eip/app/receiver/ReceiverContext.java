@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.camel.ProducerTemplate;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
+import org.openmrs.eip.app.management.repository.SiteRepository;
 import org.openmrs.eip.component.SyncContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +25,7 @@ public final class ReceiverContext {
 			if (siteNameAndInfoMap == null) {
 				log.info("Loading sites...");
 				
-				ProducerTemplate producerTemplate = SyncContext.getBean(ProducerTemplate.class);
-				String siteClass = SiteInfo.class.getSimpleName();
-				final String siteQueryUri = "jpa:" + siteClass + " ?query=SELECT s FROM " + siteClass + " s";
-				List<SiteInfo> sites = producerTemplate.requestBody(siteQueryUri, null, List.class);
+				List<SiteInfo> sites = SyncContext.getBean(SiteRepository.class).findAll();
 				siteNameAndInfoMap = new HashMap(sites.size());
 				sites.stream().forEach((site) -> siteNameAndInfoMap.put(site.getIdentifier().toLowerCase(), site));
 				
