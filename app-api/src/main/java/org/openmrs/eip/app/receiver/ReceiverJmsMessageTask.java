@@ -22,12 +22,16 @@ import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.SyncMetadata;
 import org.openmrs.eip.component.model.SyncModel;
 import org.openmrs.eip.component.utils.JsonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Reads a batch of JmsMessages and submits them to the {@link ReceiverJmsMessageProcessor} for
  * processing.
  */
 public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, ReceiverJmsMessageProcessor> {
+	
+	protected static final Logger log = LoggerFactory.getLogger(ReceiverJmsMessageTask.class);
 	
 	protected static final String SYNC_INSERT = "INSERT INTO receiver_sync_msg (model_class_name,identifier,"
 	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created,"

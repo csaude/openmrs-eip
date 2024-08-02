@@ -84,7 +84,7 @@ public class ReceiverJmsMessageProcessorTest {
 	public void getLogicalType_shouldReturnTheTableToSyncModelClassNameForSyncItem() {
 		JmsMessage msg = new JmsMessage();
 		msg.setType(SYNC);
-		SyncModel model = SyncModel.builder().tableToSyncModelClass(VisitModel.class).build();
+		SyncModel model = SyncModel.builder().tableToSyncModelClass(VisitModel.class).model(new VisitModel()).build();
 		msg.setBody(JsonUtils.marshalToBytes(model));
 		assertEquals(VisitModel.class.getName(), processor.getLogicalType(msg));
 	}
@@ -136,6 +136,31 @@ public class ReceiverJmsMessageProcessorTest {
 	@Test
 	public void getLogicalTypeHierarchy_shouldReturnNullForReconcileItem() {
 		assertNull(processor.getLogicalTypeHierarchy(MessageType.RECONCILE.name()));
+	}
+	
+	@Test
+	public void getLogicalTypeHierarchy_shouldReturnNullForASyncItem() {
+		assertNull(processor.getLogicalTypeHierarchy(SYNC.name()));
+	}
+	
+	@Test
+	public void getLogicalType_shouldReturnMessageTypeForSyncItemWithNullModel() {
+		JmsMessage msg = new JmsMessage();
+		msg.setType(SYNC);
+		SyncModel model = SyncModel.builder().tableToSyncModelClass(VisitModel.class).build();
+		msg.setBody(JsonUtils.marshalToBytes(model));
+		assertEquals(SYNC.name(), processor.getLogicalType(msg));
+	}
+	
+	@Test
+	public void getUniqueId_shouldReturnSiteIdentifierForASyncRequestAndModelIsNull() {
+		final String siteIdentifier = "test";
+		JmsMessage msg = new JmsMessage();
+		msg.setSiteId(siteIdentifier);
+		msg.setType(SYNC);
+		SyncModel model = SyncModel.builder().tableToSyncModelClass(VisitModel.class).build();
+		msg.setBody(JsonUtils.marshalToBytes(model));
+		assertEquals(siteIdentifier, processor.getUniqueId(msg));
 	}
 	
 }
