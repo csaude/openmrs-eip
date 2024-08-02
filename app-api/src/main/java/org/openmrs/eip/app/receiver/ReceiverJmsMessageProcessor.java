@@ -51,7 +51,8 @@ public class ReceiverJmsMessageProcessor extends BaseQueueProcessor<JmsMessage> 
 	
 	@Override
 	public String getUniqueId(JmsMessage item) {
-		if (item.getType() == MessageType.RECONCILE) {
+		//Model is null for a sync request and the entity was not found by the remote site.
+		if (item.getType() == MessageType.RECONCILE || item.getSyncModel().getModel() == null) {
 			//Process messages from same site serially
 			return item.getSiteId();
 		}
@@ -75,7 +76,7 @@ public class ReceiverJmsMessageProcessor extends BaseQueueProcessor<JmsMessage> 
 	
 	@Override
 	public String getLogicalType(JmsMessage item) {
-		if (item.getType() == MessageType.SYNC) {
+		if (item.getType() == MessageType.SYNC && item.getSyncModel().getModel() != null) {
 			return item.getSyncModel().getTableToSyncModelClass().getName();
 		}
 		
@@ -84,7 +85,7 @@ public class ReceiverJmsMessageProcessor extends BaseQueueProcessor<JmsMessage> 
 	
 	@Override
 	public List<String> getLogicalTypeHierarchy(String logicalType) {
-		if (MessageType.RECONCILE.name().equals(logicalType)) {
+		if (MessageType.RECONCILE.name().equals(logicalType) || MessageType.SYNC.name().equals(logicalType)) {
 			return null;
 		}
 		
