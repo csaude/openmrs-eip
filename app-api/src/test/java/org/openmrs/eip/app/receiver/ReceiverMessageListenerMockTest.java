@@ -1,5 +1,7 @@
 package org.openmrs.eip.app.receiver;
 
+import static org.mockito.Mockito.when;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,22 +30,30 @@ public class ReceiverMessageListenerMockTest {
 	private ReceiverService mockService;
 	
 	@Mock
+	private SyncStatusProcessor mockProcessor;
+	
+	@Mock
 	public ReceiverMessageListener listener;
 	
 	@Before
 	public void setup() {
 		PowerMockito.mockStatic(ReceiverMessageListenerContainer.class);
-		listener = new ReceiverMessageListener(mockRepo, mockService);
+		listener = new ReceiverMessageListener(mockRepo, mockService, mockProcessor);
 	}
 	
 	@Test
 	public void onMessage_shouldSkipCheckingForDuplicateMessages() throws Exception {
+		final String siteId = "testId";
 		Message msg = Mockito.mock(Message.class);
+		when(msg.getStringProperty(SyncConstants.JMS_HEADER_SITE)).thenReturn(siteId);
 		Mockito.when(msg.getBody(byte[].class)).thenReturn(new byte[] {});
 		
 		listener.onMessage(msg);
 		
 		Mockito.verify(mockService).saveJmsMessage(ArgumentMatchers.any(JmsMessage.class));
+		Mockito.verify(mockProcessor).process(siteId);
+		PowerMockito.verifyStatic(ReceiverMessageListenerContainer.class);
+		ReceiverMessageListenerContainer.enableAcknowledgement();
 		Mockito.verifyNoInteractions(mockRepo);
 	}
 	
@@ -57,9 +67,10 @@ public class ReceiverMessageListenerMockTest {
 		
 		listener.onMessage(msg);
 		
+		Mockito.verifyNoInteractions(mockService);
+		Mockito.verifyNoInteractions(mockProcessor);
 		PowerMockito.verifyStatic(ReceiverMessageListenerContainer.class);
 		ReceiverMessageListenerContainer.enableAcknowledgement();
-		Mockito.verifyNoInteractions(mockService);
 	}
 	
 }
