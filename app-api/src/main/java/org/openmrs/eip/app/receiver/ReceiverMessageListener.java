@@ -84,13 +84,13 @@ public class ReceiverMessageListener implements MessageListener {
 			
 			boolean duplicate = false;
 			if (batchSizeStr == null) {
-				Map bodyMap = JsonUtils.unmarshalBytes(body, Map.class);
-				final String msgUid = ((Map) (bodyMap).get("metadata")).get("messageUuid").toString();
+				Map metadata = (Map) (JsonUtils.unmarshalBytes(body, Map.class)).get("metadata");
+				final String msgUid = metadata.get("messageUuid").toString();
 				JmsMessage jmsMsg = createJmsMessage(msgUid, body, siteId, version, type);
 				if (jmsMsg != null) {
 					service.saveJmsMessage(jmsMsg);
 					if (siteId == null) {
-						siteId = bodyMap.get("sourceIdentifier").toString();
+						siteId = metadata.get("sourceIdentifier").toString();
 					}
 				} else {
 					duplicate = true;
