@@ -12,7 +12,6 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
-import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.app.management.repository.SyncMessageRepository;
@@ -53,7 +52,6 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 		md.setMessageUuid("msg-uuid-" + index);
 		md.setOperation(SyncOperation.c.name());
 		md.setDateSent(LocalDateTime.now());
-		md.setSyncVersion(AppUtils.getVersion());
 		md.setSourceIdentifier("remote1");
 		PersonModel m = new PersonModel();
 		m.setUuid("entity-uuid-" + index);

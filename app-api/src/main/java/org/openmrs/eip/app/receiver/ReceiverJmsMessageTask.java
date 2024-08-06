@@ -34,8 +34,8 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 	protected static final Logger log = LoggerFactory.getLogger(ReceiverJmsMessageTask.class);
 	
 	protected static final String SYNC_INSERT = "INSERT INTO receiver_sync_msg (model_class_name,identifier,"
-	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created,"
-	        + "date_received,sync_version) VALUES (?,?,?,?,?,?,?,?,now(),?,?)";
+	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created) "
+	        + "VALUES (?,?,?,?,?,?,?,?,now())";
 	
 	private static final String PLACE_HOLDER_IDS = "IDS";
 	
@@ -87,8 +87,6 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 					insertStmt.setString(6, md.getMessageUuid());
 					insertStmt.setObject(7, md.getDateSent());
 					insertStmt.setString(8, md.getOperation());
-					insertStmt.setObject(9, jmsMessage.getDateCreated());
-					insertStmt.setString(10, md.getSyncVersion());
 					ids.add(jmsMessage.getId());
 					insertStmt.addBatch();
 				}
