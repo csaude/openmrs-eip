@@ -14,7 +14,6 @@ import org.junit.Test;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncStatus;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.route.TestUtils;
-import org.openmrs.eip.component.model.SyncMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
@@ -36,10 +35,8 @@ public class SyncStatusProcessorIntegrationTest extends BaseReceiverTest {
 	public void shouldSkipUpdatingSyncStatusIfNoSiteIsFoundMatchingTheSiteIdentifier() {
 		final String siteIdentifier = "bad-identifier";
 		assertTrue(TestUtils.getEntities(ReceiverSyncStatus.class).isEmpty());
-		SyncMetadata metadata = new SyncMetadata();
-		metadata.setSourceIdentifier(siteIdentifier);
 		
-		processor.process(metadata);
+		processor.process(siteIdentifier);
 		
 		assertTrue(TestUtils.getEntities(ReceiverSyncStatus.class).isEmpty());
 		assertMessageLogged(Level.ERROR, "No site info found with identifier: " + siteIdentifier
@@ -49,12 +46,10 @@ public class SyncStatusProcessorIntegrationTest extends BaseReceiverTest {
 	@Test
 	public void shouldInsertASyncStatusRowForTheSiteIfItDoesNotExist() {
 		assertTrue(TestUtils.getEntities(ReceiverSyncStatus.class).isEmpty());
-		SyncMetadata metadata = new SyncMetadata();
 		SiteInfo siteInfo = TestUtils.getEntity(SiteInfo.class, 1L);
-		metadata.setSourceIdentifier(siteInfo.getIdentifier());
 		Date timestamp = new Date();
 		
-		processor.process(metadata);
+		processor.process(siteInfo.getIdentifier());
 		
 		List<ReceiverSyncStatus> statuses = TestUtils.getEntities(ReceiverSyncStatus.class);
 		assertEquals(1, statuses.size());
@@ -71,10 +66,8 @@ public class SyncStatusProcessorIntegrationTest extends BaseReceiverTest {
 		ReceiverSyncStatus syncStatus = TestUtils.getEntity(ReceiverSyncStatus.class, 1L);
 		Date existingLastSyncDate = syncStatus.getLastSyncDate();
 		Date dateCreated = syncStatus.getDateCreated();
-		SyncMetadata metadata = new SyncMetadata();
-		metadata.setSourceIdentifier(siteInfo.getIdentifier());
 		
-		processor.process(metadata);
+		processor.process(siteInfo.getIdentifier());
 		
 		assertEquals(2, TestUtils.getEntities(ReceiverSyncStatus.class).size());
 		syncStatus = TestUtils.getEntity(ReceiverSyncStatus.class, syncStatus.getId());
@@ -86,12 +79,10 @@ public class SyncStatusProcessorIntegrationTest extends BaseReceiverTest {
 	@Test
 	public void shouldInsertTheSyncStatusForAFileSyncMessage() {
 		assertTrue(TestUtils.getEntities(ReceiverSyncStatus.class).isEmpty());
-		SyncMetadata metadata = new SyncMetadata();
 		SiteInfo siteInfo = TestUtils.getEntity(SiteInfo.class, 1L);
-		metadata.setSourceIdentifier(siteInfo.getIdentifier());
 		Date timestamp = new Date();
 		
-		processor.process(metadata);
+		processor.process(siteInfo.getIdentifier());
 		
 		List<ReceiverSyncStatus> statuses = TestUtils.getEntities(ReceiverSyncStatus.class);
 		assertEquals(1, statuses.size());
