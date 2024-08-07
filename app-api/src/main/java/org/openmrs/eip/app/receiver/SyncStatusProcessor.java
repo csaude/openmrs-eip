@@ -22,7 +22,7 @@ public class SyncStatusProcessor {
 	
 	private static Map<String, ReceiverSyncStatus> siteIdAndStatusMap;
 	
-	protected static final long FLUSH_INTERVAL = 60000;
+	protected static final long FLUSH_INTERVAL = 300000;
 	
 	private SiteSyncStatusRepository statusRepo;
 	
