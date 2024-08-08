@@ -32,6 +32,7 @@ import org.openmrs.eip.component.entity.PersonName;
 import org.openmrs.eip.component.entity.Provider;
 import org.openmrs.eip.component.entity.ProviderAttribute;
 import org.openmrs.eip.component.entity.Relationship;
+import org.openmrs.eip.component.entity.RpsImportLog;
 import org.openmrs.eip.component.entity.TestOrder;
 import org.openmrs.eip.component.entity.User;
 import org.openmrs.eip.component.entity.Visit;
@@ -61,6 +62,7 @@ import org.openmrs.eip.component.management.hash.entity.PersonHash;
 import org.openmrs.eip.component.management.hash.entity.PersonNameHash;
 import org.openmrs.eip.component.management.hash.entity.ProviderHash;
 import org.openmrs.eip.component.management.hash.entity.RelationshipHash;
+import org.openmrs.eip.component.management.hash.entity.RpsImportLogHash;
 import org.openmrs.eip.component.management.hash.entity.TestOrderHash;
 import org.openmrs.eip.component.management.hash.entity.UserHash;
 import org.openmrs.eip.component.management.hash.entity.VisitAttributeHash;
@@ -93,6 +95,7 @@ import org.openmrs.eip.component.model.PersonModel;
 import org.openmrs.eip.component.model.PersonNameModel;
 import org.openmrs.eip.component.model.ProviderModel;
 import org.openmrs.eip.component.model.RelationshipModel;
+import org.openmrs.eip.component.model.RpsImportLogModel;
 import org.openmrs.eip.component.model.TestOrderModel;
 import org.openmrs.eip.component.model.UserModel;
 import org.openmrs.eip.component.model.VisitAttributeModel;
@@ -163,7 +166,9 @@ public enum TableToSyncEnum {
 	GAAC_FAMILY_MEMBER(GaacFamilyMember.class, GaacFamilyMemberModel.class, GaacFamilyMemberHash.class),
 	
 	CLINICALSUMMARY_USAGE_REPORT(ClinicalSummaryUsageReport.class, ClinicalSummaryUsageReportModel.class,
-	        ClinicalSummaryUsageReportHash.class);
+	        ClinicalSummaryUsageReportHash.class),
+	
+	ROS_IMPORT_LOG(RpsImportLog.class, RpsImportLogModel.class, RpsImportLogHash.class);
 	
 	private Class<? extends BaseEntity> entityClass;
 	
