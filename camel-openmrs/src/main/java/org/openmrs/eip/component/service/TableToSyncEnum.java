@@ -168,7 +168,7 @@ public enum TableToSyncEnum {
 	CLINICALSUMMARY_USAGE_REPORT(ClinicalSummaryUsageReport.class, ClinicalSummaryUsageReportModel.class,
 	        ClinicalSummaryUsageReportHash.class),
 	
-	ROS_IMPORT_LOG(RpsImportLog.class, RpsImportLogModel.class, RpsImportLogHash.class);
+	ESAUDEFEATURES_RPS_IMPORT_LOG(RpsImportLog.class, RpsImportLogModel.class, RpsImportLogHash.class);
 	
 	private Class<? extends BaseEntity> entityClass;
 	

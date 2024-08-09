@@ -21,7 +21,7 @@ public class RpsImportLogService extends AbstractEntityService<RpsImportLog, Rps
 	
 	@Override
 	public TableToSyncEnum getTableToSync() {
-		return TableToSyncEnum.ROS_IMPORT_LOG;
+		return TableToSyncEnum.ESAUDEFEATURES_RPS_IMPORT_LOG;
 	}
 	
 }
