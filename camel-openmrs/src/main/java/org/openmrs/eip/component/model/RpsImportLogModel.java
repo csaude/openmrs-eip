@@ -9,14 +9,14 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class RpsImportLogModel extends BaseModel {
 	
-	private String patientUuid;
+	private String patient;
 	
 	private String healthFacility;
 	
-	private String importerUuid;
+	private String importer;
 	
 	private String importerUsername;
 	
-	private LocalDateTime dateCreated;
+	private LocalDateTime dateImported;
 	
 }

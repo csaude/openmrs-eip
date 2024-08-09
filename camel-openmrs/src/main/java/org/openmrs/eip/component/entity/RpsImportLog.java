@@ -2,12 +2,13 @@ package org.openmrs.eip.component.entity;
 
 import java.time.LocalDateTime;
 
-import org.openmrs.eip.component.entity.BaseEntity;
+import org.openmrs.eip.component.entity.light.UserLight;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,9 +20,12 @@ import lombok.EqualsAndHashCode;
 @AttributeOverride(name = "id", column = @Column(name = "rps_import_log_id"))
 public class RpsImportLog extends BaseEntity {
 	
+	@Transient
+	private UserLight creator;
+	
 	@NotNull
 	@Column(name = "patient_uuid", nullable = false)
-	private String patientUuid;
+	private String patient;
 	
 	@NotNull
 	@Column(name = "health_facility", nullable = false)
@@ -29,7 +33,7 @@ public class RpsImportLog extends BaseEntity {
 	
 	@NotNull
 	@Column(name = "importer_uuid", nullable = false)
-	private String importerUuid;
+	private String importer;
 	
 	@NotNull
 	@Column(name = "importer_username", nullable = false)
@@ -37,7 +41,7 @@ public class RpsImportLog extends BaseEntity {
 	
 	@NotNull
 	@Column(name = "date_imported")
-	private LocalDateTime dateCreated;
+	private LocalDateTime dateImported;
 	
 	@Override
 	public boolean wasModifiedAfter(BaseEntity entity) {
