@@ -1,5 +1,6 @@
 package org.openmrs.eip.app.receiver;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 import org.junit.Before;
@@ -34,14 +35,23 @@ public class CustomHttpClientTest {
 	}
 	
 	@Test
-	public void sendRequest_shouldSendTheRequestToTheServer() throws Exception {
+	public void sendRequest_shouldSendTheRequestToTheServer() {
 		final String resource = "person";
 		final String json = "{}";
 		WireMock.stubFor(WireMock.post(CustomHttpClient.PATH + resource)
-		        .withHeader(HttpHeaders.CONTENT_TYPE, WireMock.equalTo(MediaType.APPLICATION_JSON_VALUE))
-		        .withBasicAuth(USER, PASSWORD).withRequestBody(WireMock.equalTo(json)).willReturn(WireMock.noContent()));
+		        .withHeader(HttpHeaders.CONTENT_TYPE, equalTo(MediaType.APPLICATION_JSON_VALUE))
+		        .withBasicAuth(USER, PASSWORD).withRequestBody(equalTo(json)).willReturn(WireMock.noContent()));
 		
 		client.sendRequest(resource, json);
+	}
+	
+	@Test
+	public void sendRequest_shouldSendTheRequestToTheServerWithNoBody() {
+		final String resource = "person";
+		WireMock.stubFor(WireMock.post(CustomHttpClient.PATH + resource).withBasicAuth(USER, PASSWORD)
+		        .withRequestBody(WireMock.absent()).willReturn(WireMock.noContent()));
+		
+		client.sendRequest(resource, null);
 	}
 	
 }
