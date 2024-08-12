@@ -123,6 +123,9 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	@Value("${" + PROP_DELAY_RETRY_TASK + ":" + DEFAULT_DELAY + "}")
 	private long delayRetryTask;
 	
+	@Value("${" + ReceiverConstants.PROP_FULL_INDEXER_CRON + ":-}")
+	private String fullIndexerCron;
+	
 	private static List<SiteParentTask> siteTasks;
 	
 	public ReceiverCamelListener(@Qualifier(BEAN_NAME_SITE_EXECUTOR) ScheduledThreadPoolExecutor siteExecutor,
@@ -221,9 +224,9 @@ public class ReceiverCamelListener extends BaseCamelListener {
 		siteTasks = new ArrayList(sites.size());
 		
 		sites.stream().forEach(site -> {
-			SiteParentTask task = new SiteParentTask(site, disabledTaskClasses);
-			siteExecutor.scheduleWithFixedDelay(task, siteTaskInitialDelay, siteTaskDelay, MILLISECONDS);
-			siteTasks.add(task);
+			SiteParentTask t = new SiteParentTask(site, disabledTaskClasses, !"-".equals(fullIndexerCron));
+			siteExecutor.scheduleWithFixedDelay(t, siteTaskInitialDelay, siteTaskDelay, MILLISECONDS);
+			siteTasks.add(t);
 		});
 	}
 	

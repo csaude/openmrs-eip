@@ -26,6 +26,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.openmrs.eip.app.AppUtils;
@@ -43,6 +44,7 @@ import org.openmrs.eip.component.repository.light.UserLightRepository;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Example;
 
@@ -135,6 +137,7 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "delayReconciler", testDelay);
 		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
 		setInternalState(listener, "delayMsgReconciler", testDelay);
+		setInternalState(listener, "fullIndexerCron", "-");
 		
 		listener.applicationStarted();
 		
@@ -146,6 +149,11 @@ public class ReceiverCamelListenerTest {
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		ArgumentCaptor<SiteParentTask> captor = ArgumentCaptor.forClass(SiteParentTask.class);
+		verify(mockSiteExecutor, times(5)).scheduleWithFixedDelay(captor.capture(), eq(testInitialDelay), eq(testDelay),
+		    eq(TimeUnit.MILLISECONDS));
+		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(4), "evictor"));
+		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(4), "updater"));
 	}
 	
 	@Test
@@ -258,6 +266,30 @@ public class ReceiverCamelListenerTest {
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+	}
+	
+	@Test
+	public void applicationStarted_shouldNotSetEvictorAndUpdatorWhenFullIndexIsEnabled() {
+		SiteInfo site = new SiteInfo();
+		site.setIdentifier("site1");
+		site.setDisabled(false);
+		Collection<SiteInfo> sites = Collections.singletonList(site);
+		when(ReceiverContext.getSites()).thenReturn(sites);
+		setInternalState(listener, "initialDelayMsgTsk", testInitialDelay);
+		setInternalState(listener, "delayMsgTask", testDelay);
+		setInternalState(listener, "initDelayReconciler", testInitialDelay);
+		setInternalState(listener, "delayReconciler", testDelay);
+		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
+		setInternalState(listener, "delayMsgReconciler", testDelay);
+		setInternalState(listener, "fullIndexerCron", "* * * * * *");
+		
+		listener.applicationStarted();
+		
+		ArgumentCaptor<SiteParentTask> captor = ArgumentCaptor.forClass(SiteParentTask.class);
+		verify(mockSiteExecutor, times(5)).scheduleWithFixedDelay(captor.capture(), eq(testInitialDelay), eq(testDelay),
+		    eq(TimeUnit.MILLISECONDS));
+		Assert.assertNull(Whitebox.getInternalState(captor.getAllValues().get(4), "evictor"));
+		Assert.assertNull(Whitebox.getInternalState(captor.getAllValues().get(4), "updater"));
 	}
 	
 }

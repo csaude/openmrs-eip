@@ -44,7 +44,7 @@ public class CustomHttpClient {
 	
 	private HttpClient client;
 	
-	public void sendRequest(String resource, String json) throws EIPException {
+	public void sendRequest(String resource, String body) throws EIPException {
 		if (client == null) {
 			client = HttpClient.newHttpClient();
 		}
@@ -54,14 +54,22 @@ public class CustomHttpClient {
 			auth = Base64.getEncoder().encode(userAndPass.getBytes(UTF_8));
 		}
 		
-		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(baseUrl + PATH + resource))
-		        .setHeader(HttpHeaders.AUTHORIZATION, "Basic " + new String(auth, UTF_8))
-		        .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-		        .POST(BodyPublishers.ofString(json, UTF_8)).build();
+		HttpRequest.Builder reqBuilder = HttpRequest.newBuilder();
+		reqBuilder.uri(URI.create(baseUrl + PATH + resource)).setHeader(HttpHeaders.AUTHORIZATION,
+		    "Basic " + new String(auth, UTF_8));
+		HttpRequest.BodyPublisher bodyPublisher;
+		if (body != null) {
+			reqBuilder.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+			bodyPublisher = BodyPublishers.ofString(body, UTF_8);
+		} else {
+			bodyPublisher = BodyPublishers.noBody();
+		}
+		
+		reqBuilder.POST(bodyPublisher);
 		
 		HttpResponse response;
 		try {
-			response = client.send(request, BODY_HANDLER);
+			response = client.send(reqBuilder.build(), BODY_HANDLER);
 		}
 		catch (Exception e) {
 			throw new EIPException("An error occurred while making http call to OpenMRS resource: " + resource, e);

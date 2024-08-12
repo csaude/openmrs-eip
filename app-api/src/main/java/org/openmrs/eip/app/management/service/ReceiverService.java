@@ -1,5 +1,7 @@
 package org.openmrs.eip.app.management.service;
 
+import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
+
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverRetryQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncArchive;
@@ -7,6 +9,7 @@ import org.openmrs.eip.app.management.entity.receiver.SyncMessage;
 import org.openmrs.eip.app.management.entity.receiver.SyncedMessage;
 import org.openmrs.eip.app.management.entity.receiver.SyncedMessage.SyncOutcome;
 import org.openmrs.eip.component.management.hash.entity.BaseHashEntity;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Contains methods for managing receiver items
@@ -121,5 +124,23 @@ public interface ReceiverService extends Service {
 	 * @return the hash object if it exists otherwise null
 	 */
 	<T extends BaseHashEntity> T getHash(String identifier, Class<T> hashClass);
+	
+	/**
+	 * Marks all items in the synced queue for cached entities as cached, matches only those with an id
+	 * that is less than or equal to the specified maximum id.
+	 *
+	 * @@param maxId maximum id to match
+	 */
+	@Transactional(transactionManager = MGT_TX_MGR)
+	void markAsEvictedFromCache(Long maxId);
+	
+	/**
+	 * Marks all items in the synced queue for indexed entities as re-indexed, matches only those with
+	 * an id that is less than or equal to the specified maximum id.
+	 *
+	 * @param maxId maximum id to match
+	 */
+	@Transactional(transactionManager = MGT_TX_MGR)
+	void markAsReIndexed(Long maxId);
 	
 }

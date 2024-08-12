@@ -375,4 +375,14 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 		return entityManager.createQuery(cq).getResultList().stream().findFirst().orElseGet(() -> null);
 	}
 	
+	@Override
+	public void markAsEvictedFromCache(Long maxId) {
+		syncedMsgRepo.markAsEvictedFromCache(maxId);
+	}
+	
+	@Override
+	public void markAsReIndexed(Long maxId) {
+		syncedMsgRepo.markAsReIndexed(maxId);
+	}
+	
 }
