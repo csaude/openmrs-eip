@@ -8,6 +8,7 @@ import static org.openmrs.eip.app.route.TestUtils.getEntity;
 
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.management.entity.receiver.SyncedMessage;
@@ -24,6 +25,9 @@ public class SyncedMessageRepositoryTest extends BaseReceiverTest {
 	
 	@Autowired
 	private SyncedMessageRepository repo;
+	
+	@Autowired
+	private SiteRepository siteRepo;
 	
 	@Test
 	public void getBatchOfMessagesForEviction_shouldReturnAOrderedBatchOfMessagesToEvict() {
@@ -151,6 +155,49 @@ public class SyncedMessageRepositoryTest extends BaseReceiverTest {
 		
 		assertEquals(1, msgs.size());
 		assertEquals(305l, msgs.get(0).getId().longValue());
+	}
+	
+	@Test
+	public void getMaxId_shouldReturnTheMaximumId() {
+		assertEquals(312l, repo.getMaxId().longValue());
+	}
+	
+	@Test
+	public void markAsEvictedFromCache_shouldUpdatedAllSuccessfulRowsForCachedEntities() {
+		final Pageable page = Pageable.ofSize(Long.valueOf(repo.count()).intValue());
+		int evictableCount = 0;
+		for (SiteInfo site : siteRepo.findAll()) {
+			evictableCount += repo.getBatchOfMessagesForEviction(site, page).size();
+		}
+		Assert.assertTrue(evictableCount > 0);
+		
+		repo.markAsEvictedFromCache(repo.getMaxId());
+		
+		evictableCount = 0;
+		for (SiteInfo site : siteRepo.findAll()) {
+			evictableCount += repo.getBatchOfMessagesForEviction(site, page).size();
+		}
+		
+		assertEquals(0, evictableCount);
+	}
+	
+	@Test
+	public void markAsReIndexed_shouldUpdatedAllSuccessfulRowsForCachedEntities() {
+		final Pageable page = Pageable.ofSize(Long.valueOf(repo.count()).intValue());
+		int indexableCount = 0;
+		for (SiteInfo site : siteRepo.findAll()) {
+			indexableCount += repo.getBatchOfMessagesForIndexing(site, page).size();
+		}
+		Assert.assertTrue(indexableCount > 0);
+		
+		repo.markAsReIndexed(repo.getMaxId());
+		
+		indexableCount = 0;
+		for (SiteInfo site : siteRepo.findAll()) {
+			indexableCount += repo.getBatchOfMessagesForIndexing(site, page).size();
+		}
+		
+		assertEquals(0, indexableCount);
 	}
 	
 }
