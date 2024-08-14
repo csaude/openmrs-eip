@@ -6,35 +6,25 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.openmrs.eip.app.management.service.ReceiverReconcileService;
-import org.openmrs.eip.app.receiver.task.FullIndexer;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-public class ReceiverSchedulerTest {
+public class ReconcileSchedulerTest {
 	
 	@Mock
 	private ReceiverReconcileService mockService;
 	
-	@Mock
-	private FullIndexer mockIndexer;
-	
-	private ReceiverScheduler scheduler;
+	private ReconcileScheduler scheduler;
 	
 	@Before
 	public void setup() {
-		scheduler = new ReceiverScheduler(mockService, mockIndexer);
+		scheduler = new ReconcileScheduler(mockService);
 	}
 	
 	@Test
-	public void reconcile_shouldAddAReconciliation() {
-		scheduler.reconcile();
+	public void execute_shouldAddAReconciliation() {
+		scheduler.execute();
 		Mockito.verify(mockService).addNewReconciliation();
-	}
-	
-	@Test
-	public void index_shouldAddAReconciliation() {
-		scheduler.index();
-		Mockito.verify(mockIndexer).start();
 	}
 	
 }

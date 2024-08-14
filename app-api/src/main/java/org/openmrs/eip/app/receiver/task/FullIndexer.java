@@ -3,7 +3,6 @@ package org.openmrs.eip.app.receiver.task;
 import org.openmrs.eip.app.management.repository.SyncedMessageRepository;
 import org.openmrs.eip.app.receiver.CustomHttpClient;
 import org.openmrs.eip.app.receiver.HttpRequestProcessor;
-import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
  * OpenMRS instance.
  */
 @Slf4j
-@Component
 public class FullIndexer {
 	
 	private CustomHttpClient client;

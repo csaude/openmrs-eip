@@ -60,6 +60,8 @@ public class ReceiverConstants {
 	
 	public static final String PROP_ENABLED_SITES = "enabled.sites";
 	
+	public static final String PROP_FULL_INDEXER_CRON = "full.indexer.schedule.cron";
+	
 	public static final String PROP_DISABLED_SITES = "disabled.sites";
 	
 	public static final String ERROR_HANDLER_REF = "inBoundErrorHandler";

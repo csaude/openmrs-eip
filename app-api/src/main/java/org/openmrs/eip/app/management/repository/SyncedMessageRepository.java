@@ -101,7 +101,7 @@ public interface SyncedMessageRepository extends JpaRepository<SyncedMessage, Lo
 	 *
 	 * @@param maxId maximum id to match
 	 */
-    @Modifying
+	@Modifying
 	@Query(CACHE_UPDATE_QUERY)
 	void markAsEvictedFromCache(@Param("maxId") Long maxId);
 	
@@ -111,7 +111,7 @@ public interface SyncedMessageRepository extends JpaRepository<SyncedMessage, Lo
 	 *
 	 * @param maxId maximum id to match
 	 */
-    @Modifying
+	@Modifying
 	@Query(INDEX_UPDATE_QUERY)
 	void markAsReIndexed(@Param("maxId") Long maxId);
 	
