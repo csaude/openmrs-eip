@@ -1,6 +1,7 @@
 package org.openmrs.eip.app.receiver.task;
 
 import org.openmrs.eip.app.management.repository.SyncedMessageRepository;
+import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.app.receiver.CustomHttpClient;
 import org.openmrs.eip.app.receiver.HttpRequestProcessor;
 import org.openmrs.eip.component.SyncProfiles;
@@ -20,9 +21,12 @@ public class FullIndexer {
 	
 	private CustomHttpClient client;
 	
+	private ReceiverService service;
+	
 	private SyncedMessageRepository syncedMsgRepo;
 	
-	public FullIndexer(SyncedMessageRepository syncedMsgRepo, CustomHttpClient client) {
+	public FullIndexer(ReceiverService service, SyncedMessageRepository syncedMsgRepo, CustomHttpClient client) {
+		this.service = service;
 		this.syncedMsgRepo = syncedMsgRepo;
 		this.client = client;
 	}
@@ -33,7 +37,9 @@ public class FullIndexer {
 		}
 		final Long maxId = syncedMsgRepo.getMaxId();
 		if (maxId == null) {
-			log.info("Skipping full index since synced queue is empty");
+			if (log.isDebugEnabled()) {
+				log.debug("Skipping full index since synced queue is empty");
+			}
 			return;
 		}
 		
@@ -53,12 +59,12 @@ public class FullIndexer {
 		if (log.isDebugEnabled()) {
 			log.debug("Updating rows for entities evicted from the cache");
 		}
-		syncedMsgRepo.markAsEvictedFromCache(maxId);
+		service.markAsEvictedFromCache(maxId);
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Updating rows for re-indexed entities");
 		}
-		syncedMsgRepo.markAsReIndexed(maxId);
+		service.markAsReIndexed(maxId);
 		
 		log.info("Full indexer completed successfully");
 	}
