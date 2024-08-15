@@ -137,6 +137,7 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "delayReconciler", testDelay);
 		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
 		setInternalState(listener, "delayMsgReconciler", testDelay);
+		setInternalState(listener, "fullIndexerCron", "-");
 		
 		listener.applicationStarted();
 		

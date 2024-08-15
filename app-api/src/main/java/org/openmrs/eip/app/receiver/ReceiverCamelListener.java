@@ -224,7 +224,7 @@ public class ReceiverCamelListener extends BaseCamelListener {
 		siteTasks = new ArrayList(sites.size());
 		
 		sites.stream().forEach(site -> {
-			SiteParentTask t = new SiteParentTask(site, disabledTaskClasses, StringUtils.isNotBlank(fullIndexerCron));
+			SiteParentTask t = new SiteParentTask(site, disabledTaskClasses, !"-".equals(fullIndexerCron));
 			siteExecutor.scheduleWithFixedDelay(t, siteTaskInitialDelay, siteTaskDelay, MILLISECONDS);
 			siteTasks.add(t);
 		});

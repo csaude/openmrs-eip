@@ -5,12 +5,16 @@ import java.util.List;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.management.entity.receiver.SyncedMessage;
 import org.openmrs.eip.component.SyncContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Reads a batch of messages in the synced queue that require OpenMRS cache eviction and forwards
  * them to the {@link CacheEvictingProcessor}.
  */
 public class CacheEvictor extends BasePostSyncActionRunnable {
+	
+	protected static final Logger log = LoggerFactory.getLogger(CacheEvictor.class);
 	
 	private CacheEvictingProcessor processor;
 	
