@@ -123,7 +123,7 @@ public class ReceiverReconcileControllerTest extends BaseReceiverWebTest {
 		ResultActions result = mockMvc.perform(builder);
 		
 		result.andExpect(status().isOk());
-		result.andExpect(jsonPath("length()", equalTo(20)));
+		result.andExpect(jsonPath("length()", equalTo(21)));
 		result.andExpect(jsonPath("[0].tableName", equalTo("encounter")));
 		result.andExpect(jsonPath("[0].rowCount", equalTo(10)));
 		result.andExpect(jsonPath("[0].processedCount", equalTo(9)));
