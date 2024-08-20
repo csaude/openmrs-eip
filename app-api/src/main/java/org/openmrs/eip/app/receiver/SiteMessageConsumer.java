@@ -29,7 +29,6 @@ import org.openmrs.eip.app.management.repository.SyncMessageRepository;
 import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.camel.utils.CamelUtils;
-import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -268,7 +267,7 @@ public class SiteMessageConsumer implements Runnable {
 		} else if (errorType != null) {
 			service.processFailedSyncItem(msg, errorType, errorMsg);
 		} else {
-			throw new EIPException("Something went wrong while processing sync message -> " + msg);
+			log.warn("Something went wrong while processing sync message -> {}", msg);
 		}
 		
 		log.info("Done processing message");

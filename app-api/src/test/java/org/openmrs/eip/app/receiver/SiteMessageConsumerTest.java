@@ -712,7 +712,7 @@ public class SiteMessageConsumerTest {
 	}
 	
 	@Test
-	public void processMessage_shouldFailIfTheSyncOutComeIsUnknown() {
+	public void processMessage_shouldKeepMessageIfTheSyncOutComeIsUnknown() {
 		setupConsumer(1);
 		Whitebox.setInternalState(consumer, "messageProcessorUri", MOCK_PROCESSOR_URI);
 		SyncMessage msg = new SyncMessage();
@@ -723,8 +723,8 @@ public class SiteMessageConsumerTest {
 			return null;
 		});
 		
-		Exception thrown = Assert.assertThrows(EIPException.class, () -> consumer.processMessage(msg));
-		assertEquals("Something went wrong while processing sync message -> " + msg, thrown.getMessage());
+		consumer.processMessage(msg);
+		
 		assertEquals(1, processedMsgs.size());
 		assertEquals(msg, processedMsgs.get(0));
 		verifyNoInteractions(mockService);
