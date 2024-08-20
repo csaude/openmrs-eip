@@ -43,6 +43,7 @@ import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -226,7 +227,7 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 	@Override
 	public boolean hasRetryItem(String identifier, String modelClassname) {
 		List<String> classNames = Utils.getListOfModelClassHierarchy(modelClassname);
-		return retryRepo.countByIdentifierAndModelClassNameIn(identifier, classNames) > 0;
+		return retryRepo.getByIdentifierAndModelClasses(identifier, classNames, Pageable.ofSize(1)).size() > 0;
 	}
 	
 	@Override
