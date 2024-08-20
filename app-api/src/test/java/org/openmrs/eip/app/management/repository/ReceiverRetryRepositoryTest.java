@@ -7,6 +7,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.openmrs.eip.app.SyncConstants.MGT_DATASOURCE_NAME;
 import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
+import static org.springframework.data.domain.Pageable.ofSize;
 
 import java.util.List;
 
@@ -29,20 +30,30 @@ public class ReceiverRetryRepositoryTest extends BaseReceiverTest {
 	private ReceiverRetryRepository repo;
 	
 	@Test
-	public void countByIdentifierAndModelClassNameIn_shouldGetTheCountOfMatchingRetryItems() {
-		assertEquals(3, repo.countByIdentifierAndModelClassNameIn("uuid-1",
-		    asList(PersonModel.class.getName(), PatientModel.class.getName())));
+	public void getByIdentifierAndModelClasses_shouldGetTheCountOfMatchingRetryItems() {
+		List<ReceiverRetryQueueItem> retries = repo.getByIdentifierAndModelClasses("uuid-1",
+		    asList(PersonModel.class.getName(), PatientModel.class.getName()), ofSize(5));
+		assertEquals(3, retries.size());
+		assertEquals(1l, retries.get(0).getId().longValue());
+		assertEquals(2l, retries.get(1).getId().longValue());
+		assertEquals(3l, retries.get(2).getId().longValue());
+		
+		retries = repo.getByIdentifierAndModelClasses("uuid-1",
+		    asList(PersonModel.class.getName(), PatientModel.class.getName()), ofSize(2));
+		assertEquals(2, retries.size());
+		assertEquals(1l, retries.get(0).getId().longValue());
+		assertEquals(2l, retries.get(1).getId().longValue());
 	}
 	
 	@Test
-	public void countByIdentifierAndModelClassNameIn_shouldReturnZeroIfTheIdentifierHasNoMatch() {
-		assertEquals(0, repo.countByIdentifierAndModelClassNameIn("some-uuid",
-		    asList(PersonModel.class.getName(), PatientModel.class.getName())));
+	public void getByIdentifierAndModelClasses_shouldReturnZeroIfTheIdentifierHasNoMatch() {
+		assertEquals(0, repo.getByIdentifierAndModelClasses("some-uuid",
+		    asList(PersonModel.class.getName(), PatientModel.class.getName()), ofSize(5)).size());
 	}
 	
 	@Test
-	public void countByIdentifierAndModelClassNameIn_shouldReturnZeroIfTheClassNamesHaveNoMatch() {
-		assertEquals(0, repo.countByIdentifierAndModelClassNameIn("uuid-1", asList(VisitModel.class.getName())));
+	public void getByIdentifierAndModelClasses_shouldReturnZeroIfTheClassNamesHaveNoMatch() {
+		assertEquals(0, repo.getByIdentifierAndModelClasses("uuid-1", asList(VisitModel.class.getName()), ofSize(5)).size());
 	}
 	
 	@Test

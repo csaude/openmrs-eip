@@ -46,6 +46,7 @@ import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -238,7 +239,7 @@ public class ConflictServiceImpl extends BaseService implements ConflictService 
 	@Override
 	public boolean hasConflictItem(String identifier, String modelClassname) {
 		List<String> classNames = Utils.getListOfModelClassHierarchy(modelClassname);
-		return conflictRepo.countByIdentifierAndModelClassNameIn(identifier, classNames) > 0;
+		return conflictRepo.getByIdentifierAndModelClasses(identifier, classNames, Pageable.ofSize(1)).size() > 0;
 	}
 	
 	/**

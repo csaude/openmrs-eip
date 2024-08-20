@@ -4,8 +4,10 @@ import java.util.List;
 
 import org.openmrs.eip.app.management.entity.receiver.ReceiverRetryQueueItem;
 import org.openmrs.eip.component.SyncOperation;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ReceiverRetryRepository extends JpaRepository<ReceiverRetryQueueItem, Long> {
 	
@@ -30,9 +32,13 @@ public interface ReceiverRetryRepository extends JpaRepository<ReceiverRetryQueu
 	 *
 	 * @param identifier the identifier to match
 	 * @param modelClassNames model class names to match
+	 * @param page {@link Pageable} instance
 	 * @return count of matching retry items
 	 */
-	long countByIdentifierAndModelClassNameIn(String identifier, List<String> modelClassNames);
+	@Query("SELECT i from ReceiverRetryQueueItem i WHERE i.identifier=:id AND i.modelClassName IN (:classes)")
+	List<ReceiverRetryQueueItem> getByIdentifierAndModelClasses(@Param("id") String identifier,
+	                                                            @Param("classes") List<String> modelClassNames,
+	                                                            Pageable page);
 	
 	/**
 	 * Checks if any row exists matching the specified identifier, operations and model class names.

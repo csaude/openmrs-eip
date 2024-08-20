@@ -2,11 +2,13 @@ package org.openmrs.eip.app.management.repository;
 
 import static org.openmrs.eip.app.SyncConstants.MGT_DATASOURCE_NAME;
 import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
+import static org.springframework.data.domain.Pageable.ofSize;
 
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
 import org.openmrs.eip.app.receiver.BaseReceiverTest;
 import org.openmrs.eip.component.model.PersonModel;
 import org.openmrs.eip.component.utils.Utils;
@@ -33,10 +35,22 @@ public class ConflictRepositoryTest extends BaseReceiverTest {
 	}
 	
 	@Test
-	public void countByIdentifierAndModelClassNameIn_shouldGetTheIdsOfAllTheConflicts() {
+	public void getByIdentifierAndModelClasses_shouldGetTheIdsOfAllTheConflicts() {
 		List<String> classes = Utils.getListOfModelClassHierarchy(PersonModel.class.getName());
-		Assert.assertEquals(3, repo.countByIdentifierAndModelClassNameIn("uuid-1", classes));
-		Assert.assertEquals(1, repo.countByIdentifierAndModelClassNameIn("uuid-2", classes));
+		List<ConflictQueueItem> conflicts = repo.getByIdentifierAndModelClasses("uuid-1", classes, ofSize(5));
+		Assert.assertEquals(3, conflicts.size());
+		Assert.assertEquals(1, conflicts.get(0).getId().longValue());
+		Assert.assertEquals(2, conflicts.get(1).getId().longValue());
+		Assert.assertEquals(3, conflicts.get(2).getId().longValue());
+		
+		conflicts = repo.getByIdentifierAndModelClasses("uuid-1", classes, ofSize(2));
+		Assert.assertEquals(2, conflicts.size());
+		Assert.assertEquals(1, conflicts.get(0).getId().longValue());
+		Assert.assertEquals(2, conflicts.get(1).getId().longValue());
+		
+		conflicts = repo.getByIdentifierAndModelClasses("uuid-2", classes, ofSize(5));
+		Assert.assertEquals(1, conflicts.size());
+		Assert.assertEquals(4, conflicts.get(0).getId().longValue());
 	}
 	
 }
