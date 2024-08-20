@@ -99,7 +99,7 @@ public class DbSyncRouteTest extends BaseReceiverRouteTest {
 		
 		producerTemplate.send(URI_DBSYNC, exchange);
 		
-		assertEquals("Cannot process the message because the entity has 3 message(s) in the conflict queue",
+		assertEquals("Cannot process the message because the entity has items in the conflict queue",
 		    getErrorMessage(exchange));
 		mockLoadEndpoint.assertIsSatisfied();
 		assertNull(exchange.getProperty(EX_PROP_MSG_PROCESSED));

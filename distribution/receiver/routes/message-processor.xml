@@ -31,7 +31,7 @@
             <method beanType="org.openmrs.eip.component.utils.Utils" method="getModelClassesInHierarchy(${exchangeProperty.model-class})" />
         </setProperty>
 
-        <toD uri="jpa:ReceiverRetryQueueItem?query=SELECT i from ReceiverRetryQueueItem i WHERE i.modelClassName IN (${exchangeProperty.model-classes}) AND i.identifier='${exchangeProperty.entity-id}'" />
+        <toD uri="jpa:ReceiverRetryQueueItem?query=SELECT i from ReceiverRetryQueueItem i WHERE i.modelClassName IN (${exchangeProperty.model-classes}) AND i.identifier='${exchangeProperty.entity-id}'&amp;maximumResults=1" />
 
         <setProperty name="retry-count">
             <simple>${body.size()}</simple>
@@ -41,9 +41,9 @@
             that happened later don't overwrite those that happened before them -->
         <when>
             <simple>${exchangeProperty.retry-count} > 0</simple>
-            <log message="Moving the message to the failure queue because the entity has ${exchangeProperty.retry-count} message(s) in the retry queue" />
+            <log message="Moving the message to the failure queue because the entity has items in the retry queue" />
             <setProperty name="retry-message">
-                <simple>Cannot process the message because the entity has ${exchangeProperty.retry-count} message(s) in the retry queue</simple>
+                <simple>Cannot process the message because the entity has items in the retry queue</simple>
             </setProperty>
             <throwException exceptionType="org.openmrs.eip.component.exception.EIPException" message="${exchangeProperty.retry-message}" />
         </when>

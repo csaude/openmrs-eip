@@ -65,7 +65,7 @@ public class MessageProcessorRouteTest extends BaseReceiverRouteTest {
 		producerTemplate.send(URI_MSG_PROCESSOR, exchange);
 		
 		mockInboundDbSyncEndpoint.assertIsSatisfied();
-		assertEquals("Cannot process the message because the entity has 3 message(s) in the retry queue",
+		assertEquals("Cannot process the message because the entity has items in the retry queue",
 		    getErrorMessage(exchange));
 		assertEquals(message, exchange.getProperty(EX_PROP_SYNC_MESSAGE));
 	}
@@ -85,7 +85,7 @@ public class MessageProcessorRouteTest extends BaseReceiverRouteTest {
 		producerTemplate.send(URI_MSG_PROCESSOR, exchange);
 		
 		mockInboundDbSyncEndpoint.assertIsSatisfied();
-		assertEquals("Cannot process the message because the entity has 3 message(s) in the retry queue",
+		assertEquals("Cannot process the message because the entity has items in the retry queue",
 		    getErrorMessage(exchange));
 		assertEquals(message, exchange.getProperty(EX_PROP_SYNC_MESSAGE));
 	}
