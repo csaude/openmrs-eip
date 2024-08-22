@@ -475,4 +475,52 @@
         </addColumn>
     </changeSet>
 
+    <changeSet author="wluyima" id="20240822-1841" labels="1.7.0">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="retry_identifier_index"/>
+            </not>
+        </preConditions>
+        <comment>Add index to receiver_retry_queue.identifier column</comment>
+        <createIndex indexName="retry_identifier_index" tableName="receiver_retry_queue">
+            <column name="identifier"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240822-1842" labels="1.7.0">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="retry_class_name_index"/>
+            </not>
+        </preConditions>
+        <comment>Add index to receiver_retry_queue.model_class_name column</comment>
+        <createIndex indexName="retry_class_name_index" tableName="receiver_retry_queue">
+            <column name="model_class_name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240822-1843" labels="1.7.0">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="conflict_identifier_index"/>
+            </not>
+        </preConditions>
+        <comment>Add index to receiver_conflict_queue.identifier column</comment>
+        <createIndex indexName="conflict_identifier_index" tableName="receiver_conflict_queue">
+            <column name="identifier"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="wluyima" id="20240822-1844" labels="1.7.0">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="conflict_class_name_index"/>
+            </not>
+        </preConditions>
+        <comment>Add index to receiver_conflict_queue.model_class_name column</comment>
+        <createIndex indexName="conflict_class_name_index" tableName="receiver_conflict_queue">
+            <column name="model_class_name"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
