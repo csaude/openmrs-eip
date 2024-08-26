@@ -298,29 +298,29 @@ public class SenderServiceTest extends BaseSenderTest {
 		Assert.assertTrue(e.getEvent().getSnapshot());
 		Assert.assertEquals(0, deleteRepo.count());
 	}
-
-    @Test
-    public void processEvent_shouldCreateAndSaveTheDatabaseEventAndDeletedEntity() {
-        Assert.assertEquals(0, eventRepo.count());
-        Assert.assertEquals(0, deleteRepo.count());
-        final String table = "visit";
-        final String id = "3";
-        final String uuid = "visit-uuid";
-        Event event = new Event();
-        event.setTableName(table);
-        event.setPrimaryKeyId(id);
-        event.setIdentifier(uuid);
-        event.setSnapshot(false);
-        event.setOperation("d");
-
-        service.processEvent(event);
-
+	
+	@Test
+	public void processEvent_shouldCreateAndSaveTheDatabaseEventAndDeletedEntity() {
+		Assert.assertEquals(0, eventRepo.count());
+		Assert.assertEquals(0, deleteRepo.count());
+		final String table = "visit";
+		final String id = "3";
+		final String uuid = "visit-uuid";
+		Event event = new Event();
+		event.setTableName(table);
+		event.setPrimaryKeyId(id);
+		event.setIdentifier(uuid);
+		event.setSnapshot(false);
+		event.setOperation("d");
+		
+		service.processEvent(event);
+		
 		Assert.assertEquals(1, eventRepo.count());
-        List<DeletedEntity> delEntities = deleteRepo.findAll();
-        DeletedEntity d = delEntities.get(0);
-        Assert.assertEquals(table, d.getTableName());
-        Assert.assertEquals(id, d.getPrimaryKeyId());
-        Assert.assertEquals(uuid, d.getIdentifier());
-    }
+		List<DeletedEntity> delEntities = deleteRepo.findAll();
+		DeletedEntity d = delEntities.get(0);
+		Assert.assertEquals(table, d.getTableName());
+		Assert.assertEquals(id, d.getPrimaryKeyId());
+		Assert.assertEquals(uuid, d.getIdentifier());
+	}
 	
 }
