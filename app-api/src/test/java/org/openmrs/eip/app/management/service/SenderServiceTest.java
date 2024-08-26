@@ -13,14 +13,17 @@ import java.time.Month;
 import java.util.Date;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
+import org.openmrs.eip.app.management.entity.sender.DeletedEntity;
 import org.openmrs.eip.app.management.entity.sender.SenderPrunedArchive;
 import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncArchive;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage.SenderSyncMessageStatus;
 import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
+import org.openmrs.eip.app.management.repository.DeletedEntityRepository;
 import org.openmrs.eip.app.management.repository.SenderPrunedArchiveRepository;
 import org.openmrs.eip.app.management.repository.SenderRetryRepository;
 import org.openmrs.eip.app.management.repository.SenderSyncArchiveRepository;
@@ -52,6 +55,9 @@ public class SenderServiceTest extends BaseSenderTest {
 	
 	@Autowired
 	private SenderSyncMessageRepository syncRepo;
+	
+	@Autowired
+	private DeletedEntityRepository deleteRepo;
 	
 	@Autowired
 	private SenderRetryRepository retryRepo;
@@ -264,5 +270,57 @@ public class SenderServiceTest extends BaseSenderTest {
 		assertEquals(dateReceivedByReceiver, a.getDateReceivedByReceiver());
 		assertTrue(a.getDateCreated().getTime() == timestamp || a.getDateCreated().getTime() > timestamp);
 	}
+	
+	@Test
+	public void processEvent_shouldCreateAndSaveTheDatabaseEvent() {
+		Assert.assertEquals(0, eventRepo.count());
+		Assert.assertEquals(0, deleteRepo.count());
+		final String table = "visit";
+		final String id = "3";
+		final String uuid = "visit-uuid";
+		final String op = "c";
+		Event event = new Event();
+		event.setTableName(table);
+		event.setPrimaryKeyId(id);
+		event.setIdentifier(uuid);
+		event.setSnapshot(true);
+		event.setOperation(op);
+		
+		service.processEvent(event);
+		
+		List<DebeziumEvent> dbzmEvents = eventRepo.findAll();
+		Assert.assertEquals(1, dbzmEvents.size());
+		DebeziumEvent e = dbzmEvents.get(0);
+		Assert.assertEquals(table, e.getEvent().getTableName());
+		Assert.assertEquals(id, e.getEvent().getPrimaryKeyId());
+		Assert.assertEquals(uuid, e.getEvent().getIdentifier());
+		Assert.assertEquals(op, e.getEvent().getOperation());
+		Assert.assertTrue(e.getEvent().getSnapshot());
+		Assert.assertEquals(0, deleteRepo.count());
+	}
+
+    @Test
+    public void processEvent_shouldCreateAndSaveTheDatabaseEventAndDeletedEntity() {
+        Assert.assertEquals(0, eventRepo.count());
+        Assert.assertEquals(0, deleteRepo.count());
+        final String table = "visit";
+        final String id = "3";
+        final String uuid = "visit-uuid";
+        Event event = new Event();
+        event.setTableName(table);
+        event.setPrimaryKeyId(id);
+        event.setIdentifier(uuid);
+        event.setSnapshot(false);
+        event.setOperation("d");
+
+        service.processEvent(event);
+
+		Assert.assertEquals(1, eventRepo.count());
+        List<DeletedEntity> delEntities = deleteRepo.findAll();
+        DeletedEntity d = delEntities.get(0);
+        Assert.assertEquals(table, d.getTableName());
+        Assert.assertEquals(id, d.getPrimaryKeyId());
+        Assert.assertEquals(uuid, d.getIdentifier());
+    }
 	
 }

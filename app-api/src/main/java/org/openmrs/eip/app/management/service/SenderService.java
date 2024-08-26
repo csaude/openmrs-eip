@@ -6,12 +6,21 @@ import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
 import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncArchive;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
+import org.openmrs.eip.component.entity.Event;
 import org.openmrs.eip.component.model.SyncModel;
 
 /**
  * Contains service methods for the sender
  */
 public interface SenderService extends Service {
+	
+	/**
+	 * Saves a {@link DebeziumEvent} instance to the database, in case of a delete event a
+	 * {@link org.openmrs.eip.app.management.entity.sender.DeletedEntity} instance is also saved.
+	 * 
+	 * @param event the event instance to process
+	 */
+	void processEvent(Event event);
 	
 	/**
 	 * Prunes the specified sync archive i.e. moves it from the archives to the pruned table

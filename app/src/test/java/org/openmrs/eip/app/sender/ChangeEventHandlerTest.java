@@ -3,7 +3,6 @@ package org.openmrs.eip.app.sender;
 import static java.util.Collections.singletonList;
 import static org.apache.kafka.connect.data.Schema.Type.STRUCT;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -21,19 +20,14 @@ import org.apache.kafka.connect.data.ConnectSchema;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.data.Struct;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.openmrs.eip.app.CustomFileOffsetBackingStore;
-import org.openmrs.eip.app.management.entity.sender.DeletedEntity;
-import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
-import org.openmrs.eip.app.management.repository.DeletedEntityRepository;
+import org.openmrs.eip.app.management.service.SenderService;
 import org.openmrs.eip.component.exception.EIPException;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -46,10 +40,7 @@ import org.slf4j.Logger;
 public class ChangeEventHandlerTest {
 	
 	@Mock
-	private DebeziumEventRepository mockRepository;
-	
-	@Mock
-	private DeletedEntityRepository deletedEntityRepo;
+	private SenderService mockService;
 	
 	@Mock
 	private Logger mockLogger;
@@ -62,7 +53,7 @@ public class ChangeEventHandlerTest {
 	@Before
 	public void setup() {
 		PowerMockito.mockStatic(CustomFileOffsetBackingStore.class);
-		handler = new ChangeEventHandler(mockRepository, deletedEntityRepo);
+		handler = new ChangeEventHandler(mockService);
 		Whitebox.setInternalState(ChangeEventHandler.class, Logger.class, mockLogger);
 	}
 	
@@ -95,7 +86,7 @@ public class ChangeEventHandlerTest {
 		handler.handle(tableName, null, true, null, exchange);
 		
 		verify(mockLogger).trace("Skipping " + tableName + " snapshot event");
-		verifyNoInteractions(mockRepository);
+		verifyNoInteractions(mockService);
 	}
 	
 	@Test
@@ -117,13 +108,10 @@ public class ChangeEventHandlerTest {
 		
 		handler.handle(tableName, id, true, null, exchange);
 		
-		verify(mockRepository).save(argThat(dbzmEvent -> {
+		verify(mockService).processEvent(argThat(event -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && uuid.equals(dbzmEvent.getEvent().getIdentifier())
-				        && "s".equals(dbzmEvent.getEvent().getOperation()) && dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getDateCreated() != null;
+				return tableName.equals(event.getTableName()) && id.equals(event.getPrimaryKeyId())
+				        && uuid.equals(event.getIdentifier()) && "s".equals(event.getOperation()) && event.getSnapshot();
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
@@ -150,13 +138,10 @@ public class ChangeEventHandlerTest {
 		
 		handler.handle(tableName, id, false, null, exchange);
 		
-		verify(mockRepository).save(argThat(dbzmEvent -> {
+		verify(mockService).processEvent(argThat(event -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && uuid.equals(dbzmEvent.getEvent().getIdentifier())
-				        && op.equals(dbzmEvent.getEvent().getOperation()) && !dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getDateCreated() != null;
+				return tableName.equals(event.getTableName()) && id.equals(event.getPrimaryKeyId())
+				        && uuid.equals(event.getIdentifier()) && op.equals(event.getOperation()) && !event.getSnapshot();
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
@@ -183,13 +168,10 @@ public class ChangeEventHandlerTest {
 		
 		handler.handle(tableName, id, false, null, exchange);
 		
-		verify(mockRepository).save(argThat(dbzmEvent -> {
+		verify(mockService).processEvent(argThat(event -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && uuid.equals(dbzmEvent.getEvent().getIdentifier())
-				        && op.equals(dbzmEvent.getEvent().getOperation()) && !dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getDateCreated() != null;
+				return tableName.equals(event.getTableName()) && id.equals(event.getPrimaryKeyId())
+				        && uuid.equals(event.getIdentifier()) && op.equals(event.getOperation()) && !event.getSnapshot();
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
@@ -217,27 +199,15 @@ public class ChangeEventHandlerTest {
 		
 		handler.handle(tableName, id, false, null, exchange);
 		
-		verify(mockRepository).save(argThat(dbzmEvent -> {
+		verify(mockService).processEvent(argThat(event -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && uuid.equals(dbzmEvent.getEvent().getIdentifier())
-				        && op.equals(dbzmEvent.getEvent().getOperation()) && !dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getDateCreated() != null;
+				return tableName.equals(event.getTableName()) && id.equals(event.getPrimaryKeyId())
+				        && uuid.equals(event.getIdentifier()) && op.equals(event.getOperation()) && !event.getSnapshot();
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}));
-		
-		ArgumentCaptor<DeletedEntity> deleteArgCaptor = ArgumentCaptor.forClass(DeletedEntity.class);
-		Mockito.verify(deletedEntityRepo).save(deleteArgCaptor.capture());
-		DeletedEntity deletedEntity = deleteArgCaptor.getValue();
-		Assert.assertEquals(tableName, deletedEntity.getTableName());
-		Assert.assertEquals(id, deletedEntity.getPrimaryKeyId());
-		Assert.assertEquals(uuid, deletedEntity.getIdentifier());
-		final long dateCreatedMills = deletedEntity.getDateCreated().getTime();
-		assertTrue(dateCreatedMills == timestamp || dateCreatedMills > timestamp);
 	}
 	
 	@Test
@@ -252,12 +222,10 @@ public class ChangeEventHandlerTest {
 		
 		handler.handle(tableName, id, false, null, exchange);
 		
-		verify(mockRepository).save(argThat(dbzmEvent -> {
+		verify(mockService).processEvent(argThat(event -> {
 			try {
-				return tableName.equals(dbzmEvent.getEvent().getTableName())
-				        && id.equals(dbzmEvent.getEvent().getPrimaryKeyId())
-				        && op.equals(dbzmEvent.getEvent().getOperation()) && !dbzmEvent.getEvent().getSnapshot()
-				        && dbzmEvent.getEvent().getIdentifier() == null && dbzmEvent.getDateCreated() != null;
+				return tableName.equals(event.getTableName()) && id.equals(event.getPrimaryKeyId())
+				        && op.equals(event.getOperation()) && !event.getSnapshot() && event.getIdentifier() == null;
 			}
 			catch (Exception e) {
 				throw new RuntimeException(e);

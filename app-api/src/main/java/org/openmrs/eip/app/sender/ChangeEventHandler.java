@@ -1,6 +1,5 @@
 package org.openmrs.eip.app.sender;
 
-import java.util.Date;
 import java.util.Map;
 
 import org.apache.camel.Exchange;
@@ -8,9 +7,7 @@ import org.apache.camel.Message;
 import org.apache.camel.component.debezium.DebeziumConstants;
 import org.apache.kafka.connect.data.Struct;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
-import org.openmrs.eip.app.management.entity.sender.DeletedEntity;
-import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
-import org.openmrs.eip.app.management.repository.DeletedEntityRepository;
+import org.openmrs.eip.app.management.service.SenderService;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.entity.Event;
 import org.openmrs.eip.component.exception.EIPException;
@@ -31,19 +28,16 @@ public class ChangeEventHandler {
 	
 	private static final Logger log = LoggerFactory.getLogger(ChangeEventHandler.class);
 	
-	private DebeziumEventRepository repository;
-	
-	private DeletedEntityRepository deletedEntityRepo;
+	private SenderService service;
 	
 	@Autowired
-	public ChangeEventHandler(DebeziumEventRepository repository, DeletedEntityRepository deletedEntityRepo) {
-		this.repository = repository;
-		this.deletedEntityRepo = deletedEntityRepo;
+	public ChangeEventHandler(SenderService service) {
+		this.service = service;
 	}
 	
 	/**
 	 * Processes a database change event and saved it to the database
-	 * 
+	 *
 	 * @param tableName the affected table name
 	 * @param id the affected database row id
 	 * @param snapshot specifies if it is a snapshot event or not
@@ -82,8 +76,8 @@ public class ChangeEventHandler {
 		event.setPrimaryKeyId(id);
 		event.setOperation(op);
 		event.setSnapshot(snapshot);
-		String uuid = null;
 		if (!isSubclassTable) {
+			String uuid;
 			if (op.equals("d")) {
 				uuid = message.getHeader(DebeziumConstants.HEADER_BEFORE, Struct.class).getString("uuid");
 			} else {
@@ -93,31 +87,7 @@ public class ChangeEventHandler {
 			event.setIdentifier(uuid);
 		}
 		
-		DebeziumEvent debeziumEvent = new DebeziumEvent();
-		debeziumEvent.setEvent(event);
-		debeziumEvent.setDateCreated(new Date());
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Saving debezium event to event queue: " + debeziumEvent);
-		}
-		
-		repository.save(debeziumEvent);
-		if (log.isDebugEnabled()) {
-			log.debug("Debezium event saved to event queue");
-		}
-		
-		if (op.equals("d")) {
-			DeletedEntity de = new DeletedEntity();
-			de.setTableName(tableName);
-			de.setPrimaryKeyId(id);
-			de.setIdentifier(uuid);
-			de.setDateCreated(new Date());
-			if (log.isDebugEnabled()) {
-				log.debug("Saving deleted entity");
-			}
-			
-			deletedEntityRepo.save(de);
-		}
+		service.processEvent(event);
 	}
 	
 }

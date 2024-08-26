@@ -7,11 +7,13 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
+import org.openmrs.eip.app.management.entity.sender.DeletedEntity;
 import org.openmrs.eip.app.management.entity.sender.SenderPrunedArchive;
 import org.openmrs.eip.app.management.entity.sender.SenderRetryQueueItem;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncArchive;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
 import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
+import org.openmrs.eip.app.management.repository.DeletedEntityRepository;
 import org.openmrs.eip.app.management.repository.SenderPrunedArchiveRepository;
 import org.openmrs.eip.app.management.repository.SenderRetryRepository;
 import org.openmrs.eip.app.management.repository.SenderSyncArchiveRepository;
@@ -46,16 +48,49 @@ public class SenderServiceImpl implements SenderService {
 	
 	private SenderRetryRepository retryRepo;
 	
+	private DeletedEntityRepository deletedRepo;
+	
 	@Value("${" + SenderConstants.PROP_SENDER_ID + "}")
 	private String senderId;
 	
 	public SenderServiceImpl(SenderSyncArchiveRepository archiveRepo, SenderPrunedArchiveRepository prunedRepo,
-	    DebeziumEventRepository eventRepo, SenderSyncMessageRepository syncRepo, SenderRetryRepository retryRepo) {
+	    DebeziumEventRepository eventRepo, SenderSyncMessageRepository syncRepo, SenderRetryRepository retryRepo,
+	    DeletedEntityRepository deletedRepo) {
 		this.archiveRepo = archiveRepo;
 		this.prunedRepo = prunedRepo;
 		this.eventRepo = eventRepo;
 		this.syncRepo = syncRepo;
 		this.retryRepo = retryRepo;
+		this.deletedRepo = deletedRepo;
+	}
+	
+	@Override
+	@Transactional(transactionManager = MGT_TX_MGR)
+	public void processEvent(Event event) {
+		DebeziumEvent debeziumEvent = new DebeziumEvent();
+		debeziumEvent.setEvent(event);
+		debeziumEvent.setDateCreated(new Date());
+		if (log.isDebugEnabled()) {
+			log.debug("Saving debezium event to event queue: " + debeziumEvent);
+		}
+		
+		eventRepo.save(debeziumEvent);
+		if (log.isDebugEnabled()) {
+			log.debug("Debezium event saved to event queue");
+		}
+		
+		if (event.getOperation().equals("d")) {
+			DeletedEntity de = new DeletedEntity();
+			de.setTableName(event.getTableName());
+			de.setPrimaryKeyId(event.getPrimaryKeyId());
+			de.setIdentifier(event.getIdentifier());
+			de.setDateCreated(new Date());
+			if (log.isDebugEnabled()) {
+				log.debug("Saving deleted entity");
+			}
+			
+			deletedRepo.save(de);
+		}
 	}
 	
 	@Override
