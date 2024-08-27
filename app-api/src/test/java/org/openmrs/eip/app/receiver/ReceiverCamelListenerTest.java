@@ -135,7 +135,8 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "delayReconciler", testDelay);
 		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
 		setInternalState(listener, "delayMsgReconciler", testDelay);
-		
+		setInternalState(listener, "fullIndexerCron", "-");
+
 		listener.applicationStarted();
 		
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(SiteParentTask.class), eq(testInitialDelay),
@@ -147,10 +148,10 @@ public class ReceiverCamelListenerTest {
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		ArgumentCaptor<SiteParentTask> captor = ArgumentCaptor.forClass(SiteParentTask.class);
-		verify(mockSiteExecutor, times(5)).scheduleWithFixedDelay(captor.capture(), eq(testInitialDelay), eq(testDelay),
+		verify(mockSiteExecutor, times(4)).scheduleWithFixedDelay(captor.capture(), eq(testInitialDelay), eq(testDelay),
 		    eq(TimeUnit.MILLISECONDS));
-		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(4), "evictor"));
-		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(4), "updater"));
+		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(3), "evictor"));
+		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(3), "updater"));
 	}
 	
 	@Test
@@ -283,10 +284,10 @@ public class ReceiverCamelListenerTest {
 		listener.applicationStarted();
 		
 		ArgumentCaptor<SiteParentTask> captor = ArgumentCaptor.forClass(SiteParentTask.class);
-		verify(mockSiteExecutor, times(5)).scheduleWithFixedDelay(captor.capture(), eq(testInitialDelay), eq(testDelay),
+		verify(mockSiteExecutor, times(4)).scheduleWithFixedDelay(captor.capture(), eq(testInitialDelay), eq(testDelay),
 		    eq(TimeUnit.MILLISECONDS));
-		Assert.assertNull(Whitebox.getInternalState(captor.getAllValues().get(4), "evictor"));
-		Assert.assertNull(Whitebox.getInternalState(captor.getAllValues().get(4), "updater"));
+		Assert.assertNull(Whitebox.getInternalState(captor.getAllValues().get(3), "evictor"));
+		Assert.assertNull(Whitebox.getInternalState(captor.getAllValues().get(3), "updater"));
 	}
 	
 }
