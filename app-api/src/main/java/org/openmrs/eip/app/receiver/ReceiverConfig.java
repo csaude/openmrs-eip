@@ -14,7 +14,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.openmrs.eip.app.management.repository.ReceiverReconcileRepository;
+import org.openmrs.eip.app.receiver.reconcile.FullIndexerScheduler;
 import org.openmrs.eip.app.receiver.reconcile.ReconcileScheduler;
+import org.openmrs.eip.app.receiver.task.FullIndexer;
 import org.openmrs.eip.component.SyncProfiles;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -60,6 +62,11 @@ public class ReceiverConfig {
 	@Bean
 	public ReconcileScheduler reconcileScheduler(ReceiverReconcileRepository repo) {
 		return new ReconcileScheduler(repo);
+	}
+	
+	@Bean
+	public FullIndexerScheduler fullIndexerScheduler(FullIndexer indexer) {
+		return new FullIndexerScheduler(indexer);
 	}
 	
 }

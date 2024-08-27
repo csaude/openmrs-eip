@@ -74,7 +74,7 @@ public class SiteParentTaskTest {
 		List<Class<? extends Runnable>> disabledClasses = Arrays.asList(SyncedMessageArchiver.class,
 		    SyncedMessageDeleter.class);
 		
-		SiteParentTask task = new SiteParentTask(mockSite, null, disabledClasses);
+		SiteParentTask task = new SiteParentTask(mockSite, null, disabledClasses, false);
 		
 		Assert.assertNotNull(Whitebox.getInternalState(task, "synchronizer"));
 		Assert.assertNotNull(Whitebox.getInternalState(task, "evictor"));
@@ -86,7 +86,7 @@ public class SiteParentTaskTest {
 	
 	@Test
 	public void doRun_shouldRunTheChildTasks() throws Exception {
-		SiteParentTask task = new SiteParentTask(mockSite, null, Collections.emptyList());
+		SiteParentTask task = new SiteParentTask(mockSite, null, Collections.emptyList(), false);
 		setInternalState(task, "synchronizer", mockSynchronizer);
 		setInternalState(task, "evictor", mockEvictor);
 		setInternalState(task, "updater", mockUpdater);
@@ -108,7 +108,7 @@ public class SiteParentTaskTest {
 	public void doRun_shouldSkipRunningTheDisabledChildTasks() throws Exception {
 		List<Class<? extends Runnable>> disabledClasses = Arrays.asList(SyncedMessageArchiver.class,
 		    SyncedMessageDeleter.class);
-		SiteParentTask task = new SiteParentTask(mockSite, null, disabledClasses);
+		SiteParentTask task = new SiteParentTask(mockSite, null, disabledClasses, false);
 		setInternalState(task, "synchronizer", mockSynchronizer);
 		setInternalState(task, "evictor", mockEvictor);
 		setInternalState(task, "updater", mockUpdater);

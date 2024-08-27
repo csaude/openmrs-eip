@@ -47,7 +47,7 @@ public class SiteParentTask extends BaseTask {
 	private final ExecutorService childExecutor = Executors.newFixedThreadPool(TASK_COUNT);
 	
 	public SiteParentTask(SiteInfo siteInfo, ThreadPoolExecutor syncExecutor,
-	    List<Class<? extends Runnable>> disabledTaskClasses) {
+	    List<Class<? extends Runnable>> disabledTaskClasses, boolean fullIndexEnabled) {
 		
 		this.siteInfo = siteInfo;
 		
@@ -55,12 +55,14 @@ public class SiteParentTask extends BaseTask {
 			synchronizer = new SiteMessageConsumer(ReceiverConstants.URI_MSG_PROCESSOR, siteInfo, syncExecutor);
 		}
 		
-		if (!disabledTaskClasses.contains(CacheEvictor.class)) {
-			evictor = new CacheEvictor(siteInfo);
-		}
-		
-		if (!disabledTaskClasses.contains(SearchIndexUpdater.class)) {
-			updater = new SearchIndexUpdater(siteInfo);
+		if (!fullIndexEnabled) {
+			if (!disabledTaskClasses.contains(CacheEvictor.class)) {
+				evictor = new CacheEvictor(siteInfo);
+			}
+			
+			if (!disabledTaskClasses.contains(SearchIndexUpdater.class)) {
+				updater = new SearchIndexUpdater(siteInfo);
+			}
 		}
 		
 		if (!disabledTaskClasses.contains(SyncResponseSender.class)) {

@@ -19,7 +19,7 @@ public class ReceiverServiceImplTest {
 	
 	@Before
 	public void setup() {
-		service = new ReceiverServiceImpl(null, mockSyncedMsgRepo, null, null, null, null, null, null, null, null);
+		service = new ReceiverServiceImpl(null, mockSyncedMsgRepo, null, null, null, null, null, null, null, null, null);
 	}
 	
 	@Test
