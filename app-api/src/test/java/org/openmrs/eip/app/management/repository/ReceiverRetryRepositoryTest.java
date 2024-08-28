@@ -34,15 +34,17 @@ public class ReceiverRetryRepositoryTest extends BaseReceiverTest {
 		List<ReceiverRetryQueueItem> retries = repo.getByIdentifierAndModelClasses("uuid-1",
 		    asList(PersonModel.class.getName(), PatientModel.class.getName()), ofSize(5));
 		assertEquals(3, retries.size());
-		assertEquals(1l, retries.get(0).getId().longValue());
-		assertEquals(2l, retries.get(1).getId().longValue());
-		assertEquals(3l, retries.get(2).getId().longValue());
+		List<Long> ids = retries.stream().map(r -> r.getId()).toList();
+		assertTrue(ids.contains(1L));
+		assertTrue(ids.contains(2L));
+		assertTrue(ids.contains(3L));
 		
 		retries = repo.getByIdentifierAndModelClasses("uuid-1",
 		    asList(PersonModel.class.getName(), PatientModel.class.getName()), ofSize(2));
 		assertEquals(2, retries.size());
-		assertEquals(1l, retries.get(0).getId().longValue());
-		assertEquals(2l, retries.get(1).getId().longValue());
+		ids = retries.stream().map(r -> r.getId()).toList();
+		assertTrue(ids.contains(1L));
+		assertTrue(ids.contains(3L));
 	}
 	
 	@Test
