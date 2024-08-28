@@ -475,7 +475,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet author="wluyima" id="20240828-1501" labels="1.7.0">
+    <changeSet author="wluyima" id="20240828-1511" labels="1.7.0">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists indexName="retry_model_identifier_idx"/>
@@ -483,12 +483,12 @@
         </preConditions>
         <comment>Add index to model_class_name and identifier columns in receiver_retry_queue table</comment>
         <createIndex indexName="retry_model_identifier_idx" tableName="receiver_retry_queue">
-            <column name="model_class_name"/>
             <column name="identifier"/>
+            <column name="model_class_name"/>
         </createIndex>
     </changeSet>
 
-    <changeSet author="wluyima" id="20240828-1502" labels="1.7.0">
+    <changeSet author="wluyima" id="20240828-1512" labels="1.7.0">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists indexName="conflict_model_identifier_idx"/>
@@ -496,8 +496,8 @@
         </preConditions>
         <comment>Add index to model_class_name and identifier columns in receiver_conflict_queue table</comment>
         <createIndex indexName="conflict_model_identifier_idx" tableName="receiver_conflict_queue">
-            <column name="model_class_name"/>
             <column name="identifier"/>
+            <column name="model_class_name"/>
         </createIndex>
     </changeSet>
 
