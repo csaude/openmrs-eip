@@ -136,7 +136,7 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
 		setInternalState(listener, "delayMsgReconciler", testDelay);
 		setInternalState(listener, "fullIndexerCron", "-");
-
+		
 		listener.applicationStarted();
 		
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(SiteParentTask.class), eq(testInitialDelay),
