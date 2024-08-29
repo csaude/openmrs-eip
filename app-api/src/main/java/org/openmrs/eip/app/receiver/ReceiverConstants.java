@@ -62,6 +62,12 @@ public class ReceiverConstants {
 	
 	public static final String PROP_FULL_INDEXER_CRON = "full.indexer.schedule.cron";
 	
+	public static final String PROP_ARCHIVE_DISABLED = "archive.task.disabled";
+	
+	public static final String PROP_INITIAL_DELAY_ARCHIVE = "archive.task.initial.delay";
+	
+	public static final String PROP_DELAY_ARCHIVE = "archive.task.delay";
+	
 	public static final String PROP_DISABLED_SITES = "disabled.sites";
 	
 	public static final String ERROR_HANDLER_REF = "inBoundErrorHandler";

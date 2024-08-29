@@ -103,28 +103,28 @@ public class SyncedMessageRepositoryTest extends BaseReceiverTest {
 	
 	@Test
 	public void getBatchOfMessagesForArchiving_shouldReturnAOrderedBatchOfMessagesToArchive() {
-		SiteInfo site = getEntity(SiteInfo.class, 5L);
 		Pageable page = PageRequest.of(0, 10);
 		
-		List<SyncedMessage> msgs = repo.getBatchOfMessagesForArchiving(site, page);
+		List<SyncedMessage> msgs = repo.getBatchOfMessagesForArchiving(page);
 		
-		assertEquals(4, msgs.size());
-		assertEquals(301l, msgs.get(0).getId().longValue());
-		assertEquals(302l, msgs.get(1).getId().longValue());
-		assertEquals(303l, msgs.get(2).getId().longValue());
-		assertEquals(304l, msgs.get(3).getId().longValue());
+		assertEquals(6, msgs.size());
+		assertEquals(4l, msgs.get(0).getId().longValue());
+		assertEquals(301l, msgs.get(1).getId().longValue());
+		assertEquals(302l, msgs.get(2).getId().longValue());
+		assertEquals(303l, msgs.get(3).getId().longValue());
+		assertEquals(304l, msgs.get(4).getId().longValue());
+		assertEquals(312l, msgs.get(5).getId().longValue());
 	}
 	
 	@Test
 	public void getBatchOfMessagesForArchiving_shouldReturnResultsBasedOnTheBatchSize() {
-		SiteInfo site = getEntity(SiteInfo.class, 5L);
-		assertEquals(4, repo.getBatchOfMessagesForArchiving(site, Pageable.unpaged()).size());
+		assertEquals(6, repo.getBatchOfMessagesForArchiving(Pageable.unpaged()).size());
 		
-		List<SyncedMessage> msgs = repo.getBatchOfMessagesForArchiving(site, PageRequest.of(0, 2));
+		List<SyncedMessage> msgs = repo.getBatchOfMessagesForArchiving(PageRequest.of(0, 2));
 		
 		assertEquals(2, msgs.size());
-		assertEquals(301l, msgs.get(0).getId().longValue());
-		assertEquals(302l, msgs.get(1).getId().longValue());
+		assertEquals(4l, msgs.get(0).getId().longValue());
+		assertEquals(301l, msgs.get(1).getId().longValue());
 	}
 	
 	@Test
@@ -145,7 +145,7 @@ public class SyncedMessageRepositoryTest extends BaseReceiverTest {
 	@Test
 	public void getBatchOfMessagesForDeleting_shouldReturnResultsBasedOnTheBatchSize() {
 		SiteInfo site = getEntity(SiteInfo.class, 5L);
-		assertEquals(4, repo.getBatchOfMessagesForArchiving(site, Pageable.unpaged()).size());
+		assertEquals(6, repo.getBatchOfMessagesForArchiving(Pageable.unpaged()).size());
 		
 		List<SyncedMessage> msgs = repo.getBatchOfMessagesForDeleting(site, PageRequest.of(0, 1));
 		
