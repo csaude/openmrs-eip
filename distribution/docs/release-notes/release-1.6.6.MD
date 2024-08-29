@@ -1,4 +1,4 @@
-# Release Notes - DB Sync Version 1.6.5
+# Release Notes - DB Sync Version 1.6.6
 
 <h2>        Improvement
 </h2>
