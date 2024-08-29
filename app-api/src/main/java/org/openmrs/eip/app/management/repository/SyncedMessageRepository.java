@@ -21,7 +21,7 @@ public interface SyncedMessageRepository extends JpaRepository<SyncedMessage, Lo
 	        + "m.indexed = true AND m.searchIndexUpdated = false AND (m.cached = false OR m.evictedFromCache = true) "
 	        + "ORDER BY m.dateCreated ASC";
 	
-	String ARCHIVE_QUERY = "SELECT m FROM SyncedMessage m WHERE m.site = :site AND m.outcome = 'SUCCESS' AND "
+	String ARCHIVE_QUERY = "SELECT m FROM SyncedMessage m WHERE m.outcome = 'SUCCESS' AND "
 	        + "m.responseSent = true AND (m.cached = false OR m.evictedFromCache = true) AND (m.indexed = false OR "
 	        + "m.searchIndexUpdated = true)";
 	
@@ -69,12 +69,11 @@ public interface SyncedMessageRepository extends JpaRepository<SyncedMessage, Lo
 	/**
 	 * Gets a batch of post processed synced messages for archiving for the specified site
 	 *
-	 * @param site the site to match against
 	 * @param pageable {@link Pageable} instance
 	 * @return list of synced messages
 	 */
 	@Query(ARCHIVE_QUERY)
-	List<SyncedMessage> getBatchOfMessagesForArchiving(@Param("site") SiteInfo site, Pageable pageable);
+	List<SyncedMessage> getBatchOfMessagesForArchiving(Pageable pageable);
 	
 	/**
 	 * Gets a batch of synced messages for deleting for the specified site where responses are sent and

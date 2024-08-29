@@ -15,8 +15,6 @@ public enum SiteChildTaskType {
 	
 	RESPONSE_SENDER(SyncResponseSender.class),
 	
-	ARCHIVER(SyncedMessageArchiver.class),
-	
 	DELETER(SyncedMessageDeleter.class);
 	
 	@Getter

@@ -102,6 +102,7 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "initialDelayPruner", testInitialDelay);
 		setInternalState(listener, "delayPruner", testDelay);
 		setInternalState(listener, "jmsTaskDisabled", false);
+		setInternalState(listener, "archiveTaskDisabled", false);
 		setInternalState(listener, "enabledSiteIdentifiers", Collections.emptyList());
 		setInternalState(listener, "disabledSiteIdentifiers", Collections.emptyList());
 	}
@@ -135,6 +136,8 @@ public class ReceiverCamelListenerTest {
 		setInternalState(listener, "delayReconciler", testDelay);
 		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
 		setInternalState(listener, "delayMsgReconciler", testDelay);
+		setInternalState(listener, "initialDelayArchiveTask", testInitialDelay);
+		setInternalState(listener, "delayArchiveTask", testDelay);
 		setInternalState(listener, "fullIndexerCron", "-");
 		
 		listener.applicationStarted();
@@ -147,11 +150,13 @@ public class ReceiverCamelListenerTest {
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(SyncedMessageArchiver.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		ArgumentCaptor<SiteParentTask> captor = ArgumentCaptor.forClass(SiteParentTask.class);
-		verify(mockSiteExecutor, times(4)).scheduleWithFixedDelay(captor.capture(), eq(testInitialDelay), eq(testDelay),
+		verify(mockSiteExecutor, times(5)).scheduleWithFixedDelay(captor.capture(), eq(testInitialDelay), eq(testDelay),
 		    eq(TimeUnit.MILLISECONDS));
-		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(3), "evictor"));
-		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(3), "updater"));
+		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(4), "evictor"));
+		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(4), "updater"));
 	}
 	
 	@Test
@@ -288,6 +293,24 @@ public class ReceiverCamelListenerTest {
 		    eq(TimeUnit.MILLISECONDS));
 		Assert.assertNull(Whitebox.getInternalState(captor.getAllValues().get(3), "evictor"));
 		Assert.assertNull(Whitebox.getInternalState(captor.getAllValues().get(3), "updater"));
+	}
+	
+	@Test
+	public void applicationStarted_shouldNotStartArchiveTaskIfDisabled() {
+		setInternalState(listener, "archiveTaskDisabled", true);
+		setInternalState(listener, "initDelayReconciler", testInitialDelay);
+		setInternalState(listener, "delayReconciler", testDelay);
+		setInternalState(listener, "initDelayMsgReconciler", testInitialDelay);
+		setInternalState(listener, "delayMsgReconciler", testDelay);
+		
+		listener.applicationStarted();
+		
+		Mockito.verify(mockSiteExecutor, never()).scheduleWithFixedDelay(any(SyncedMessageArchiver.class), anyLong(),
+		    anyLong(), any());
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 	}
 	
 }

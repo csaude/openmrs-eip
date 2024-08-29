@@ -45,9 +45,6 @@ public class SiteParentTaskTest {
 	private SyncResponseSender mockResponseSender;
 	
 	@Mock
-	private SyncedMessageArchiver mockArchiver;
-	
-	@Mock
 	private SyncedMessageDeleter mockDeleter;
 	
 	@Mock
@@ -80,7 +77,6 @@ public class SiteParentTaskTest {
 		Assert.assertNotNull(Whitebox.getInternalState(task, "evictor"));
 		Assert.assertNotNull(Whitebox.getInternalState(task, "updater"));
 		Assert.assertNotNull(Whitebox.getInternalState(task, "responseSender"));
-		Assert.assertNull(Whitebox.getInternalState(task, "archiver"));
 		Assert.assertNull(Whitebox.getInternalState(task, "deleter"));
 	}
 	
@@ -91,7 +87,6 @@ public class SiteParentTaskTest {
 		setInternalState(task, "evictor", mockEvictor);
 		setInternalState(task, "updater", mockUpdater);
 		setInternalState(task, "responseSender", mockResponseSender);
-		setInternalState(task, "archiver", mockArchiver);
 		setInternalState(task, "deleter", mockDeleter);
 		
 		task.doRun();
@@ -100,7 +95,6 @@ public class SiteParentTaskTest {
 		Mockito.verify(mockEvictor).run();
 		Mockito.verify(mockUpdater).run();
 		Mockito.verify(mockResponseSender).run();
-		Mockito.verify(mockArchiver).run();
 		Mockito.verify(mockDeleter).run();
 	}
 	
@@ -120,7 +114,6 @@ public class SiteParentTaskTest {
 		Mockito.verify(mockEvictor).run();
 		Mockito.verify(mockUpdater).run();
 		Mockito.verify(mockResponseSender).run();
-		Mockito.verifyNoInteractions(mockArchiver);
 		Mockito.verifyNoInteractions(mockDeleter);
 	}
 	

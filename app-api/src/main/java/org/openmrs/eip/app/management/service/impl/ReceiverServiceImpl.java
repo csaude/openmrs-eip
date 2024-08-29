@@ -10,7 +10,6 @@ import java.util.List;
 import org.apache.camel.ProducerTemplate;
 import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
-import org.openmrs.eip.app.management.entity.receiver.ReceiverPrunedItem;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverRetryQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncArchive;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncRequest;
@@ -116,31 +115,6 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 	
 	@Override
 	@Transactional(transactionManager = MGT_TX_MGR)
-	public void archiveSyncedMessage(SyncedMessage message) {
-		//TODO Check first if an archive with same message uuid does not exist yet
-		log.info("Moving message to the archives queue");
-		
-		ReceiverSyncArchive archive = new ReceiverSyncArchive(message);
-		archive.setDateCreated(new Date());
-		if (log.isDebugEnabled()) {
-			log.debug("Saving archive");
-		}
-		
-		archiveRepo.save(archive);
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Successfully saved archive, removing item from the synced queue");
-		}
-		
-		syncedMsgRepo.delete(message);
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Successfully removed item from the synced queue");
-		}
-	}
-	
-	@Override
-	@Transactional(transactionManager = MGT_TX_MGR)
 	public void archiveRetry(ReceiverRetryQueueItem retry) {
 		log.info("Archiving retry item with id: " + retry.getId());
 		
@@ -160,31 +134,6 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Successfully removed item removed from the retry queue");
-		}
-	}
-	
-	@Override
-	@Transactional(transactionManager = MGT_TX_MGR)
-	public void prune(ReceiverSyncArchive archive) {
-		if (log.isDebugEnabled()) {
-			log.debug("Pruning sync archive");
-		}
-		
-		ReceiverPrunedItem pruned = new ReceiverPrunedItem(archive);
-		if (log.isDebugEnabled()) {
-			log.debug("Saving pruned sync item");
-		}
-		
-		prunedRepo.save(pruned);
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Successfully saved pruned sync item, removing item from the archive queue");
-		}
-		
-		archiveRepo.delete(archive);
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Successfully removed item from the archive queue");
 		}
 	}
 	
