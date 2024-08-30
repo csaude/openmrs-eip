@@ -24,11 +24,11 @@ import jakarta.persistence.Table;
  */
 public abstract class BaseMovingTask<T extends AbstractEntity> extends BaseQueueTask<T> {
 	
-	protected static final Logger LOG = LoggerFactory.getLogger(BaseMovingTask.class);
+	private static final Logger LOG = LoggerFactory.getLogger(BaseMovingTask.class);
 	
 	private static final String PLACE_HOLDER_IDS = "IDS";
-
-    private static DataSource dataSource;
+	
+	private static DataSource dataSource;
 	
 	private String deleteQuery;
 	
@@ -56,8 +56,8 @@ public abstract class BaseMovingTask<T extends AbstractEntity> extends BaseQueue
 					insertStmt.addBatch();
 				}
 				
-				if (log.isDebugEnabled()) {
-					log.debug("Saving items in batch of {}", count);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Saving items in batch of {}", count);
 				}
 				
 				int[] rows = insertStmt.executeBatch();
@@ -65,8 +65,8 @@ public abstract class BaseMovingTask<T extends AbstractEntity> extends BaseQueue
 					throw new Exception("Expected " + count + " sync items to be inserted but was " + rows.length);
 				}
 				
-				if (log.isDebugEnabled()) {
-					log.debug("Removing items in batch of {}", count);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Removing items in batch of {}", count);
 				}
 				
 				final String delQuery = deleteQuery.replace(PLACE_HOLDER_IDS, StringUtils.join(ids, ","));

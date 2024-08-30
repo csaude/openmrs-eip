@@ -39,8 +39,6 @@ public class SiteParentTask extends BaseTask {
 	
 	private SyncResponseSender responseSender;
 	
-	private SyncedMessageArchiver archiver;
-	
 	private SyncedMessageDeleter deleter;
 	
 	@Getter
@@ -66,10 +64,6 @@ public class SiteParentTask extends BaseTask {
 			responseSender = new SyncResponseSender(siteInfo);
 		}
 		
-		if (!disabledTaskClasses.contains(SyncedMessageArchiver.class)) {
-			archiver = new SyncedMessageArchiver(siteInfo);
-		}
-		
 		if (!disabledTaskClasses.contains(SyncedMessageDeleter.class)) {
 			deleter = new SyncedMessageDeleter(siteInfo);
 		}
@@ -91,7 +85,6 @@ public class SiteParentTask extends BaseTask {
 		runTask(evictor, futures);
 		runTask(updater, futures);
 		runTask(responseSender, futures);
-		runTask(archiver, futures);
 		runTask(deleter, futures);
 		
 		AppUtils.waitForFutures(futures, ReceiverConstants.CHILD_TASK_NAME);

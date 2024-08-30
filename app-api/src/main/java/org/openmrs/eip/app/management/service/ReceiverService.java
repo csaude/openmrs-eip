@@ -8,7 +8,6 @@ import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverRetryQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncArchive;
 import org.openmrs.eip.app.management.entity.receiver.SyncMessage;
-import org.openmrs.eip.app.management.entity.receiver.SyncedMessage;
 import org.openmrs.eip.app.management.entity.receiver.SyncedMessage.SyncOutcome;
 import org.openmrs.eip.component.management.hash.entity.BaseHashEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +24,6 @@ public interface ReceiverService extends Service {
 	 * @param outcome {@link SyncOutcome}
 	 */
 	void moveToSyncedQueue(SyncMessage message, SyncOutcome outcome);
-	
-	/**
-	 * Moves the specified {@link SyncedMessage} to the archive queue
-	 *
-	 * @param message the message to archive
-	 */
-	void archiveSyncedMessage(SyncedMessage message);
 	
 	/**
 	 * Moves the specified {@link ReceiverRetryQueueItem} to the archive queue

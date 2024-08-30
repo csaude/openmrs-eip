@@ -162,25 +162,6 @@ public class ReceiverServiceTest extends BaseReceiverTest {
 	
 	@Test
 	@Sql(scripts = { "classpath:mgt_site_info.sql",
-	        "classpath:mgt_receiver_synced_msg.sql" }, config = @SqlConfig(dataSource = MGT_DATASOURCE_NAME, transactionManager = MGT_TX_MGR))
-	public void archiveSyncedMessage_shouldMoveTheSyncedMessageToTheArchiveQueue() {
-		final Long id = 1L;
-		SyncedMessage msg = syncedMsgRepo.findById(id).get();
-		assertEquals(0, archiveRepo.count());
-		long timestamp = System.currentTimeMillis();
-		
-		service.archiveSyncedMessage(msg);
-		
-		assertFalse(syncedMsgRepo.findById(id).isPresent());
-		List<ReceiverSyncArchive> archives = archiveRepo.findAll();
-		assertEquals(1, archives.size());
-		ReceiverSyncArchive a = archives.get(0);
-		assertEquals(msg.getMessageUuid(), a.getMessageUuid());
-		assertTrue(a.getDateCreated().getTime() == timestamp || a.getDateCreated().getTime() > timestamp);
-	}
-	
-	@Test
-	@Sql(scripts = { "classpath:mgt_site_info.sql",
 	        "classpath:mgt_receiver_retry_queue.sql" }, config = @SqlConfig(dataSource = MGT_DATASOURCE_NAME, transactionManager = MGT_TX_MGR))
 	public void archiveRetry_shouldMoveTheSyncedMessageToTheArchiveQueue() {
 		final Long id = 1L;

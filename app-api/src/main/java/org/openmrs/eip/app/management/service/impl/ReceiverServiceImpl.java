@@ -122,33 +122,6 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 	
 	@Override
 	@Transactional(transactionManager = MGT_TX_MGR)
-	public void archiveSyncedMessage(SyncedMessage message) {
-		//TODO Check first if an archive with same message uuid does not exist yet
-		if (log.isDebugEnabled()) {
-			log.debug("Moving message to the archives queue");
-		}
-		
-		ReceiverSyncArchive archive = new ReceiverSyncArchive(message);
-		archive.setDateCreated(new Date());
-		if (log.isDebugEnabled()) {
-			log.debug("Saving archive");
-		}
-		
-		archiveRepo.save(archive);
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Successfully saved archive, removing item from the synced queue");
-		}
-		
-		syncedMsgRepo.delete(message);
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Successfully removed item from the synced queue");
-		}
-	}
-	
-	@Override
-	@Transactional(transactionManager = MGT_TX_MGR)
 	public void archiveRetry(ReceiverRetryQueueItem retry) {
 		if (log.isDebugEnabled()) {
 			log.debug("Archiving retry item");

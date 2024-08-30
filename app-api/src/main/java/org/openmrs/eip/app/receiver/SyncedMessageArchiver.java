@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SyncedMessageArchiver extends BaseMovingTask<SyncedMessage> {
 	
-	protected static final Logger log = LoggerFactory.getLogger(SyncedMessageArchiver.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SyncedMessageArchiver.class);
 	
 	protected static final String ARCHIVE_INSERT = "INSERT INTO receiver_sync_archive (model_class_name,identifier,"
 	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created,"
@@ -37,8 +37,8 @@ public class SyncedMessageArchiver extends BaseMovingTask<SyncedMessage> {
 	
 	@Override
 	public List<SyncedMessage> getNextBatch() {
-		if (log.isTraceEnabled()) {
-			log.trace("Fetching next batch of " + AppUtils.getTaskPage().getPageSize() + " synced items to archive");
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("Fetching next batch of " + AppUtils.getTaskPage().getPageSize() + " synced items to archive");
 		}
 		
 		return syncedMsgRepo.getBatchOfMessagesForArchiving(AppUtils.getTaskPage());
