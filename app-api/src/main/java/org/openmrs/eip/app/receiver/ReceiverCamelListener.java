@@ -14,9 +14,12 @@ import static org.openmrs.eip.app.SyncConstants.PROP_INITIAL_DELAY_RECONCILER;
 import static org.openmrs.eip.app.SyncConstants.PROP_INITIAL_DELAY_RETRY_TASK;
 import static org.openmrs.eip.app.SyncConstants.PROP_PRUNER_ENABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.BEAN_NAME_SITE_EXECUTOR;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_ARCHIVE_DISABLED;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DELAY_ARCHIVE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DELAY_JMS_MSG_TASK;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DISABLED_SITES;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_ENABLED_SITES;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_INITIAL_DELAY_ARCHIVE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_INITIAL_DELAY_JMS_MSG_TASK;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_JMS_TASK_DISABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SITE_DISABLED_TASKS;
@@ -125,6 +128,15 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	
 	@Value("${" + ReceiverConstants.PROP_FULL_INDEXER_CRON + ":-}")
 	private String fullIndexerCron;
+	
+	@Value("${" + PROP_ARCHIVE_DISABLED + ":false}")
+	private boolean archiveTaskDisabled;
+	
+	@Value("${" + PROP_INITIAL_DELAY_ARCHIVE + ":60000}")
+	private long initialDelayArchiveTask;
+	
+	@Value("${" + PROP_DELAY_ARCHIVE + ":" + DEFAULT_DELAY + "}")
+	private long delayArchiveTask;
 	
 	private static List<SiteParentTask> siteTasks;
 	
@@ -243,6 +255,11 @@ public class ReceiverCamelListener extends BaseCamelListener {
 		siteExecutor.scheduleWithFixedDelay(recTask, initDelayReconciler, delayReconciler, MILLISECONDS);
 		ReceiverReconcileMsgTask recMsgTask = new ReceiverReconcileMsgTask();
 		siteExecutor.scheduleWithFixedDelay(recMsgTask, initDelayMsgReconciler, delayMsgReconciler, MILLISECONDS);
+		if (!archiveTaskDisabled) {
+			log.info("Starting Archive task...");
+			SyncedMessageArchiver archiver = new SyncedMessageArchiver();
+			siteExecutor.scheduleWithFixedDelay(archiver, initialDelayArchiveTask, delayArchiveTask, MILLISECONDS);
+		}
 	}
 	
 	private void startPrunerTask() {
