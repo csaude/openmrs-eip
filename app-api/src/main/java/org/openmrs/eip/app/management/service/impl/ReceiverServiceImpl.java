@@ -10,7 +10,6 @@ import java.util.List;
 import org.openmrs.eip.HashUtils;
 import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
-import org.openmrs.eip.app.management.entity.receiver.ReceiverPrunedItem;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverRetryQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncArchive;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncRequest;
@@ -143,31 +142,6 @@ public class ReceiverServiceImpl extends BaseService implements ReceiverService 
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Successfully removed item removed from the retry queue");
-		}
-	}
-	
-	@Override
-	@Transactional(transactionManager = MGT_TX_MGR)
-	public void prune(ReceiverSyncArchive archive) {
-		if (log.isDebugEnabled()) {
-			log.debug("Pruning sync archive");
-		}
-		
-		ReceiverPrunedItem pruned = new ReceiverPrunedItem(archive);
-		if (log.isDebugEnabled()) {
-			log.debug("Saving pruned sync item");
-		}
-		
-		prunedRepo.save(pruned);
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Successfully saved pruned sync item, removing item from the archive queue");
-		}
-		
-		archiveRepo.delete(archive);
-		
-		if (log.isDebugEnabled()) {
-			log.debug("Successfully removed item from the archive queue");
 		}
 	}
 	

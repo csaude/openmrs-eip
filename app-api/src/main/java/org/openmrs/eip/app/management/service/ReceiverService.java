@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
 import org.openmrs.eip.app.management.entity.receiver.ReceiverRetryQueueItem;
-import org.openmrs.eip.app.management.entity.receiver.ReceiverSyncArchive;
 import org.openmrs.eip.app.management.entity.receiver.SyncMessage;
 import org.openmrs.eip.app.management.entity.receiver.SyncedMessage.SyncOutcome;
 import org.openmrs.eip.component.management.hash.entity.BaseHashEntity;
@@ -31,13 +30,6 @@ public interface ReceiverService extends Service {
 	 * @param retry the retry to archive
 	 */
 	void archiveRetry(ReceiverRetryQueueItem retry);
-	
-	/**
-	 * Prunes the specified sync archive i.e. moves it from the archive queue to the pruned queue
-	 * 
-	 * @param archive the archive to prune
-	 */
-	void prune(ReceiverSyncArchive archive);
 	
 	/**
 	 * Updates the entity hash to match the current state in the database
