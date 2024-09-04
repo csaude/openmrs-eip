@@ -107,7 +107,7 @@ public class ReceiverArchivePruningTaskTest {
 		archive.setDateReceived(dateReceived);
 		archive.setOperation(SyncOperation.u);
 		archive.setSyncVersion(version);
-        task = new ReceiverArchivePruningTask(0);
+		task = new ReceiverArchivePruningTask(0);
 		
 		task.addItem(mockStatement, archive);
 		
