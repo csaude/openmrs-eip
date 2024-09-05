@@ -92,7 +92,6 @@ public class ReceiverArchivePruningTaskTest {
 		final String msgUuid = "msg-uuid";
 		final LocalDateTime dateSent = LocalDateTime.now();
 		final Date dateReceived = new Date();
-		final String version = "1.0";
 		ReceiverSyncArchive archive = new ReceiverSyncArchive();
 		archive.setDateCreated(new Date());
 		archive.setModelClassName(modelClass);

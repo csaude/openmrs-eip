@@ -66,7 +66,6 @@ public class SyncedMessageArchiverTest {
 		final String msgUuid = "msg-uuid";
 		final LocalDateTime dateSent = LocalDateTime.now();
 		final Date dateReceived = new Date();
-		final String version = "1.0";
 		SyncedMessage msg = new SyncedMessage();
 		msg.setDateCreated(new Date());
 		msg.setModelClassName(modelClass);
