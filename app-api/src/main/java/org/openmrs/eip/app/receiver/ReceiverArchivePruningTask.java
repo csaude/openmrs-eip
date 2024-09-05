@@ -24,7 +24,7 @@ public class ReceiverArchivePruningTask extends BaseMovingTask<ReceiverSyncArchi
 	
 	protected static final String PRUNE_INSERT = "INSERT INTO receiver_pruned_item (model_class_name,identifier,"
 	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created,"
-	        + "date_received,sync_version) VALUES (?,?,?,?,?,?,?,?,now(),?,?)";
+	        + "date_received) VALUES (?,?,?,?,?,?,?,?,now(),?)";
 	
 	private ReceiverSyncArchiveRepository repo;
 	

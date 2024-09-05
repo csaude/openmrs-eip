@@ -119,7 +119,6 @@ public class ReceiverArchivePruningTaskTest {
 		Mockito.verify(mockStatement).setObject(7, dateSent);
 		Mockito.verify(mockStatement).setString(8, SyncOperation.u.name());
 		Mockito.verify(mockStatement).setObject(9, dateReceived);
-		Mockito.verify(mockStatement).setString(10, version);
 	}
 	
 }
