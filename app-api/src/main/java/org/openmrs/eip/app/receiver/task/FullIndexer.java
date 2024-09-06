@@ -49,7 +49,7 @@ public class FullIndexer {
 		if (log.isDebugEnabled()) {
 			log.debug("Clearing DB cache in OpenMRS instance");
 		}
-		client.sendRequest(HttpRequestProcessor.CACHE_RESOURCE, null);
+		client.sendRequest(HttpRequestProcessor.CACHE_RESOURCE, "");
 		
 		if (log.isDebugEnabled()) {
 			log.debug("Starting search index rebuild in OpenMRS instance");
