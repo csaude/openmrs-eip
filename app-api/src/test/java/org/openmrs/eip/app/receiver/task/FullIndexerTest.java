@@ -38,7 +38,7 @@ public class FullIndexerTest {
 		
 		indexer.start();
 		
-		Mockito.verify(mockClient).sendRequest(HttpRequestProcessor.CACHE_RESOURCE, null);
+		Mockito.verify(mockClient).sendRequest(HttpRequestProcessor.CACHE_RESOURCE, "");
 		Mockito.verify(mockClient).sendRequest(HttpRequestProcessor.INDEX_RESOURCE, "{\"async\":true}");
 		Mockito.verify(mockService).markAsEvictedFromCache(maxId);
 		Mockito.verify(mockService).markAsReIndexed(maxId);
