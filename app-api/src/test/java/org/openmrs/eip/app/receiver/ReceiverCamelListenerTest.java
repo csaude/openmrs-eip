@@ -47,6 +47,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Example;
+import org.springframework.jms.listener.MessageListenerContainer;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SyncContext.class, ReceiverContext.class, AppUtils.class, ReceiverUtils.class })
@@ -72,6 +73,9 @@ public class ReceiverCamelListenerTest {
 	private ThreadPoolExecutor mockSyncExecutor;
 	
 	@Mock
+	private MessageListenerContainer mockMsgListener;
+	
+	@Mock
 	private ReceiverRetryTask mockRetryTask;
 	
 	private ReceiverCamelListener listener;
@@ -94,6 +98,7 @@ public class ReceiverCamelListenerTest {
 		when(mockUserRepo.findOne(any(Example.class))).thenReturn(Optional.of(testAppUser));
 		when(SyncContext.getBean(UserLightRepository.class)).thenReturn(mockUserLightRepo);
 		when(mockUserLightRepo.findById(TEST_OPENMRS_USER_ID)).thenReturn(Optional.of(new UserLight()));
+		when(SyncContext.getBean(MessageListenerContainer.class)).thenReturn(mockMsgListener);
 		listener = new ReceiverCamelListener(mockSiteExecutor, mockSyncExecutor);
 		setInternalState(BaseSiteRunnable.class, "initialized", true);
 		setInternalState(BaseReceiverSyncPrioritizingTask.class, "initialized", true);
@@ -159,6 +164,7 @@ public class ReceiverCamelListenerTest {
 		    eq(TimeUnit.MILLISECONDS));
 		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(5), "evictor"));
 		Assert.assertNotNull(Whitebox.getInternalState(captor.getAllValues().get(5), "updater"));
+		Mockito.verify(mockMsgListener).start();
 	}
 	
 	@Test
@@ -313,6 +319,15 @@ public class ReceiverCamelListenerTest {
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileMsgTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+	}
+	
+	@Test
+	public void applicationStarted_shouldNotStartMessageListenerIfDisabled() {
+		setInternalState(listener, "msgListenerDisabled", true);
+		
+		listener.applicationStarted();
+		
+		Mockito.verifyNoInteractions(mockMsgListener);
 	}
 	
 }
