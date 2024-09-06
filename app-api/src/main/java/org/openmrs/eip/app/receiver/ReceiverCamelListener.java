@@ -21,6 +21,7 @@ import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_DISABLED_SITES
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_ENABLED_SITES;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_INITIAL_DELAY_ARCHIVE;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_INITIAL_DELAY_JMS_MSG_TASK;
+import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_JMS_LISTENER_DISABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_JMS_TASK_DISABLED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SITE_DISABLED_TASKS;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.PROP_SITE_TASK_DELAY;
@@ -56,6 +57,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -140,6 +142,9 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	
 	private static List<SiteParentTask> siteTasks;
 	
+	@Value("${" + PROP_JMS_LISTENER_DISABLED + ":false}")
+	private boolean msgListenerDisabled;
+	
 	public ReceiverCamelListener(@Qualifier(BEAN_NAME_SITE_EXECUTOR) ScheduledThreadPoolExecutor siteExecutor,
 	    @Qualifier(BEAN_NAME_SYNC_EXECUTOR) ThreadPoolExecutor syncExecutor) {
 		super(syncExecutor);
@@ -214,6 +219,11 @@ public class ReceiverCamelListener extends BaseCamelListener {
 			log.info("Pruning sync archives older than " + archivesMaxAgeInDays + " days");
 			
 			startPrunerTask();
+		}
+		
+		if (!msgListenerDisabled) {
+			log.info("Starting JMS message listener");
+			SyncContext.getBean(MessageListenerContainer.class).start();
 		}
 	}
 	
