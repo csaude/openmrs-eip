@@ -99,6 +99,7 @@ public class ReceiverCamelListenerTest {
 		when(SyncContext.getBean(UserLightRepository.class)).thenReturn(mockUserLightRepo);
 		when(mockUserLightRepo.findById(TEST_OPENMRS_USER_ID)).thenReturn(Optional.of(new UserLight()));
 		when(SyncContext.getBean(MessageListenerContainer.class)).thenReturn(mockMsgListener);
+		when(SyncContext.getBean(ReceiverRetryTask.class)).thenReturn(mockRetryTask);
 		listener = new ReceiverCamelListener(mockSiteExecutor, mockSyncExecutor);
 		setInternalState(BaseSiteRunnable.class, "initialized", true);
 		setInternalState(BaseReceiverSyncPrioritizingTask.class, "initialized", true);
@@ -150,6 +151,8 @@ public class ReceiverCamelListenerTest {
 		listener.applicationStarted();
 		
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(SiteParentTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverRetryTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverJmsMessageTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
