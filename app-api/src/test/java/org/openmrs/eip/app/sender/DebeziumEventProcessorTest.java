@@ -24,7 +24,7 @@ public class DebeziumEventProcessorTest {
 	@Before
 	public void setup() {
 		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
-		processor = new DebeziumEventProcessor(null, null);
+		processor = new DebeziumEventProcessor(null, null, null);
 	}
 	
 	@After
