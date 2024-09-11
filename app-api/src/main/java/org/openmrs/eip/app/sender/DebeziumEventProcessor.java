@@ -1,6 +1,7 @@
 package org.openmrs.eip.app.sender;
 
 import static org.openmrs.eip.app.SyncConstants.BEAN_NAME_SYNC_EXECUTOR;
+import static org.openmrs.eip.component.SyncOperation.d;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -13,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.openmrs.eip.app.BaseFromCamelToCamelEndpointProcessor;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
 import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
-import org.openmrs.eip.component.SyncOperation;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
@@ -76,30 +76,28 @@ public class DebeziumEventProcessor extends BaseFromCamelToCamelEndpointProcesso
 		//Squash events for the same row so that exactly one message is processed in case of multiple in this run in.
 		//Delete being a terminal event, squash for a single entity will stop at the last event before a delete event
 		//to ensure we don't re-process a non-existent entity
-		Map<String, DebeziumEvent> keyAndEarliestMsgMap = new LinkedHashMap(items.size());
+		Map<String, DebeziumEvent> keyAndLatestMap = new LinkedHashMap(items.size());
 		List<DebeziumEvent> squashedEvents = new ArrayList();
 		items.stream().forEach(dbzmEvent -> {
 			String table = dbzmEvent.getEvent().getTableName();
 			String key = table + "#" + dbzmEvent.getEvent().getPrimaryKeyId();
-			if (!keyAndEarliestMsgMap.containsKey(key)) {
-				keyAndEarliestMsgMap.put(key, dbzmEvent);
+			if (keyAndLatestMap.containsKey(key) && d.name().equals(dbzmEvent.getEvent().getOperation())) {
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("Squashing stopped for {}, postponing processing of delete event: {}", key, dbzmEvent);
+				}
 			} else {
-				if (dbzmEvent.getEvent().getOperation() != SyncOperation.d.name()) {
-					squashedEvents.add(dbzmEvent);
+				DebeziumEvent previousEvent = keyAndLatestMap.put(key, dbzmEvent);
+				if (previousEvent != null) {
+					squashedEvents.add(previousEvent);
 					
 					if (LOG.isTraceEnabled()) {
-						LOG.trace("Squashing entity event -> " + dbzmEvent);
-					}
-				} else {
-					if (LOG.isTraceEnabled()) {
-						LOG.trace(
-						    "Squashing stopped for " + key + ", postponing processing of delete event -> " + dbzmEvent);
+						LOG.trace("Squashing entity event: {}", previousEvent);
 					}
 				}
 			}
 		});
 		
-		doProcessWork(keyAndEarliestMsgMap.values().stream().toList());
+		doProcessWork(keyAndLatestMap.values().stream().toList());
 		repo.deleteAll(squashedEvents);
 	}
 	

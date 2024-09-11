@@ -1,19 +1,35 @@
 package org.openmrs.eip.app.sender;
 
+import static org.apache.commons.collections.CollectionUtils.isEqualCollection;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.powermock.reflect.Whitebox.setInternalState;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.DebeziumEvent;
+import org.openmrs.eip.app.management.repository.DebeziumEventRepository;
+import org.openmrs.eip.component.SyncOperation;
 import org.openmrs.eip.component.entity.Event;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+@RunWith(PowerMockRunner.class)
 public class DebeziumEventProcessorTest {
 	
 	private DebeziumEventProcessor processor;
+	
+	@Mock
+	private DebeziumEventRepository mockRepo;
 	
 	private DebeziumEvent createEvent() {
 		DebeziumEvent de = new DebeziumEvent();
@@ -24,7 +40,7 @@ public class DebeziumEventProcessorTest {
 	@Before
 	public void setup() {
 		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
-		processor = new DebeziumEventProcessor(null, null, null);
+		processor = new DebeziumEventProcessor(null, null, mockRepo);
 	}
 	
 	@After
@@ -89,6 +105,57 @@ public class DebeziumEventProcessorTest {
 	@Test
 	public void getQueueName_shouldReturnTheQueueName() {
 		assertEquals("db-event", processor.getQueueName());
+	}
+	
+	@Test
+	public void processWork_shouldSquashEventsForTheSameRowAndSendOnlyTheMostRecent() throws Exception {
+		final String pk1 = "1";
+		final String personTable = "person";
+		Event event = new Event();
+		event.setTableName(personTable);
+		event.setPrimaryKeyId(pk1);
+		DebeziumEvent e1 = new DebeziumEvent();
+		e1.setId(1L);
+		e1.setEvent(event);
+		DebeziumEvent e2 = new DebeziumEvent();
+		e2.setId(2L);
+		e2.setEvent(event);
+		
+		final String pk2 = "2";
+		event = new Event();
+		event.setTableName(personTable);
+		event.setPrimaryKeyId(pk2);
+		DebeziumEvent e3 = new DebeziumEvent();
+		e3.setId(3L);
+		e3.setEvent(event);
+		DebeziumEvent e4 = new DebeziumEvent();
+		e4.setId(4L);
+		e4.setEvent(event);
+		DebeziumEvent e5 = new DebeziumEvent();
+		e5.setId(5L);
+		e5.setEvent(event);
+		event = new Event();
+		event.setTableName(personTable);
+		event.setPrimaryKeyId(pk2);
+		event.setOperation(SyncOperation.d.name());
+		DebeziumEvent e6 = new DebeziumEvent();
+		e6.setId(6L);
+		e6.setEvent(event);
+		
+		processor = Mockito.spy(processor);
+		List<DebeziumEvent> events = List.of(e1, e2, e3, e4, e5, e6);
+		List<DebeziumEvent> processedEvents = new ArrayList();
+		Mockito.doAnswer(invocation -> {
+			List<DebeziumEvent> eventList = invocation.getArgument(0);
+			processedEvents.addAll(eventList);
+			return null;
+		}).when(processor).doProcessWork(anyList());
+		
+		processor.processWork(events);
+		
+		Mockito.verify(processor).doProcessWork(processedEvents);
+		assertTrue(isEqualCollection(List.of(e2, e5), processedEvents));
+		Mockito.verify(mockRepo).deleteAll(List.of(e1, e3, e4));
 	}
 	
 }
