@@ -75,7 +75,7 @@ public class DebeziumEventProcessor extends BaseFromCamelToCamelEndpointProcesso
 	public void processWork(List<DebeziumEvent> items) throws Exception {
 		//Squash events for the same row so that exactly one message is processed in case of multiple in this run in.
 		//Delete being a terminal event, squash for a single entity will stop at the last event before a delete event
-		//to ensure we don't re-process a non-existent entity
+		//to ensure we don't re-process a non-existent row
 		Map<String, DebeziumEvent> keyAndLatestMap = new LinkedHashMap(items.size());
 		List<DebeziumEvent> squashedEvents = new ArrayList();
 		items.stream().forEach(dbzmEvent -> {

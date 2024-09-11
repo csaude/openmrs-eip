@@ -1,9 +1,13 @@
 package org.openmrs.eip.app.sender;
 
 import static org.openmrs.eip.app.SyncConstants.BEAN_NAME_SYNC_EXECUTOR;
+import static org.openmrs.eip.component.SyncOperation.d;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.openmrs.eip.app.AppUtils;
@@ -79,6 +83,36 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 	}
 	
 	@Override
+	public void processWork(List<SenderSyncMessage> items) throws Exception {
+		//Squash events for the same row so that exactly one message is processed in case of multiple in this run in.
+		//Delete being a terminal event, squash for a single entity will stop at the last event before a delete event
+		//to ensure we don't re-process a non-existent row
+		Map<String, SenderSyncMessage> keyAndLatestMap = new LinkedHashMap(items.size());
+		List<SenderSyncMessage> squashedMsgs = new ArrayList();
+		items.stream().forEach(msg -> {
+			String table = msg.getTableName();
+			String key = table + "#" + msg.getIdentifier();
+			if (keyAndLatestMap.containsKey(key) && d.name().equals(msg.getOperation())) {
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("Squashing stopped for {}, postponing processing of delete event: {}", key, msg);
+				}
+			} else {
+				SenderSyncMessage previousMsg = keyAndLatestMap.put(key, msg);
+				if (previousMsg != null) {
+					squashedMsgs.add(previousMsg);
+					
+					if (LOG.isTraceEnabled()) {
+						LOG.trace("Squashing entity event: {}", previousMsg);
+					}
+				}
+			}
+		});
+		
+		doProcessWork(keyAndLatestMap.values().stream().toList());
+		repo.deleteAll(squashedMsgs);
+	}
+	
+	@Override
 	public void processItem(SenderSyncMessage syncMsg) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Preparing sync payload to send");
@@ -122,6 +156,10 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 		if (!batchDisabled) {
 			batchManager.send(true);
 		}
+	}
+	
+	protected void doProcessWork(List<SenderSyncMessage> items) throws Exception {
+		super.processWork(items);
 	}
 	
 }
