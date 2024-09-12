@@ -1,8 +1,6 @@
 package org.openmrs.eip.app.sender;
 
-import static org.apache.commons.collections.CollectionUtils.isEqualCollection;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
@@ -120,6 +118,12 @@ public class DebeziumEventProcessorTest {
 		DebeziumEvent e2 = new DebeziumEvent();
 		e2.setId(2L);
 		e2.setEvent(event);
+		DebeziumEvent e2b = new DebeziumEvent();
+		e2b.setId(20L);
+		event = new Event();
+		event.setTableName("patient");
+		event.setPrimaryKeyId(pk1);
+		e2b.setEvent(event);
 		
 		final String pk2 = "2";
 		event = new Event();
@@ -143,7 +147,7 @@ public class DebeziumEventProcessorTest {
 		e6.setEvent(event);
 		
 		processor = Mockito.spy(processor);
-		List<DebeziumEvent> events = List.of(e1, e2, e3, e4, e5, e6);
+		List<DebeziumEvent> events = List.of(e1, e2b, e2, e3, e4, e5, e6);
 		List<DebeziumEvent> processedEvents = new ArrayList();
 		Mockito.doAnswer(invocation -> {
 			List<DebeziumEvent> eventList = invocation.getArgument(0);
@@ -154,7 +158,10 @@ public class DebeziumEventProcessorTest {
 		processor.processWork(events);
 		
 		Mockito.verify(processor).doProcessWork(processedEvents);
-		assertTrue(isEqualCollection(List.of(e2, e5), processedEvents));
+		assertEquals(3, processedEvents.size());
+		assertEquals(20l, processedEvents.get(0).getId().longValue());
+		assertEquals(2l, processedEvents.get(1).getId().longValue());
+		assertEquals(5l, processedEvents.get(2).getId().longValue());
 		Mockito.verify(mockRepo).deleteAll(List.of(e1, e3, e4));
 	}
 	

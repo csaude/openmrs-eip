@@ -92,19 +92,26 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 		items.stream().forEach(msg -> {
 			String table = msg.getTableName();
 			String key = table + "#" + msg.getIdentifier();
-			if (keyAndLatestMap.containsKey(key) && d.name().equals(msg.getOperation())) {
+			SenderSyncMessage previousMsg = keyAndLatestMap.get(key);
+			if (previousMsg != null && d.name().equals(msg.getOperation())) {
 				if (LOG.isTraceEnabled()) {
 					LOG.trace("Squashing stopped for {}, postponing processing of delete event: {}", key, msg);
 				}
 			} else {
-				SenderSyncMessage previousMsg = keyAndLatestMap.put(key, msg);
 				if (previousMsg != null) {
+					//We intentionally remove and add instead of using Map.put which updates the existing value because
+					//we need to preserve the order of item in the original list which ensures that later events for an
+					//entity in a subclass table like patient are processed after any other earlier events for the same
+					//entity from the parent table like person.
 					squashedMsgs.add(previousMsg);
+					keyAndLatestMap.remove(key);
 					
 					if (LOG.isTraceEnabled()) {
 						LOG.trace("Squashing entity event: {}", previousMsg);
 					}
 				}
+				
+				keyAndLatestMap.put(key, msg);
 			}
 		});
 		

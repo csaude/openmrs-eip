@@ -1,8 +1,6 @@
 package org.openmrs.eip.app.sender;
 
-import static org.apache.commons.collections.CollectionUtils.isEqualCollection;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -143,6 +141,10 @@ public class SenderSyncMessageProcessorMockTest {
 		msg2.setId(2L);
 		msg2.setTableName(personTable);
 		msg2.setIdentifier(uuid1);
+		SenderSyncMessage msg2b = new SenderSyncMessage();
+		msg2b.setId(20L);
+		msg2b.setTableName("patient");
+		msg2b.setIdentifier(uuid1);
 		
 		final String uuid2 = "uuid-2";
 		SenderSyncMessage msg3 = new SenderSyncMessage();
@@ -164,18 +166,21 @@ public class SenderSyncMessageProcessorMockTest {
 		msg6.setOperation(SyncOperation.d.name());
 		
 		processor = Mockito.spy(processor);
-		List<SenderSyncMessage> events = List.of(msg1, msg2, msg3, msg4, msg5, msg6);
-		List<SenderSyncMessage> processedEvents = new ArrayList();
+		List<SenderSyncMessage> events = List.of(msg1, msg2b, msg2, msg3, msg4, msg5, msg6);
+		List<SenderSyncMessage> processedMsgs = new ArrayList();
 		Mockito.doAnswer(invocation -> {
 			List<SenderSyncMessage> eventList = invocation.getArgument(0);
-			processedEvents.addAll(eventList);
+			processedMsgs.addAll(eventList);
 			return null;
 		}).when(processor).doProcessWork(anyList());
 		
 		processor.processWork(events);
 		
-		Mockito.verify(processor).doProcessWork(processedEvents);
-		assertTrue(isEqualCollection(List.of(msg2, msg5), processedEvents));
+		Mockito.verify(processor).doProcessWork(processedMsgs);
+		assertEquals(3, processedMsgs.size());
+		assertEquals(20l, processedMsgs.get(0).getId().longValue());
+		assertEquals(2l, processedMsgs.get(1).getId().longValue());
+		assertEquals(5l, processedMsgs.get(2).getId().longValue());
 		Mockito.verify(mockRepo).deleteAll(List.of(msg1, msg3, msg4));
 	}
 	
