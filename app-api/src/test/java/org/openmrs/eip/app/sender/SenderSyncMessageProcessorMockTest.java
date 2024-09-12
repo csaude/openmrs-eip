@@ -1,17 +1,26 @@
 package org.openmrs.eip.app.sender;
 
+import static org.apache.commons.collections.CollectionUtils.isEqualCollection;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.powermock.reflect.Whitebox.setInternalState;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.SenderSyncMessage;
+import org.openmrs.eip.app.management.repository.SenderSyncMessageRepository;
+import org.openmrs.eip.component.SyncOperation;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 import org.springframework.jms.core.JmsTemplate;
@@ -27,6 +36,9 @@ public class SenderSyncMessageProcessorMockTest {
 	private SenderSyncBatchManager mockBatchManager;
 	
 	@Mock
+	private SenderSyncMessageRepository mockRepo;
+	
+	@Mock
 	private JmsTemplate mockTemplate;
 	
 	private boolean originalBatchDisabled;
@@ -36,7 +48,7 @@ public class SenderSyncMessageProcessorMockTest {
 	@Before
 	public void setup() {
 		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
-		processor = new SenderSyncMessageProcessor(null, mockTemplate, null, mockBatchManager);
+		processor = new SenderSyncMessageProcessor(null, mockTemplate, mockRepo, mockBatchManager);
 		originalSiteId = Whitebox.getInternalState(processor, "senderId");
 		originalBatchDisabled = Whitebox.getInternalState(processor, "batchDisabled");
 		Whitebox.setInternalState(processor, "senderId", SITE_ID);
@@ -117,6 +129,54 @@ public class SenderSyncMessageProcessorMockTest {
 		
 		verify(mockBatchManager).add(msg);
 		verifyNoInteractions(mockTemplate);
+	}
+	
+	@Test
+	public void processWork_shouldSquashEventsForTheSameRowAndSendOnlyTheMostRecent() throws Exception {
+		final String uuid1 = "uuid-1";
+		final String personTable = "person";
+		SenderSyncMessage msg1 = new SenderSyncMessage();
+		msg1.setId(1L);
+		msg1.setTableName(personTable);
+		msg1.setIdentifier(uuid1);
+		SenderSyncMessage msg2 = new SenderSyncMessage();
+		msg2.setId(2L);
+		msg2.setTableName(personTable);
+		msg2.setIdentifier(uuid1);
+		
+		final String uuid2 = "uuid-2";
+		SenderSyncMessage msg3 = new SenderSyncMessage();
+		msg3.setId(3L);
+		msg3.setTableName(personTable);
+		msg3.setIdentifier(uuid2);
+		SenderSyncMessage msg4 = new SenderSyncMessage();
+		msg4.setId(4L);
+		msg4.setTableName(personTable);
+		msg4.setIdentifier(uuid2);
+		SenderSyncMessage msg5 = new SenderSyncMessage();
+		msg5.setId(5L);
+		msg5.setTableName(personTable);
+		msg5.setIdentifier(uuid2);
+		SenderSyncMessage msg6 = new SenderSyncMessage();
+		msg6.setId(6L);
+		msg6.setTableName(personTable);
+		msg6.setIdentifier(uuid2);
+		msg6.setOperation(SyncOperation.d.name());
+		
+		processor = Mockito.spy(processor);
+		List<SenderSyncMessage> events = List.of(msg1, msg2, msg3, msg4, msg5, msg6);
+		List<SenderSyncMessage> processedEvents = new ArrayList();
+		Mockito.doAnswer(invocation -> {
+			List<SenderSyncMessage> eventList = invocation.getArgument(0);
+			processedEvents.addAll(eventList);
+			return null;
+		}).when(processor).doProcessWork(anyList());
+		
+		processor.processWork(events);
+		
+		Mockito.verify(processor).doProcessWork(processedEvents);
+		assertTrue(isEqualCollection(List.of(msg2, msg5), processedEvents));
+		Mockito.verify(mockRepo).deleteAll(List.of(msg1, msg3, msg4));
 	}
 	
 }
