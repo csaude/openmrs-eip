@@ -162,7 +162,7 @@ public class DebeziumEventProcessorTest {
 		assertEquals(20l, processedEvents.get(0).getId().longValue());
 		assertEquals(2l, processedEvents.get(1).getId().longValue());
 		assertEquals(5l, processedEvents.get(2).getId().longValue());
-		Mockito.verify(mockRepo).deleteAll(List.of(e1, e3, e4));
+		Mockito.verify(mockRepo).deleteAllInBatch(List.of(e1, e3, e4));
 	}
 	
 }

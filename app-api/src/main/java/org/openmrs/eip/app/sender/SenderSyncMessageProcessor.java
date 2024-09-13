@@ -116,7 +116,7 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 		});
 		
 		doProcessWork(keyAndLatestMap.values().stream().toList());
-		repo.deleteAll(squashedMsgs);
+		repo.deleteAllInBatch(squashedMsgs);
 	}
 	
 	@Override

@@ -181,7 +181,7 @@ public class SenderSyncMessageProcessorMockTest {
 		assertEquals(20l, processedMsgs.get(0).getId().longValue());
 		assertEquals(2l, processedMsgs.get(1).getId().longValue());
 		assertEquals(5l, processedMsgs.get(2).getId().longValue());
-		Mockito.verify(mockRepo).deleteAll(List.of(msg1, msg3, msg4));
+		Mockito.verify(mockRepo).deleteAllInBatch(List.of(msg1, msg3, msg4));
 	}
 	
 }

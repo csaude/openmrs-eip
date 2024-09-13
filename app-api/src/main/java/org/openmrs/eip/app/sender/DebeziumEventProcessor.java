@@ -105,7 +105,7 @@ public class DebeziumEventProcessor extends BaseFromCamelToCamelEndpointProcesso
 		});
 		
 		doProcessWork(keyAndLatestMap.values().stream().toList());
-		repo.deleteAll(squashedEvents);
+		repo.deleteAllInBatch(squashedEvents);
 	}
 	
 	protected void doProcessWork(List<DebeziumEvent> items) throws Exception {
