@@ -87,35 +87,36 @@ public class SenderSyncMessageProcessor extends BaseQueueProcessor<SenderSyncMes
 		//Squash events for the same row so that exactly one message is processed in case of multiple in this run in.
 		//Delete being a terminal event, squash for a single entity will stop at the last event before a delete event
 		//to ensure we don't re-process a non-existent row
+		List<SenderSyncMessage> msgsToProcess = new ArrayList<>(items.size());
 		Map<String, SenderSyncMessage> keyAndLatestMap = new LinkedHashMap(items.size());
 		List<SenderSyncMessage> squashedMsgs = new ArrayList();
 		items.stream().forEach(msg -> {
 			String table = msg.getTableName();
 			String key = table + "#" + msg.getIdentifier();
-			SenderSyncMessage previousMsg = keyAndLatestMap.get(key);
-			if (previousMsg != null && d.name().equals(msg.getOperation())) {
+			if (keyAndLatestMap.containsKey(key) && d.name().equals(msg.getOperation())) {
 				if (LOG.isTraceEnabled()) {
 					LOG.trace("Squashing stopped for {}, postponing processing of delete event: {}", key, msg);
 				}
 			} else {
+				SenderSyncMessage previousMsg = keyAndLatestMap.put(key, msg);
 				if (previousMsg != null) {
-					//We intentionally remove and add instead of using Map.put which updates the existing value because
-					//we need to preserve the order of item in the original list which ensures that later events for an
-					//entity in a subclass table like patient are processed after any other earlier events for the same
-					//entity from the parent table like person.
 					squashedMsgs.add(previousMsg);
-					keyAndLatestMap.remove(key);
+					//We maintain a list of unique events to process instead of using keyAndLatestMap.values() because
+					//we need to preserve the order of items from the original list which ensures that later events for
+					//an entity in a subclass table like patient are processed after any other earlier events for the
+					//same entity from a parent table like person.
+					msgsToProcess.remove(previousMsg);
 					
 					if (LOG.isTraceEnabled()) {
-						LOG.trace("Squashing entity event: {}", previousMsg);
+						LOG.trace("Squashing sync msg: {}", previousMsg);
 					}
 				}
 				
-				keyAndLatestMap.put(key, msg);
+				msgsToProcess.add(msg);
 			}
 		});
 		
-		doProcessWork(keyAndLatestMap.values().stream().toList());
+		doProcessWork(msgsToProcess);
 		repo.deleteAllInBatch(squashedMsgs);
 	}
 	

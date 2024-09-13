@@ -76,35 +76,36 @@ public class DebeziumEventProcessor extends BaseFromCamelToCamelEndpointProcesso
 		//Squash events for the same row so that exactly one message is processed in case of multiple in this run in.
 		//Delete being a terminal event, squash for a single entity will stop at the last event before a delete event
 		//to ensure we don't re-process a non-existent row
+		List<DebeziumEvent> eventsToProcess = new ArrayList<>(items.size());
 		Map<String, DebeziumEvent> keyAndLatestMap = new LinkedHashMap(items.size());
 		List<DebeziumEvent> squashedEvents = new ArrayList();
 		items.stream().forEach(dbzmEvent -> {
 			String table = dbzmEvent.getEvent().getTableName();
 			String key = table + "#" + dbzmEvent.getEvent().getPrimaryKeyId();
-			DebeziumEvent previousEvent = keyAndLatestMap.get(key);
-			if (previousEvent != null && d.name().equals(dbzmEvent.getEvent().getOperation())) {
+			if (keyAndLatestMap.containsKey(key) && d.name().equals(dbzmEvent.getEvent().getOperation())) {
 				if (LOG.isTraceEnabled()) {
 					LOG.trace("Squashing stopped for {}, postponing processing of delete event: {}", key, dbzmEvent);
 				}
 			} else {
+				DebeziumEvent previousEvent = keyAndLatestMap.put(key, dbzmEvent);
 				if (previousEvent != null) {
-					//We intentionally remove and add instead of using Map.put which updates the existing value because
-					//we need to preserve the order of item in the original list which ensures that later events for an
-					//entity in a subclass table like patient are processed after any other earlier events for the same
-					//entity from the parent table like person.
 					squashedEvents.add(previousEvent);
-					keyAndLatestMap.remove(key);
+					//We maintain a list of unique events to process instead of using keyAndLatestMap.values() because
+					//we need to preserve the order of items from the original list which ensures that later events for
+					//an entity in a subclass table like patient are processed after any other earlier events for the
+					//same entity from a parent table like person.
+					eventsToProcess.remove(previousEvent);
 					
 					if (LOG.isTraceEnabled()) {
-						LOG.trace("Squashing entity event: {}", previousEvent);
+						LOG.trace("Squashing db event: {}", previousEvent);
 					}
 				}
 				
-				keyAndLatestMap.put(key, dbzmEvent);
+				eventsToProcess.add(dbzmEvent);
 			}
 		});
 		
-		doProcessWork(keyAndLatestMap.values().stream().toList());
+		doProcessWork(eventsToProcess);
 		repo.deleteAllInBatch(squashedEvents);
 	}
 	
