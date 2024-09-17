@@ -66,7 +66,7 @@ public abstract class BaseSyncProcessor<T extends AbstractEntity> extends BaseQu
 			
 			removeId = true;
 			beforeSync(item);
-			syncHelper.sync(JsonUtils.unmarshalSyncModel(getSyncPayload(item)), false);
+			sync(item);
 			afterSync(item);
 		}
 		catch (ConflictsFoundException e) {
@@ -95,6 +95,10 @@ public abstract class BaseSyncProcessor<T extends AbstractEntity> extends BaseQu
 				PROCESSING_MSG_QUEUE.remove(uniqueId);
 			}
 		}
+	}
+	
+	protected void sync(T item) {
+		syncHelper.sync(JsonUtils.unmarshalSyncModel(getSyncPayload(item)), false);
 	}
 	
 	protected abstract void beforeSync(T item);
