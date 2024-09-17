@@ -5,8 +5,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
-import org.openmrs.eip.app.management.service.ReceiverService;
+import org.openmrs.eip.app.management.service.ConflictService;
 import org.openmrs.eip.app.receiver.SyncHelper;
+import org.openmrs.eip.component.SyncContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,14 +18,10 @@ public class ConflictMessageProcessor extends BaseSyncProcessor<ConflictQueueIte
 	
 	private static final Logger LOG = LoggerFactory.getLogger(ConflictMessageProcessor.class);
 	
-	private ReceiverService service;
-	
 	private Set<String> propertiesToSync;
 	
-	public ConflictMessageProcessor(ThreadPoolExecutor executor, ReceiverService service, SyncHelper syncHelper,
-	    Set<String> propertiesToSync) {
+	public ConflictMessageProcessor(ThreadPoolExecutor executor, SyncHelper syncHelper, Set<String> propertiesToSync) {
 		super(executor, syncHelper);
-		this.service = service;
 		this.propertiesToSync = propertiesToSync;
 	}
 	
@@ -65,19 +62,24 @@ public class ConflictMessageProcessor extends BaseSyncProcessor<ConflictQueueIte
 	}
 	
 	@Override
+	protected void sync(ConflictQueueItem item) throws Throwable {
+		SyncContext.getBean(ConflictService.class).resolveWithMerge(item, propertiesToSync);
+	}
+	
+	@Override
 	protected void afterSync(ConflictQueueItem item) {
-		//TODO
 		LOG.info("Done syncing conflict");
 	}
 	
 	@Override
 	protected void onConflict(ConflictQueueItem item) {
-		//TODO
+		//TODO What should we do in case a new conflict is encountered, is it even possible anyways?
+		LOG.error("Encountered another conflict while resolving a conflict");
 	}
 	
 	@Override
 	protected void onError(ConflictQueueItem item, String exceptionClass, String errorItem) {
-		//TODO
+		LOG.error("Failed to sync resolved conflict item with uuid: {}", item.getMessageUuid());
 	}
 	
 }

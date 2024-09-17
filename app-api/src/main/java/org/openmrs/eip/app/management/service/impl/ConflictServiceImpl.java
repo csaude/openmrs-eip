@@ -2,6 +2,7 @@ package org.openmrs.eip.app.management.service.impl;
 
 import static org.apache.commons.beanutils.PropertyUtils.getProperty;
 import static org.apache.commons.beanutils.PropertyUtils.setProperty;
+import static org.openmrs.eip.app.SyncConstants.BEAN_NAME_SYNC_EXECUTOR;
 import static org.openmrs.eip.app.SyncConstants.CHAINED_TX_MGR;
 import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.FIELD_VOIDED;
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.camel.CamelContext;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +31,7 @@ import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.app.receiver.ConflictResolution;
 import org.openmrs.eip.app.receiver.ReceiverUtils;
 import org.openmrs.eip.app.receiver.SyncHelper;
+import org.openmrs.eip.app.receiver.processor.ConflictMessageProcessor;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
@@ -200,7 +203,7 @@ public class ConflictServiceImpl extends BaseService implements ConflictService 
 	
 	@Override
 	@Transactional(transactionManager = CHAINED_TX_MGR)
-	public void resolveWithMerge(ConflictQueueItem conflict, Set<String> propertiesToSync) throws Exception {
+	public void resolveWithMerge(ConflictQueueItem conflict, Set<String> propertiesToSync) {
 		if (propertiesToSync.isEmpty()) {
 			throw new EIPException("No properties to sync specified for merge resolution decision");
 		} else if (!Collections.disjoint(propertiesToSync, MERGE_EXCLUDE_FIELDS)) {
@@ -225,15 +228,8 @@ public class ConflictServiceImpl extends BaseService implements ConflictService 
 		mergeVoidOrRetireProperties(dbModel, newModel, propertiesToSync);
 		mergeAuditProperties(dbModel, newModel);
 		syncModel.setModel(dbModel);
-		
-		try {
-			//TODO What should we do in case a new conflict is encountered, is it even possible anyways?
-			syncHelper.sync(syncModel, true);
-			moveToSyncedQueue(conflict);
-		}
-		catch (Throwable throwable) {
-			throw new EIPException("Failed to sync resolved conflict item with uuid: " + conflict.getMessageUuid());
-		}
+		syncHelper.sync(syncModel, true);
+		moveToSyncedQueue(conflict);
 	}
 	
 	@Override
@@ -381,9 +377,11 @@ public class ConflictServiceImpl extends BaseService implements ConflictService 
 		moveToRetryQueue(conflict, "Moved from conflict queue after conflict resolution");
 	}
 	
-	private void resolveWithMerge(ConflictResolution r) throws Exception {
-		//We need to call the method on a proxy for the transaction AOP to work
-		SyncContext.getBean(ConflictService.class).resolveWithMerge(r.getConflict(), r.getPropertiesToSync());
+	private void resolveWithMerge(ConflictResolution r) {
+		//TODO Possibly set no executor if we call processItem
+		ThreadPoolExecutor executor = SyncContext.getBean(BEAN_NAME_SYNC_EXECUTOR);
+		ConflictMessageProcessor p = new ConflictMessageProcessor(executor, syncHelper, r.getPropertiesToSync());
+		p.processItem(r.getConflict());
 	}
 	
 }
