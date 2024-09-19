@@ -2,7 +2,6 @@ package org.openmrs.eip.app.management.service.impl;
 
 import static org.apache.commons.beanutils.PropertyUtils.getProperty;
 import static org.apache.commons.beanutils.PropertyUtils.setProperty;
-import static org.openmrs.eip.app.SyncConstants.BEAN_NAME_SYNC_EXECUTOR;
 import static org.openmrs.eip.app.SyncConstants.CHAINED_TX_MGR;
 import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.FIELD_VOIDED;
@@ -13,7 +12,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.camel.CamelContext;
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +30,6 @@ import org.openmrs.eip.app.receiver.ConflictResolution;
 import org.openmrs.eip.app.receiver.ReceiverUtils;
 import org.openmrs.eip.app.receiver.SyncHelper;
 import org.openmrs.eip.app.receiver.processor.ConflictMessageProcessor;
-import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.BaseChangeableDataModel;
@@ -378,8 +375,7 @@ public class ConflictServiceImpl extends BaseService implements ConflictService 
 	}
 	
 	private void resolveWithMerge(ConflictResolution r) throws Exception {
-		ThreadPoolExecutor executor = SyncContext.getBean(BEAN_NAME_SYNC_EXECUTOR);
-		ConflictMessageProcessor p = new ConflictMessageProcessor(executor, syncHelper, r.getPropertiesToSync());
+		ConflictMessageProcessor p = new ConflictMessageProcessor(syncHelper, r.getPropertiesToSync());
 		p.processWork(List.of(r.getConflict()));
 	}
 	

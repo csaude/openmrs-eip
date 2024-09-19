@@ -1,7 +1,6 @@
 package org.openmrs.eip.app.receiver.processor;
 
 import java.util.Set;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
@@ -20,8 +19,8 @@ public class ConflictMessageProcessor extends BaseSyncProcessor<ConflictQueueIte
 	
 	private Set<String> propertiesToSync;
 	
-	public ConflictMessageProcessor(ThreadPoolExecutor executor, SyncHelper syncHelper, Set<String> propertiesToSync) {
-		super(executor, syncHelper);
+	public ConflictMessageProcessor(SyncHelper syncHelper, Set<String> propertiesToSync) {
+		super(null, syncHelper);
 		this.propertiesToSync = propertiesToSync;
 	}
 	
