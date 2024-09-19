@@ -377,11 +377,10 @@ public class ConflictServiceImpl extends BaseService implements ConflictService 
 		moveToRetryQueue(conflict, "Moved from conflict queue after conflict resolution");
 	}
 	
-	private void resolveWithMerge(ConflictResolution r) {
-		//TODO Possibly set no executor if we call processItem
+	private void resolveWithMerge(ConflictResolution r) throws Exception {
 		ThreadPoolExecutor executor = SyncContext.getBean(BEAN_NAME_SYNC_EXECUTOR);
 		ConflictMessageProcessor p = new ConflictMessageProcessor(executor, syncHelper, r.getPropertiesToSync());
-		p.processItem(r.getConflict());
+		p.processWork(List.of(r.getConflict()));
 	}
 	
 }

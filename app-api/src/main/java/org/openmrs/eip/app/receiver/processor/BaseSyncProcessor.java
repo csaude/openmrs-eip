@@ -97,7 +97,7 @@ public abstract class BaseSyncProcessor<T extends AbstractEntity> extends BaseQu
 		}
 	}
 	
-	protected void sync(T item) {
+	protected void sync(T item) throws Throwable {
 		syncHelper.sync(JsonUtils.unmarshalSyncModel(getSyncPayload(item)), false);
 	}
 	
