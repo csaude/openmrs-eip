@@ -7,6 +7,7 @@ import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
 import org.openmrs.eip.app.management.service.ConflictService;
 import org.openmrs.eip.app.receiver.SyncHelper;
 import org.openmrs.eip.component.SyncContext;
+import org.openmrs.eip.component.exception.EIPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,13 +73,13 @@ public class ConflictMessageProcessor extends BaseSyncProcessor<ConflictQueueIte
 	
 	@Override
 	protected void onConflict(ConflictQueueItem item) {
-		//TODO What should we do in case a new conflict is encountered, is it even possible anyways?
-		LOG.error("Encountered another conflict while resolving a conflict");
+		throw new EIPException(
+		        "Encountered another conflict while resolving a conflict with uuid: " + item.getMessageUuid());
 	}
 	
 	@Override
 	protected void onError(ConflictQueueItem item, String exceptionClass, String errorItem) {
-		LOG.error("Failed to sync resolved conflict item with uuid: {}", item.getMessageUuid());
+		throw new EIPException("Failed to sync resolved conflict item with uuid: " + item.getMessageUuid());
 	}
 	
 }

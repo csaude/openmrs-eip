@@ -583,7 +583,6 @@ public class ConflictServiceImplTest {
 		ConflictResolution resolution = new ConflictResolution(conflict, MERGE);
 		Set<String> props = Set.of("prop1");
 		resolution.addPropertyToSync("prop1");
-		
 		Constructor<ConflictMessageProcessor> constructor = ConstructorUtils
 		        .getAccessibleConstructor(ConflictMessageProcessor.class, SyncHelper.class, Set.class);
 		ConflictMessageProcessor mockProcessor = Mockito.mock(ConflictMessageProcessor.class);

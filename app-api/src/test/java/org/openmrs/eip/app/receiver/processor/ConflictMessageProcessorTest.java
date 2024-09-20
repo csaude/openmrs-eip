@@ -18,6 +18,7 @@ import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.management.service.ConflictService;
 import org.openmrs.eip.component.SyncContext;
+import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.model.PersonModel;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -86,6 +87,28 @@ public class ConflictMessageProcessorTest {
 		processor.sync(conflict);
 		
 		Mockito.verify(mockService).resolveWithMerge(conflict, propsToSync);
+	}
+	
+	@Test
+	public void onConflict_shouldFailOnAnotherConflict() {
+		final String uuid = "uuid";
+		ConflictQueueItem c = new ConflictQueueItem();
+		c.setMessageUuid(uuid);
+		
+		EIPException e = Assert.assertThrows(EIPException.class, () -> processor.onConflict(c));
+		
+		assertEquals("Encountered another conflict while resolving a conflict with uuid: " + uuid, e.getMessage());
+	}
+	
+	@Test
+	public void onConflict_shouldFailOnError() {
+		final String uuid = "uuid";
+		ConflictQueueItem c = new ConflictQueueItem();
+		c.setMessageUuid(uuid);
+		
+		EIPException e = Assert.assertThrows(EIPException.class, () -> processor.onError(c, null, null));
+		
+		assertEquals("Failed to sync resolved conflict item with uuid: " + uuid, e.getMessage());
 	}
 	
 }
