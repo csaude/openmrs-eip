@@ -374,9 +374,9 @@ public class ConflictServiceImpl extends BaseService implements ConflictService 
 		moveToRetryQueue(conflict, "Moved from conflict queue after conflict resolution");
 	}
 	
-	private void resolveWithMerge(ConflictResolution r) throws Exception {
+	protected void resolveWithMerge(ConflictResolution r) {
 		ConflictMessageProcessor p = new ConflictMessageProcessor(syncHelper, r.getPropertiesToSync());
-		p.processWork(List.of(r.getConflict()));
+		p.processItem(r.getConflict());
 	}
 	
 }

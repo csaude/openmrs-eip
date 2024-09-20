@@ -18,8 +18,10 @@ import static org.openmrs.eip.app.receiver.ConflictResolution.ResolutionDecision
 import static org.openmrs.eip.app.receiver.ReceiverConstants.FIELD_RETIRED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.FIELD_VOIDED;
 import static org.openmrs.eip.app.receiver.ReceiverConstants.MERGE_EXCLUDE_FIELDS;
+import static org.powermock.reflect.Whitebox.setInternalState;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -29,6 +31,8 @@ import java.util.Set;
 import org.apache.camel.CamelContext;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang3.reflect.ConstructorUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,12 +41,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.openmrs.eip.Holder;
+import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.receiver.ConflictQueueItem;
 import org.openmrs.eip.app.management.service.ConflictService;
 import org.openmrs.eip.app.management.service.ReceiverService;
 import org.openmrs.eip.app.receiver.ConflictResolution;
 import org.openmrs.eip.app.receiver.ConflictResolution.ResolutionDecision;
 import org.openmrs.eip.app.receiver.SyncHelper;
+import org.openmrs.eip.app.receiver.processor.ConflictMessageProcessor;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.camel.utils.CamelUtils;
 import org.openmrs.eip.component.exception.EIPException;
@@ -62,7 +68,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SyncContext.class, CamelUtils.class })
+@PrepareForTest({ SyncContext.class, CamelUtils.class, ConflictMessageProcessor.class, ConflictServiceImpl.class })
 public class ConflictServiceImplTest {
 	
 	private ConflictServiceImpl service;
@@ -83,9 +89,16 @@ public class ConflictServiceImplTest {
 	public void setup() {
 		PowerMockito.mockStatic(CamelUtils.class);
 		PowerMockito.mockStatic(SyncContext.class);
+		PowerMockito.mockStatic(ConflictMessageProcessor.class);
+		setInternalState(BaseQueueProcessor.class, "initialized", true);
 		service = new ConflictServiceImpl(null, null, null, mockReceiverService, mockContext, mockServiceFacade, null,
 		        mockSyncHelper);
 		when(SyncContext.getBean(ConflictService.class)).thenReturn(service);
+	}
+	
+	@After
+	public void tearDown() {
+		setInternalState(BaseQueueProcessor.class, "initialized", false);
 	}
 	
 	@Test
@@ -138,19 +151,18 @@ public class ConflictServiceImplTest {
 	}
 	
 	@Test
-	public void resolve_shouldFailForAMergeResolutionAndNoSyncedPropertiesSpecified() {
+	public void resolveWithMerge_shouldFailForAMergeResolutionAndNoSyncedPropertiesSpecified() {
 		Throwable thrown = Assert.assertThrows(EIPException.class,
-		    () -> service.resolve(new ConflictResolution(new ConflictQueueItem(), MERGE)));
+		    () -> service.resolveWithMerge(new ConflictQueueItem(), Set.of()));
 		assertEquals("No properties to sync specified for merge resolution decision", thrown.getMessage());
 	}
 	
 	@Test
-	public void resolve_shouldFailForAMergeResolutionAndSyncedPropertiesContainsAnyDisallowedProperty() {
-		ConflictResolution resolution = new ConflictResolution(new ConflictQueueItem(), MERGE);
-		resolution.addPropertyToSync("dateChanged");
-		Throwable thrown = Assert.assertThrows(EIPException.class, () -> service.resolve(resolution));
+	public void resolveWithMerge_shouldFailForAMergeResolutionAndSyncedPropertiesContainsAnyDisallowedProperty() {
+		Throwable t = Assert.assertThrows(EIPException.class,
+		    () -> service.resolveWithMerge(new ConflictQueueItem(), Set.of("dateChanged")));
 		assertEquals("Found invalid properties for a merge conflict resolution, please exclude: " + MERGE_EXCLUDE_FIELDS,
-		    thrown.getMessage());
+		    t.getMessage());
 	}
 	
 	@Test
@@ -555,24 +567,31 @@ public class ConflictServiceImplTest {
 	}
 	
 	@Test
-	public void resolve_shouldFailIfTheSyncOutcomeIsUnknownForAMergeResolution() throws Exception {
-		final String modelClassName = PersonModel.class.getName();
-		final String uuid = "person-uuid";
-		PersonModel newModel = new PersonModel();
-		newModel.setUuid(uuid);
-		SyncModel syncModel = SyncModel.builder().tableToSyncModelClass(PersonModel.class).model(newModel).build();
-		PersonModel originalDbModel = new PersonModel();
-		PersonModel dbModel = (PersonModel) BeanUtils.cloneBean(originalDbModel);
-		when(mockServiceFacade.getModel(TableToSyncEnum.PERSON, uuid)).thenReturn(dbModel);
-		ConflictQueueItem conflict = new ConflictQueueItem();
-		conflict.setIdentifier(uuid);
-		conflict.setModelClassName(modelClassName);
-		conflict.setEntityPayload(JsonUtils.marshall(syncModel));
-		ConflictResolution resolution = new ConflictResolution(conflict, MERGE);
-		resolution.addPropertyToSync("gender");
+	public void resolve_shouldResolveAMerge() throws Exception {
+		ConflictResolution resolution = new ConflictResolution(new ConflictQueueItem(), MERGE);
+		service = Mockito.spy(service);
+		Mockito.doNothing().when(service).resolveWithMerge(resolution);
 		
-		Throwable thrown = Assert.assertThrows(EIPException.class, () -> service.resolve(resolution));
-		assertEquals("Failed to sync resolved conflict item with uuid: " + conflict.getMessageUuid(), thrown.getMessage());
+		service.resolve(resolution);
+		
+		Mockito.verify(service).resolveWithMerge(resolution);
+	}
+	
+	@Test
+	public void resolveWithMerge_shouldResolveAMerge() throws Exception {
+		ConflictQueueItem conflict = new ConflictQueueItem();
+		ConflictResolution resolution = new ConflictResolution(conflict, MERGE);
+		Set<String> props = Set.of("prop1");
+		resolution.addPropertyToSync("prop1");
+		
+		Constructor<ConflictMessageProcessor> constructor = ConstructorUtils
+		        .getAccessibleConstructor(ConflictMessageProcessor.class, SyncHelper.class, Set.class);
+		ConflictMessageProcessor mockProcessor = Mockito.mock(ConflictMessageProcessor.class);
+		PowerMockito.whenNew(constructor).withArguments(mockSyncHelper, props).thenReturn(mockProcessor);
+		
+		service.resolveWithMerge(resolution);
+		
+		Mockito.verify(mockProcessor).processItem(conflict);
 	}
 	
 }
