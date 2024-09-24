@@ -44,10 +44,12 @@ public class Gaac extends BaseChangeableDataEntity {
 	@JoinColumn(name = "focal_patient_id")
 	private PatientLight focalPatient;
 	
+	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "affinity_type")
 	private GaacAffinityTypeLight affinityType;
 	
+	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "location_id")
 	private LocationLight location;
