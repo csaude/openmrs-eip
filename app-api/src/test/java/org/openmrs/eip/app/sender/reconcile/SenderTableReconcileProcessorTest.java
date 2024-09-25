@@ -1,7 +1,7 @@
 package org.openmrs.eip.app.sender.reconcile;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.openmrs.eip.app.SyncConstants.RECONCILE_MSG_SEPARATOR;
 import static org.powermock.reflect.Whitebox.setInternalState;
@@ -22,11 +22,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.ReconciliationResponse;
+import org.openmrs.eip.app.management.entity.sender.SenderReconcileMessage;
 import org.openmrs.eip.app.management.entity.sender.SenderReconciliation;
 import org.openmrs.eip.app.management.entity.sender.SenderTableReconciliation;
+import org.openmrs.eip.app.management.repository.SenderReconcileMsgRepository;
 import org.openmrs.eip.app.management.repository.SenderReconcileRepository;
 import org.openmrs.eip.app.management.repository.SenderTableReconcileRepository;
-import org.openmrs.eip.app.sender.SenderUtils;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.repository.SyncEntityRepository;
 import org.openmrs.eip.component.utils.JsonUtils;
@@ -35,13 +36,10 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 import org.springframework.data.domain.Pageable;
-import org.springframework.jms.core.JmsTemplate;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SyncContext.class, SenderUtils.class })
+@PrepareForTest(SyncContext.class)
 public class SenderTableReconcileProcessorTest {
-	
-	private static final String QUEUE_NAME = "text_queue";
 	
 	private static final String RECONCILIATION_ID = "test_identifier";
 	
@@ -56,7 +54,7 @@ public class SenderTableReconcileProcessorTest {
 	private SenderReconcileRepository mockRecRepo;
 	
 	@Mock
-	private JmsTemplate mockJmsTemplate;
+	private SenderReconcileMsgRepository mockReconcileMsgRepo;
 	
 	@Mock
 	private SyncEntityRepository mockOpenmrsRepo;
@@ -68,11 +66,9 @@ public class SenderTableReconcileProcessorTest {
 	
 	@Before
 	public void setup() {
-		PowerMockito.mockStatic(SyncContext.class, SenderUtils.class);
-		when(SenderUtils.getQueueName()).thenReturn(QUEUE_NAME);
+		PowerMockito.mockStatic(SyncContext.class);
 		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
-		processor = new SenderTableReconcileProcessor(null, mockTableRecRepo, mockRecRepo, mockJmsTemplate);
-		Whitebox.setInternalState(processor, "siteId", SITE_ID);
+		processor = new SenderTableReconcileProcessor(null, mockTableRecRepo, mockRecRepo, mockReconcileMsgRepo);
 		when(mockReconciliation.getBatchSize()).thenReturn(BATCH_SIZE);
 		when(mockRecRepo.getReconciliation()).thenReturn(mockReconciliation);
 		when(mockReconciliation.getIdentifier()).thenReturn(RECONCILIATION_ID);
@@ -117,10 +113,9 @@ public class SenderTableReconcileProcessorTest {
 		expectedResp.setRowCount(rowCount);
 		expectedResp.setBatchSize(0);
 		expectedResp.setData("");
-		ArgumentCaptor<ReconcileResponseCreator> argCaptor = ArgumentCaptor.forClass(ReconcileResponseCreator.class);
-		Mockito.verify(mockJmsTemplate).send(eq(QUEUE_NAME), argCaptor.capture());
-		assertEquals(JsonUtils.marshall(expectedResp), argCaptor.getValue().getBody());
-		assertEquals(SITE_ID, argCaptor.getValue().getSiteId());
+		ArgumentCaptor<SenderReconcileMessage> argCaptor = ArgumentCaptor.forClass(SenderReconcileMessage.class);
+		Mockito.verify(mockReconcileMsgRepo).save(argCaptor.capture());
+		assertArrayEquals(JsonUtils.marshalToBytes(expectedResp), argCaptor.getValue().getBody());
 	}
 	
 	@Test
@@ -150,10 +145,9 @@ public class SenderTableReconcileProcessorTest {
 		expectedResp.setBatchSize(batch.size());
 		List<String> uuids = batch.stream().map(entry -> entry[1].toString()).collect(Collectors.toList());
 		expectedResp.setData(StringUtils.join(uuids, RECONCILE_MSG_SEPARATOR));
-		ArgumentCaptor<ReconcileResponseCreator> argCaptor = ArgumentCaptor.forClass(ReconcileResponseCreator.class);
-		Mockito.verify(mockJmsTemplate).send(eq(QUEUE_NAME), argCaptor.capture());
-		assertEquals(JsonUtils.marshall(expectedResp), argCaptor.getValue().getBody());
-		assertEquals(SITE_ID, argCaptor.getValue().getSiteId());
+		ArgumentCaptor<SenderReconcileMessage> argCaptor = ArgumentCaptor.forClass(SenderReconcileMessage.class);
+		Mockito.verify(mockReconcileMsgRepo).save(argCaptor.capture());
+		assertArrayEquals(JsonUtils.marshalToBytes(expectedResp), argCaptor.getValue().getBody());
 	}
 	
 	@Test
@@ -183,10 +177,9 @@ public class SenderTableReconcileProcessorTest {
 		expectedResp.setBatchSize(batch.size());
 		List<String> uuids = batch.stream().map(entry -> entry[1].toString()).collect(Collectors.toList());
 		expectedResp.setData(StringUtils.join(uuids, RECONCILE_MSG_SEPARATOR));
-		ArgumentCaptor<ReconcileResponseCreator> argCaptor = ArgumentCaptor.forClass(ReconcileResponseCreator.class);
-		Mockito.verify(mockJmsTemplate).send(eq(QUEUE_NAME), argCaptor.capture());
-		assertEquals(JsonUtils.marshall(expectedResp), argCaptor.getValue().getBody());
-		assertEquals(SITE_ID, argCaptor.getValue().getSiteId());
+		ArgumentCaptor<SenderReconcileMessage> argCaptor = ArgumentCaptor.forClass(SenderReconcileMessage.class);
+		Mockito.verify(mockReconcileMsgRepo).save(argCaptor.capture());
+		assertArrayEquals(JsonUtils.marshalToBytes(expectedResp), argCaptor.getValue().getBody());
 	}
 	
 }

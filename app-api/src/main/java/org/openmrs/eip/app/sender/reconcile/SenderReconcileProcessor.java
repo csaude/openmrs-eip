@@ -13,14 +13,15 @@ import org.openmrs.eip.app.BasePureParallelQueueProcessor;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.ReconciliationResponse;
 import org.openmrs.eip.app.management.entity.sender.DeletedEntity;
+import org.openmrs.eip.app.management.entity.sender.SenderReconcileMessage;
 import org.openmrs.eip.app.management.entity.sender.SenderReconciliation;
 import org.openmrs.eip.app.management.entity.sender.SenderReconciliation.SenderReconcileStatus;
 import org.openmrs.eip.app.management.entity.sender.SenderTableReconciliation;
 import org.openmrs.eip.app.management.repository.DeletedEntityRepository;
+import org.openmrs.eip.app.management.repository.SenderReconcileMsgRepository;
 import org.openmrs.eip.app.management.repository.SenderReconcileRepository;
 import org.openmrs.eip.app.management.repository.SenderTableReconcileRepository;
 import org.openmrs.eip.app.management.service.SenderReconcileService;
-import org.openmrs.eip.app.sender.SenderConstants;
 import org.openmrs.eip.app.sender.SenderUtils;
 import org.openmrs.eip.component.SyncProfiles;
 import org.openmrs.eip.component.exception.EIPException;
@@ -29,9 +30,7 @@ import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -51,20 +50,17 @@ public class SenderReconcileProcessor extends BasePureParallelQueueProcessor<Sen
 	
 	private SenderReconcileService service;
 	
-	private JmsTemplate jmsTemplate;
-	
-	@Value("${" + SenderConstants.PROP_SENDER_ID + "}")
-	private String siteId;
+	private SenderReconcileMsgRepository reconcileMsgRepo;
 	
 	public SenderReconcileProcessor(@Qualifier(BEAN_NAME_SYNC_EXECUTOR) ThreadPoolExecutor executor,
 	    SenderReconcileRepository reconcileRepo, SenderTableReconcileRepository tableReconcileRepo,
-	    DeletedEntityRepository deleteRepo, SenderReconcileService service, JmsTemplate jmsTemplate) {
+	    DeletedEntityRepository deleteRepo, SenderReconcileService service, SenderReconcileMsgRepository reconcileMsgRepo) {
 		super(executor);
 		this.reconcileRepo = reconcileRepo;
 		this.tableReconcileRepo = tableReconcileRepo;
 		this.deleteRepo = deleteRepo;
 		this.service = service;
-		this.jmsTemplate = jmsTemplate;
+		this.reconcileMsgRepo = reconcileMsgRepo;
 	}
 	
 	@Override
@@ -203,10 +199,9 @@ public class SenderReconcileProcessor extends BasePureParallelQueueProcessor<Sen
 		response.setBatchSize(uuids.size());
 		response.setData(StringUtils.join(uuids, SyncConstants.RECONCILE_MSG_SEPARATOR));
 		
-		final String json = JsonUtils.marshall(response);
-		//TODO To avoid message duplication, add message to outbound queue e.g. this can happen if message is sent
-		//but status not update and uuids are resent
-		jmsTemplate.send(SenderUtils.getQueueName(), new ReconcileResponseCreator(json, siteId));
+		SenderReconcileMessage msg = new SenderReconcileMessage();
+		msg.setBody(JsonUtils.marshalToBytes(response));
+		reconcileMsgRepo.save(msg);
 	}
 	
 	private String getUuidFromParent(String table, Long id) {

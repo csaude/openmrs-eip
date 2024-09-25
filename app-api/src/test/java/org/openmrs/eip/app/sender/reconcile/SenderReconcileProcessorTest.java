@@ -1,5 +1,6 @@
 package org.openmrs.eip.app.sender.reconcile;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -32,31 +33,27 @@ import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.ReconciliationResponse;
 import org.openmrs.eip.app.management.entity.sender.DeletedEntity;
+import org.openmrs.eip.app.management.entity.sender.SenderReconcileMessage;
 import org.openmrs.eip.app.management.entity.sender.SenderReconciliation;
 import org.openmrs.eip.app.management.entity.sender.SenderReconciliation.SenderReconcileStatus;
 import org.openmrs.eip.app.management.entity.sender.SenderTableReconciliation;
 import org.openmrs.eip.app.management.repository.DeletedEntityRepository;
+import org.openmrs.eip.app.management.repository.SenderReconcileMsgRepository;
 import org.openmrs.eip.app.management.repository.SenderReconcileRepository;
 import org.openmrs.eip.app.management.repository.SenderTableReconcileRepository;
 import org.openmrs.eip.app.management.service.SenderReconcileService;
-import org.openmrs.eip.app.sender.SenderUtils;
 import org.openmrs.eip.component.exception.EIPException;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
-import org.springframework.jms.core.JmsTemplate;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ AppUtils.class, SenderUtils.class })
+@PrepareForTest(AppUtils.class)
 public class SenderReconcileProcessorTest {
 	
-	private static final String QUEUE_NAME = "test";
-	
 	private static final String RECONCILE_ID = "testId";
-	
-	private static final String SITE_ID = "siteId";
 	
 	@Mock
 	private SenderReconcileService mockService;
@@ -71,19 +68,16 @@ public class SenderReconcileProcessorTest {
 	private DeletedEntityRepository mockDeleteRepo;
 	
 	@Mock
-	private JmsTemplate mockJmsTemplate;
+	private SenderReconcileMsgRepository mockReconcileMsgRepo;
 	
 	private SenderReconcileProcessor processor;
 	
 	@Before
 	public void setup() {
 		PowerMockito.mockStatic(AppUtils.class);
-		PowerMockito.mockStatic(SenderUtils.class);
 		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
-		Mockito.when(SenderUtils.getQueueName()).thenReturn(QUEUE_NAME);
 		processor = new SenderReconcileProcessor(null, mockRecRepo, mockTableRecRepo, mockDeleteRepo, mockService,
-		        mockJmsTemplate);
-		Whitebox.setInternalState(processor, "siteId", SITE_ID);
+		        mockReconcileMsgRepo);
 	}
 	
 	@After
@@ -156,20 +150,19 @@ public class SenderReconcileProcessorTest {
 		List<String> uuids = List.of("person-uuid1", "person-uuid2");
 		SenderReconciliation rec = new SenderReconciliation();
 		rec.setIdentifier(RECONCILE_ID);
-		ArgumentCaptor<ReconcileResponseCreator> creatorArgCaptor = ArgumentCaptor.forClass(ReconcileResponseCreator.class);
+		ArgumentCaptor<SenderReconcileMessage> creatorArgCaptor = ArgumentCaptor.forClass(SenderReconcileMessage.class);
 		
 		processor.send(rec, table, uuids, true);
 		
-		verify(mockJmsTemplate).send(eq(QUEUE_NAME), creatorArgCaptor.capture());
-		ReconcileResponseCreator creator = creatorArgCaptor.getValue();
+		verify(mockReconcileMsgRepo).save(creatorArgCaptor.capture());
+		SenderReconcileMessage msg = creatorArgCaptor.getValue();
 		ReconciliationResponse response = new ReconciliationResponse();
 		response.setIdentifier(RECONCILE_ID);
 		response.setTableName(table);
 		response.setBatchSize(uuids.size());
 		response.setLastTableBatch(true);
 		response.setData(StringUtils.join(uuids, RECONCILE_MSG_SEPARATOR));
-		assertEquals(JsonUtils.marshall(response), creator.getBody());
-		assertEquals(SITE_ID, creator.getSiteId());
+		assertArrayEquals(JsonUtils.marshalToBytes(response), msg.getBody());
 	}
 	
 	@Test
