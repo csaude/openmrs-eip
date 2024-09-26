@@ -2,6 +2,7 @@ package org.openmrs.eip.app.sender.reconcile;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.openmrs.eip.app.SyncConstants.RECONCILE_MSG_SEPARATOR;
 import static org.powermock.reflect.Whitebox.setInternalState;
@@ -100,6 +101,7 @@ public class SenderTableReconcileProcessorTest {
 		rec.setSnapshotDate(snapshotDate);
 		Assert.assertFalse(rec.isStarted());
 		when(SyncContext.getRepositoryBean(table)).thenReturn(mockOpenmrsRepo);
+		long timestamp = System.currentTimeMillis();
 		
 		processor.processItem(rec);
 		
@@ -116,6 +118,8 @@ public class SenderTableReconcileProcessorTest {
 		ArgumentCaptor<SenderReconcileMessage> argCaptor = ArgumentCaptor.forClass(SenderReconcileMessage.class);
 		Mockito.verify(mockReconcileMsgRepo).save(argCaptor.capture());
 		assertArrayEquals(JsonUtils.marshalToBytes(expectedResp), argCaptor.getValue().getBody());
+		assertTrue(argCaptor.getValue().getDateCreated().getTime() == timestamp
+		        || argCaptor.getValue().getDateCreated().getTime() > timestamp);
 	}
 	
 	@Test
@@ -134,6 +138,7 @@ public class SenderTableReconcileProcessorTest {
 		batch.add(new Object[] { 14L, "uuid-14" });
 		batch.add(new Object[] { 15L, "uuid-15" });
 		when(mockOpenmrsRepo.getIdAndUuidBatchToReconcile(lastProcId, endId, page)).thenReturn(batch);
+		long timestamp = System.currentTimeMillis();
 		
 		processor.processItem(rec);
 		
@@ -148,6 +153,8 @@ public class SenderTableReconcileProcessorTest {
 		ArgumentCaptor<SenderReconcileMessage> argCaptor = ArgumentCaptor.forClass(SenderReconcileMessage.class);
 		Mockito.verify(mockReconcileMsgRepo).save(argCaptor.capture());
 		assertArrayEquals(JsonUtils.marshalToBytes(expectedResp), argCaptor.getValue().getBody());
+		assertTrue(argCaptor.getValue().getDateCreated().getTime() == timestamp
+		        || argCaptor.getValue().getDateCreated().getTime() > timestamp);
 	}
 	
 	@Test
@@ -166,6 +173,7 @@ public class SenderTableReconcileProcessorTest {
 		batch.add(new Object[] { 14L, "uuid-14" });
 		batch.add(new Object[] { 15L, "uuid-15" });
 		when(mockOpenmrsRepo.getIdAndUuidBatchToReconcile(lastProcId, endId, page)).thenReturn(batch);
+		long timestamp = System.currentTimeMillis();
 		
 		processor.processItem(rec);
 		
@@ -180,6 +188,8 @@ public class SenderTableReconcileProcessorTest {
 		ArgumentCaptor<SenderReconcileMessage> argCaptor = ArgumentCaptor.forClass(SenderReconcileMessage.class);
 		Mockito.verify(mockReconcileMsgRepo).save(argCaptor.capture());
 		assertArrayEquals(JsonUtils.marshalToBytes(expectedResp), argCaptor.getValue().getBody());
+		assertTrue(argCaptor.getValue().getDateCreated().getTime() == timestamp
+		        || argCaptor.getValue().getDateCreated().getTime() > timestamp);
 	}
 	
 }

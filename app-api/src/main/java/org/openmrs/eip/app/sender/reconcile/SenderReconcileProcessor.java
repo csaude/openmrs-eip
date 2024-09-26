@@ -201,6 +201,7 @@ public class SenderReconcileProcessor extends BasePureParallelQueueProcessor<Sen
 		
 		SenderReconcileMessage msg = new SenderReconcileMessage();
 		msg.setBody(JsonUtils.marshalToBytes(response));
+		msg.setDateCreated(new Date());
 		reconcileMsgRepo.save(msg);
 	}
 	

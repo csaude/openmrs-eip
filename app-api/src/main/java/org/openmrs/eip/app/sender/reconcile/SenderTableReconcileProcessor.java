@@ -2,6 +2,7 @@ package org.openmrs.eip.app.sender.reconcile;
 
 import static org.openmrs.eip.app.SyncConstants.BEAN_NAME_SYNC_EXECUTOR;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
@@ -104,6 +105,7 @@ public class SenderTableReconcileProcessor extends BasePureParallelQueueProcesso
 		response.setBatchSize(uuids.size());
 		SenderReconcileMessage msg = new SenderReconcileMessage();
 		msg.setBody(JsonUtils.marshalToBytes(response));
+		msg.setDateCreated(new Date());
 		reconcileMsgRepo.save(msg);
 		
 		if (LOG.isTraceEnabled()) {

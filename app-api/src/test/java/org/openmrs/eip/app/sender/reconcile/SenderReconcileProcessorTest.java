@@ -2,6 +2,7 @@ package org.openmrs.eip.app.sender.reconcile;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -151,6 +152,7 @@ public class SenderReconcileProcessorTest {
 		SenderReconciliation rec = new SenderReconciliation();
 		rec.setIdentifier(RECONCILE_ID);
 		ArgumentCaptor<SenderReconcileMessage> creatorArgCaptor = ArgumentCaptor.forClass(SenderReconcileMessage.class);
+		long timestamp = System.currentTimeMillis();
 		
 		processor.send(rec, table, uuids, true);
 		
@@ -163,6 +165,7 @@ public class SenderReconcileProcessorTest {
 		response.setLastTableBatch(true);
 		response.setData(StringUtils.join(uuids, RECONCILE_MSG_SEPARATOR));
 		assertArrayEquals(JsonUtils.marshalToBytes(response), msg.getBody());
+		assertTrue(msg.getDateCreated().getTime() == timestamp || msg.getDateCreated().getTime() > timestamp);
 	}
 	
 	@Test
