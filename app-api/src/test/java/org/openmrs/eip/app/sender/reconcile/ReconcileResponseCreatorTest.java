@@ -13,8 +13,8 @@ import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import jakarta.jms.BytesMessage;
 import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
 
 @RunWith(PowerMockRunner.class)
 public class ReconcileResponseCreatorTest {
@@ -23,18 +23,19 @@ public class ReconcileResponseCreatorTest {
 	private Session mockSession;
 	
 	@Mock
-	private TextMessage mockMsg;
+	private BytesMessage mockMsg;
 	
 	@Test
 	public void createMessage_shouldCreateJmsMessageForTheResponse() throws Exception {
-		final String body = "test_body";
+		final byte[] body = "test_body".getBytes();
 		final String siteId = "test_site_id";
 		ReconcileResponseCreator creator = new ReconcileResponseCreator(body, siteId);
-		Mockito.when(mockSession.createTextMessage(body)).thenReturn(mockMsg);
+		Mockito.when(mockSession.createBytesMessage()).thenReturn(mockMsg);
 		
-		TextMessage msg = (TextMessage) creator.createMessage(mockSession);
+		BytesMessage msg = (BytesMessage) creator.createMessage(mockSession);
 		
 		assertEquals(msg, mockMsg);
+		Mockito.verify(msg).writeBytes(body);
 		Mockito.verify(msg).setStringProperty(SyncConstants.JMS_HEADER_SITE, siteId);
 		Mockito.verify(msg).setStringProperty(SyncConstants.JMS_HEADER_TYPE, MessageType.RECONCILE.name());
 		Mockito.verify(msg).setStringProperty(eq(SyncConstants.JMS_HEADER_MSG_ID), ArgumentMatchers.anyString());

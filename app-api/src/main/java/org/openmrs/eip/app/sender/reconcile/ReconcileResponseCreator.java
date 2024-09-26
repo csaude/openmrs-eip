@@ -7,10 +7,10 @@ import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
 import org.springframework.jms.core.MessageCreator;
 
+import jakarta.jms.BytesMessage;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
 import lombok.Getter;
 
 /**
@@ -19,12 +19,12 @@ import lombok.Getter;
 public class ReconcileResponseCreator implements MessageCreator {
 	
 	@Getter
-	private String body;
+	private byte[] body;
 	
 	@Getter
 	private String siteId;
 	
-	ReconcileResponseCreator(String body, String siteId) {
+	ReconcileResponseCreator(byte[] body, String siteId) {
 		this.body = body;
 		this.siteId = siteId;
 	}
@@ -32,7 +32,8 @@ public class ReconcileResponseCreator implements MessageCreator {
 	@Override
 	public Message createMessage(Session session) throws JMSException {
 		//TODO First compress payload if necessary
-		TextMessage message = session.createTextMessage(body);
+		BytesMessage message = session.createBytesMessage();
+		message.writeBytes(body);
 		message.setStringProperty(SyncConstants.JMS_HEADER_MSG_ID, UUID.randomUUID().toString());
 		message.setStringProperty(SyncConstants.JMS_HEADER_SITE, siteId);
 		message.setStringProperty(SyncConstants.JMS_HEADER_TYPE, MessageType.RECONCILE.name());

@@ -44,8 +44,6 @@ public class SenderTableReconcileProcessorTest {
 	
 	private static final String RECONCILIATION_ID = "test_identifier";
 	
-	private static final String SITE_ID = "test_site";
-	
 	private static final int BATCH_SIZE = 5;
 	
 	@Mock
