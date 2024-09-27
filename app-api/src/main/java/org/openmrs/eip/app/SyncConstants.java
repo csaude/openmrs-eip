@@ -78,6 +78,10 @@ public class SyncConstants {
 	
 	public static final String PROP_DELAY_TABLE_RECONCILER = "reconcile.table.delay";
 	
+	public static final String PROP_INITIAL_DELAY_RECONCILE_SEND = "reconcile.sender.initial.delay";
+	
+	public static final String PROP_DELAY_RECONCILE_SEND = "reconcile.sender.delay";
+	
 	public static final String PROP_LARGE_MSG_SIZE = "jms.large.msg.size";
 	
 	public static final String RECONCILE_MSG_SEPARATOR = ",";

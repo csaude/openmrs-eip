@@ -23,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.openmrs.eip.app.AppUtils;
+import org.openmrs.eip.app.sender.reconcile.SenderReconcileMsgTask;
 import org.openmrs.eip.app.sender.reconcile.SenderReconcileTask;
 import org.openmrs.eip.app.sender.reconcile.SenderTableReconcileTask;
 import org.openmrs.eip.app.sender.task.SenderSyncMessageTask;
@@ -67,6 +68,8 @@ public class SenderCamelListenerTest {
 		setInternalState(listener, "delayTblReconciler", testDelay);
 		setInternalState(listener, "initialDelaySync", testInitialDelay);
 		setInternalState(listener, "delaySync", testDelay);
+		setInternalState(listener, "initialReconcileSend", testInitialDelay);
+		setInternalState(listener, "delayReconcileSend", testDelay);
 	}
 	
 	@Test
@@ -77,6 +80,8 @@ public class SenderCamelListenerTest {
 		Mockito.verify(mockExecutor).scheduleWithFixedDelay(any(SenderReconcileTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockExecutor).scheduleWithFixedDelay(any(SenderTableReconcileTask.class), eq(testInitialDelay),
+		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
+		Mockito.verify(mockExecutor).scheduleWithFixedDelay(any(SenderReconcileMsgTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockExecutor, never()).scheduleWithFixedDelay(any(BinlogPurgingTask.class), anyLong(), anyLong(),
 		    any(TimeUnit.class));

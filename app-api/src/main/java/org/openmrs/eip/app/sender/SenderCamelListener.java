@@ -6,10 +6,12 @@ import static org.openmrs.eip.app.SyncConstants.DEFAULT_DELAY_PRUNER;
 import static org.openmrs.eip.app.SyncConstants.PROP_ARCHIVES_MAX_AGE_DAYS;
 import static org.openmrs.eip.app.SyncConstants.PROP_DELAY_PRUNER;
 import static org.openmrs.eip.app.SyncConstants.PROP_DELAY_RECONCILER;
+import static org.openmrs.eip.app.SyncConstants.PROP_DELAY_RECONCILE_SEND;
 import static org.openmrs.eip.app.SyncConstants.PROP_DELAY_SYNC;
 import static org.openmrs.eip.app.SyncConstants.PROP_DELAY_TABLE_RECONCILER;
 import static org.openmrs.eip.app.SyncConstants.PROP_INITIAL_DELAY_PRUNER;
 import static org.openmrs.eip.app.SyncConstants.PROP_INITIAL_DELAY_RECONCILER;
+import static org.openmrs.eip.app.SyncConstants.PROP_INITIAL_DELAY_RECONCILE_SEND;
 import static org.openmrs.eip.app.SyncConstants.PROP_INITIAL_DELAY_SYNC;
 import static org.openmrs.eip.app.SyncConstants.PROP_INITIAL_DELAY_TABLE_RECONCILER;
 import static org.openmrs.eip.app.SyncConstants.PROP_PRUNER_ENABLED;
@@ -25,6 +27,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.BaseCamelListener;
+import org.openmrs.eip.app.sender.reconcile.SenderReconcileMsgTask;
 import org.openmrs.eip.app.sender.reconcile.SenderReconcileTask;
 import org.openmrs.eip.app.sender.reconcile.SenderTableReconcileTask;
 import org.openmrs.eip.app.sender.task.SenderSyncMessageTask;
@@ -102,6 +105,12 @@ public class SenderCamelListener extends BaseCamelListener {
 	@Value("${" + PROP_DELAY_SYNC + ":" + DEFAULT_DELAY + "}")
 	private long delaySync;
 	
+	@Value("${" + PROP_INITIAL_DELAY_RECONCILE_SEND + ":" + DEFAULT_INITIAL_DELAY + "}")
+	private long initialReconcileSend;
+	
+	@Value("${" + PROP_DELAY_RECONCILE_SEND + ":" + DEFAULT_DELAY + "}")
+	private long delayReconcileSend;
+	
 	public SenderCamelListener(@Qualifier(BEAN_NAME_SCHEDULED_EXECUTOR) ScheduledExecutorService scheduledExecutor,
 	    @Qualifier(BEAN_NAME_SYNC_EXECUTOR) ThreadPoolExecutor syncExecutor) {
 		super(syncExecutor);
@@ -126,6 +135,8 @@ public class SenderCamelListener extends BaseCamelListener {
 		scheduledExecutor.scheduleWithFixedDelay(recTask, initDelayReconciler, delayReconciler, MILLISECONDS);
 		SenderTableReconcileTask tblRecTask = new SenderTableReconcileTask();
 		scheduledExecutor.scheduleWithFixedDelay(tblRecTask, initDelayTblReconciler, delayTblReconciler, MILLISECONDS);
+		SenderReconcileMsgTask recMsgTask = new SenderReconcileMsgTask();
+		scheduledExecutor.scheduleWithFixedDelay(recMsgTask, initialReconcileSend, delayReconcileSend, MILLISECONDS);
 		
 		if (binlogPurgerEnabled) {
 			String file = SyncContext.getBean(Environment.class).getProperty(PROP_DBZM_OFFSET_FILENAME);
