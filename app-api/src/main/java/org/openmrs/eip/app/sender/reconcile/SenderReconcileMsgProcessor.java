@@ -8,6 +8,7 @@ import org.openmrs.eip.app.BasePureParallelQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.SenderReconcileMessage;
 import org.openmrs.eip.app.management.repository.SenderReconcileMsgRepository;
 import org.openmrs.eip.app.sender.SenderConstants;
+import org.openmrs.eip.app.sender.SenderUtils;
 import org.openmrs.eip.component.SyncProfiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +62,7 @@ public class SenderReconcileMsgProcessor extends BasePureParallelQueueProcessor<
 			LOG.trace("");
 		}
 		
-		jmsTemplate.send(new ReconcileResponseCreator(item.getBody(), siteId));
+		jmsTemplate.send(SenderUtils.getQueueName(), new ReconcileResponseCreator(item.getBody(), siteId));
 		repo.delete(item);
 	}
 	

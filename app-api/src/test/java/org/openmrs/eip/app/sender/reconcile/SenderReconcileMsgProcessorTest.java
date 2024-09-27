@@ -9,17 +9,24 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.openmrs.eip.app.BaseQueueProcessor;
 import org.openmrs.eip.app.management.entity.sender.SenderReconcileMessage;
 import org.openmrs.eip.app.management.repository.SenderReconcileMsgRepository;
+import org.openmrs.eip.app.sender.SenderUtils;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 import org.springframework.jms.core.JmsTemplate;
 
 @RunWith(PowerMockRunner.class)
+@PrepareForTest(SenderUtils.class)
 public class SenderReconcileMsgProcessorTest {
+	
+	private static final String QUEUE = "test-queue";
 	
 	private static final String SITE_ID = "test_site";
 	
@@ -33,6 +40,8 @@ public class SenderReconcileMsgProcessorTest {
 	
 	@Before
 	public void setup() {
+		PowerMockito.mockStatic(SenderUtils.class);
+		Mockito.when(SenderUtils.getQueueName()).thenReturn(QUEUE);
 		Whitebox.setInternalState(BaseQueueProcessor.class, "initialized", true);
 		processor = new SenderReconcileMsgProcessor(null, mockRepo, mockTemplate);
 		Whitebox.setInternalState(processor, "siteId", SITE_ID);
@@ -60,7 +69,7 @@ public class SenderReconcileMsgProcessorTest {
 		processor.processItem(m);
 		
 		ArgumentCaptor<ReconcileResponseCreator> argCaptor = ArgumentCaptor.forClass(ReconcileResponseCreator.class);
-		Mockito.verify(mockTemplate).send(argCaptor.capture());
+		Mockito.verify(mockTemplate).send(ArgumentMatchers.eq(QUEUE), argCaptor.capture());
 		Assert.assertArrayEquals(body, argCaptor.getValue().getBody());
 		Assert.assertEquals(SITE_ID, argCaptor.getValue().getSiteId());
 		Mockito.verify(mockRepo).delete(m);
