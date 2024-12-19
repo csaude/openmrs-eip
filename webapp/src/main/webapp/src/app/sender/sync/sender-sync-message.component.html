@@ -15,7 +15,8 @@
 	<tbody>
 	<tr *ngFor="let m of syncMessages">
 		<td>{{m.tableName}}</td>
-		<td>{{m.identifier}}</td>
+		<td>{{m.identifier?.substring(0, 8)}}
+		</td>
 		<td>
 			<span class="text-success" [hidden]="m.operation != 'c'" i18n="@@common-insert">Insert</span>
 			<span [hidden]="m.operation != 'u'" i18n="@@common-update">Update</span>
@@ -23,16 +24,16 @@
 			<span class="text-secondary" [hidden]="m.operation != 's'" i18n="@@common-read">Read</span>
 			<span class="text-info" [hidden]="m.operation != 'r'" i18n="@@common-request">Request</span>
 		</td>
-		<td container="body" ngbTooltip="{{m.messageUuid}}" [openDelay]="1000">{{m.messageUuid?.substring(0, 6)}}</td>
+		<td container="body" ngbTooltip="{{m.messageUuid}}" [openDelay]="1000">{{m.messageUuid?.substring(0, 8)}}</td>
 		<td>
 			<i class="bi-envelope-dash text-warning ui-cursor-pointer" [hidden]="m.status != 'NEW'" [ngbTooltip]="statusWaitingTemplate" [openDelay]="1000"></i>
 			<i class="bi-envelope-check-fill text-success ui-cursor-pointer" [hidden]="m.status != 'SENT'" [ngbTooltip]="statusSentTemplate" [openDelay]="1000"></i>
 		</td>
 		<td container="body" ngbTooltip="{{m.eventDate | date:'EEEE, MMMM dd, y, HH:mm:ss'}}" [openDelay]="1000">
-			{{m.eventDate | date:'MMM dd'}}
+			{{m.eventDate | date:'dd MMM'}}
 		</td>
 		<td container="body" ngbTooltip="{{m.dateSent | date:'EEEE, MMMM dd, y, HH:mm:ss'}}" [openDelay]="1000">
-			{{m.dateSent | date:'MMM dd'}}
+			{{m.dateSent | date:'dd MMM'}}
 		</td>
 	</tr>
 	</tbody>
