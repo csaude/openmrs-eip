@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.debezium.connector.mysql.MySqlStreamingChangeEventSource.BinlogPosition;
+import io.debezium.connector.binlog.BinlogStreamingChangeEventSource.BinlogPosition;
 
 public class OffsetUtils {
 	

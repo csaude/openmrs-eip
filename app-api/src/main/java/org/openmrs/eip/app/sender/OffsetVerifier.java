@@ -9,7 +9,7 @@ import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.network.ServerException;
 import com.mysql.cj.exceptions.MysqlErrorNumbers;
 
-import io.debezium.connector.mysql.MySqlStreamingChangeEventSource.BinlogPosition;
+import io.debezium.connector.binlog.BinlogStreamingChangeEventSource.BinlogPosition;
 
 /**
  * Verifies the {@link BinlogPosition} information against the MySQL server binlogs

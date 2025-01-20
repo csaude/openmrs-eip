@@ -30,7 +30,7 @@ import org.springframework.util.ClassUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.debezium.connector.mysql.MySqlStreamingChangeEventSource.BinlogPosition;
+import io.debezium.connector.binlog.BinlogStreamingChangeEventSource.BinlogPosition;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(OffsetUtils.class)

@@ -9,7 +9,7 @@ import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.BinaryLogClient.AbstractLifecycleListener;
 import com.github.shyiko.mysql.binlog.BinaryLogClient.EventListener;
 
-import io.debezium.connector.mysql.MySqlStreamingChangeEventSource.BinlogPosition;
+import io.debezium.connector.binlog.BinlogStreamingChangeEventSource.BinlogPosition;
 
 /**
  * Base class for listeners for both binlog and client life cycle events
