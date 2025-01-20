@@ -40,18 +40,16 @@
                     <artifactId>jetty-jakarta-servlet-api</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>com.zendesk</groupId>
-                    <artifactId>mysql-binlog-connector-java</artifactId> <!-- Exclude transitive connector -->
+                    <groupId>io.debezium</groupId>
+                    <artifactId>debezium-connector-mysql</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Add the required mysql-binlog-connector-java version -->
         <dependency>
-            <groupId>com.zendesk</groupId>
-            <artifactId>mysql-binlog-connector-java</artifactId>
-            <version>0.28.3</version>
+            <groupId>io.debezium</groupId>
+            <artifactId>debezium-connector-mysql</artifactId>
+            <version>3.0.7.Final</version>
         </dependency>
-
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
