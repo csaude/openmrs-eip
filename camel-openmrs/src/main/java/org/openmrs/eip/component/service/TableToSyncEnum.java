@@ -13,10 +13,6 @@ import org.openmrs.eip.component.entity.DrugOrder;
 import org.openmrs.eip.component.entity.Encounter;
 import org.openmrs.eip.component.entity.EncounterDiagnosis;
 import org.openmrs.eip.component.entity.EncounterProvider;
-import org.openmrs.eip.component.entity.Gaac;
-import org.openmrs.eip.component.entity.GaacFamily;
-import org.openmrs.eip.component.entity.GaacFamilyMember;
-import org.openmrs.eip.component.entity.GaacMember;
 import org.openmrs.eip.component.entity.Location;
 import org.openmrs.eip.component.entity.LocationAttribute;
 import org.openmrs.eip.component.entity.Observation;
@@ -46,10 +42,6 @@ import org.openmrs.eip.component.management.hash.entity.DrugOrderHash;
 import org.openmrs.eip.component.management.hash.entity.EncounterDiagnosisHash;
 import org.openmrs.eip.component.management.hash.entity.EncounterHash;
 import org.openmrs.eip.component.management.hash.entity.EncounterProviderHash;
-import org.openmrs.eip.component.management.hash.entity.GaacFamilyHash;
-import org.openmrs.eip.component.management.hash.entity.GaacFamilyMemberHash;
-import org.openmrs.eip.component.management.hash.entity.GaacHash;
-import org.openmrs.eip.component.management.hash.entity.GaacMemberHash;
 import org.openmrs.eip.component.management.hash.entity.ObsHash;
 import org.openmrs.eip.component.management.hash.entity.OrderHash;
 import org.openmrs.eip.component.management.hash.entity.PatientHash;
@@ -78,10 +70,6 @@ import org.openmrs.eip.component.model.DrugOrderModel;
 import org.openmrs.eip.component.model.EncounterDiagnosisModel;
 import org.openmrs.eip.component.model.EncounterModel;
 import org.openmrs.eip.component.model.EncounterProviderModel;
-import org.openmrs.eip.component.model.GaacFamilyMemberModel;
-import org.openmrs.eip.component.model.GaacFamilyModel;
-import org.openmrs.eip.component.model.GaacMemberModel;
-import org.openmrs.eip.component.model.GaacModel;
 import org.openmrs.eip.component.model.LocationModel;
 import org.openmrs.eip.component.model.ObservationModel;
 import org.openmrs.eip.component.model.OrderModel;
@@ -156,14 +144,6 @@ public enum TableToSyncEnum {
 	PROVIDER(Provider.class, ProviderModel.class, ProviderHash.class),
 	
 	ENCOUNTER_PROVIDER(EncounterProvider.class, EncounterProviderModel.class, EncounterProviderHash.class),
-	
-	GAAC(Gaac.class, GaacModel.class, GaacHash.class),
-	
-	GAAC_MEMBER(GaacMember.class, GaacMemberModel.class, GaacMemberHash.class),
-	
-	GAAC_FAMILY(GaacFamily.class, GaacFamilyModel.class, GaacFamilyHash.class),
-	
-	GAAC_FAMILY_MEMBER(GaacFamilyMember.class, GaacFamilyMemberModel.class, GaacFamilyMemberHash.class),
 	
 	CLINICALSUMMARY_USAGE_REPORT(ClinicalSummaryUsageReport.class, ClinicalSummaryUsageReportModel.class,
 	        ClinicalSummaryUsageReportHash.class),
