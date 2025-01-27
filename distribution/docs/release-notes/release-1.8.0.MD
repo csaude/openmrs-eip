@@ -1,4 +1,14 @@
 # Release Notes - DB Sync Version 1.8.0
+
+The documentation for the property can be found in
+the [receiver application.properties file](../receiver/application.properties)
+
+#### New Properties
+
+```
+jms.send.batch.disabled
+jms.send.batch.size
+```
             
 <h2>        New Features
 </h2>
