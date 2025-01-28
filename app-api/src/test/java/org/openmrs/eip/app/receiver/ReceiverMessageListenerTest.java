@@ -10,6 +10,7 @@ import static org.openmrs.eip.app.SyncConstants.JMS_HEADER_SITE;
 import static org.openmrs.eip.app.SyncConstants.JMS_HEADER_TYPE;
 import static org.openmrs.eip.app.SyncConstants.MGT_DATASOURCE_NAME;
 import static org.openmrs.eip.app.SyncConstants.MGT_TX_MGR;
+import static org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType.RECONCILE;
 import static org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType.SYNC;
 import static org.openmrs.eip.component.model.SyncModel.builder;
 import static org.openmrs.eip.component.utils.JsonUtils.marshall;
@@ -257,6 +258,30 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		List<JmsMessage> msgs = repo.findAll();
 		assertEquals(1, msgs.size());
 		assertTrue(Arrays.equals(body.getBytes(), msgs.get(0).getBody()));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
+	}
+	
+	@Test
+	public void onMessage_shouldAddTheJmsMessageForAReconcileItemToTheDb() throws Exception {
+		final String siteId = "remote1";
+		final String body = "test";
+		final String msgId = "jms-msg-id";
+		assertEquals(0, repo.count());
+		BytesMessage bytesMsg = new ActiveMQBytesMessage();
+		bytesMsg.writeBytes(body.getBytes());
+		bytesMsg.setStringProperty(JMS_HEADER_MSG_ID, msgId);
+		bytesMsg.setStringProperty(JMS_HEADER_TYPE, RECONCILE.name());
+		bytesMsg.setStringProperty(JMS_HEADER_SITE, siteId);
+		
+		listener.onMessage(bytesMsg);
+		
+		List<JmsMessage> msgs = repo.findAll();
+		assertEquals(1, msgs.size());
+		JmsMessage msg = msgs.get(0);
+		assertTrue(Arrays.equals(body.getBytes(), msg.getBody()));
+		assertEquals(msgId, msg.getMessageId());
+		assertEquals(siteId, msg.getSiteId());
+		assertEquals(RECONCILE, msg.getType());
 		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
 	}
 	
