@@ -255,7 +255,7 @@ public class ReceiverCamelListener extends BaseCamelListener {
 	private void startTasks() {
 		if (!jmsTaskDisabled) {
 			log.info("Starting JMS task...");
-			ReceiverJmsMessageTask jmsTask = new ReceiverJmsMessageTask();
+			ReceiverSyncJmsMessageTask jmsTask = new ReceiverSyncJmsMessageTask();
 			siteExecutor.scheduleWithFixedDelay(jmsTask, initialDelayMsgTsk, delayMsgTask, MILLISECONDS);
 		}
 		

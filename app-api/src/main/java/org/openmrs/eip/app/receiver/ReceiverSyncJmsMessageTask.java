@@ -29,9 +29,9 @@ import org.slf4j.LoggerFactory;
  * Reads a batch of JmsMessages and submits them to the {@link ReceiverJmsMessageProcessor} for
  * processing.
  */
-public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, ReceiverJmsMessageProcessor> {
+public class ReceiverSyncJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, ReceiverJmsMessageProcessor> {
 	
-	protected static final Logger log = LoggerFactory.getLogger(ReceiverJmsMessageTask.class);
+	protected static final Logger log = LoggerFactory.getLogger(ReceiverSyncJmsMessageTask.class);
 	
 	protected static final String SYNC_INSERT = "INSERT INTO receiver_sync_msg (model_class_name,identifier,"
 	        + "entity_payload,site_id,is_snapshot,message_uuid,date_sent_by_sender,operation,date_created,"
@@ -45,7 +45,7 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 	
 	private DataSource dataSource;
 	
-	public ReceiverJmsMessageTask() {
+	public ReceiverSyncJmsMessageTask() {
 		super(SyncContext.getBean(ReceiverJmsMessageProcessor.class));
 		this.repo = SyncContext.getBean(JmsMessageRepository.class);
 		this.dataSource = SyncContext.getBean(SyncConstants.MGT_DATASOURCE_NAME);

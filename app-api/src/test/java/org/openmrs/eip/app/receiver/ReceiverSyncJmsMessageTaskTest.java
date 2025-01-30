@@ -30,9 +30,9 @@ import org.springframework.test.context.jdbc.SqlConfig;
 
 @Sql(scripts = {
         "classpath:mgt_site_info.sql" }, config = @SqlConfig(dataSource = MGT_DATASOURCE_NAME, transactionManager = MGT_TX_MGR))
-public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
+public class ReceiverSyncJmsMessageTaskTest extends BaseReceiverTest {
 	
-	private ReceiverJmsMessageTask task;
+	private ReceiverSyncJmsMessageTask task;
 	
 	@Autowired
 	private SyncMessageRepository synMsgRepo;
@@ -40,11 +40,11 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 	@Autowired
 	private JmsMessageRepository jmsMsgRepo;
 	
-	private final String ORIGINAL_DELETE_QUERY = ReceiverJmsMessageTask.jmsDeleteQuery;
+	private final String ORIGINAL_DELETE_QUERY = ReceiverSyncJmsMessageTask.jmsDeleteQuery;
 	
 	@After
 	public void tearDown() {
-		Whitebox.setInternalState(ReceiverJmsMessageTask.class, "jmsDeleteQuery", ORIGINAL_DELETE_QUERY);
+		Whitebox.setInternalState(ReceiverSyncJmsMessageTask.class, "jmsDeleteQuery", ORIGINAL_DELETE_QUERY);
 	}
 	
 	private JmsMessage createMessage(int index) {
@@ -76,7 +76,7 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 		}
 		TestUtils.flush();
 		Assert.assertEquals(COUNT, jmsMsgRepo.count());
-		task = new ReceiverJmsMessageTask();
+		task = new ReceiverSyncJmsMessageTask();
 		
 		task.process(msgs);
 		
@@ -95,8 +95,8 @@ public class ReceiverJmsMessageTaskTest extends BaseReceiverTest {
 		}
 		TestUtils.flush();
 		Assert.assertEquals(COUNT, jmsMsgRepo.count());
-		task = new ReceiverJmsMessageTask();
-		Whitebox.setInternalState(ReceiverJmsMessageTask.class, "jmsDeleteQuery", "BAD QUERY");
+		task = new ReceiverSyncJmsMessageTask();
+		Whitebox.setInternalState(ReceiverSyncJmsMessageTask.class, "jmsDeleteQuery", "BAD QUERY");
 		
 		Throwable thrown = Assert.assertThrows(EIPException.class, () -> task.process(msgs));
 		

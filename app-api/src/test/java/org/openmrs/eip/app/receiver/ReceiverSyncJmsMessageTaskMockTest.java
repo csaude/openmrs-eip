@@ -35,7 +35,7 @@ import org.springframework.data.domain.Pageable;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SyncContext.class, AppUtils.class })
-public class ReceiverJmsMessageTaskMockTest {
+public class ReceiverSyncJmsMessageTaskMockTest {
 	
 	@Mock
 	private JmsMessageRepository mockRepo;
@@ -58,7 +58,7 @@ public class ReceiverJmsMessageTaskMockTest {
 	@Mock
 	private Statement mockDeleteStatement;
 	
-	private ReceiverJmsMessageTask task;
+	private ReceiverSyncJmsMessageTask task;
 	
 	@Before
 	public void setup() throws Exception {
@@ -67,7 +67,7 @@ public class ReceiverJmsMessageTaskMockTest {
 		when(SyncContext.getBean(ReceiverJmsMessageProcessor.class)).thenReturn(mockProcessor);
 		when(SyncContext.getBean(SyncConstants.MGT_DATASOURCE_NAME)).thenReturn(mockDatasource);
 		when(mockDatasource.getConnection()).thenReturn(mockConnection);
-		when(mockConnection.prepareStatement(ReceiverJmsMessageTask.SYNC_INSERT)).thenReturn(mockInsertStatement);
+		when(mockConnection.prepareStatement(ReceiverSyncJmsMessageTask.SYNC_INSERT)).thenReturn(mockInsertStatement);
 		when(mockConnection.createStatement()).thenReturn(mockDeleteStatement);
 	}
 	
@@ -83,7 +83,7 @@ public class ReceiverJmsMessageTaskMockTest {
 	@Test
 	public void getNextBatch_shouldFetchTheNextBatchOfMessage() {
 		when(AppUtils.getTaskPage()).thenReturn(mockPage);
-		task = new ReceiverJmsMessageTask();
+		task = new ReceiverSyncJmsMessageTask();
 		setInternalState(task, JmsMessageRepository.class, mockRepo);
 		List<JmsMessage> expected = List.of(new JmsMessage(), new JmsMessage(), new JmsMessage());
 		when(mockRepo.findByType(MessageType.SYNC, mockPage)).thenReturn(expected);
@@ -96,7 +96,7 @@ public class ReceiverJmsMessageTaskMockTest {
 	@Test
 	public void process_shouldProcessMessagesIndividuallyIfTheMessageListContainsASyncRequest() throws Exception {
 		List<JmsMessage> msgs = List.of(createMessage(SyncOperation.r.name()), createMessage(SyncOperation.c.name()));
-		task = new ReceiverJmsMessageTask();
+		task = new ReceiverSyncJmsMessageTask();
 		when(mockConnection.getAutoCommit()).thenReturn(true);
 		
 		task.process(msgs);
