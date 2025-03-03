@@ -53,7 +53,7 @@
 		<table *ngIf="parsedEntityPayLoad.metadata.operation !== 'd'" border="1" width="100%" class="table-striped ui-display-table">
 			<tbody>
 			<tr *ngFor="let entry of parsedEntityPayLoad.model | keyvalue">
-				<th class="text-right align-text-top">{{entry.key}}</th>
+				<th class="text-right align-text-top">{{entry.key === 'gender' ? 'sex' : entry.key }}</th>
 				<td class="text-left">{{entry.value}}</td>
 			</tr>
 			</tbody>
