@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Reads a batch of sync JmsMessages and submits them to the {@link ReceiverJmsMessageProcessor} for
+ * Reads a batch of JmsMessages and submits them to the {@link ReceiverJmsMessageProcessor} for
  * processing.
  */
 public class ReceiverSyncJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, ReceiverJmsMessageProcessor> {
@@ -53,7 +53,7 @@ public class ReceiverSyncJmsMessageTask extends BaseDelegatingQueueTask<JmsMessa
 	
 	@Override
 	public String getTaskName() {
-		return "sync jms msg task";
+		return "jms msg task";
 	}
 	
 	@Override
