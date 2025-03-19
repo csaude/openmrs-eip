@@ -85,7 +85,7 @@ public class ReceiverMessageListener implements MessageListener {
 			boolean duplicate = false;
 			if (batchSizeStr == null) {
 				Map metadata = (Map) (JsonUtils.unmarshalBytes(body, Map.class)).get("metadata");
-				final String msgUid = metadata.get("messageUuid").toString();
+				final String msgUid = metadata.get("messageUuid") != null ? metadata.get("messageUuid").toString() : null;
 				JmsMessage jmsMsg = createJmsMessage(msgUid, body, siteId, version, type);
 				if (jmsMsg != null) {
 					service.saveJmsMessage(jmsMsg);
