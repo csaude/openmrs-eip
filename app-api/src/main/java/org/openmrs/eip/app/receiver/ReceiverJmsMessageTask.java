@@ -82,7 +82,9 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 					insertStmt.setString(1, syncModel.getTableToSyncModelClass().getName());
 					insertStmt.setString(2, syncModel.getModel().getUuid());
 					insertStmt.setString(3, body);
-					insertStmt.setLong(4, ReceiverContext.getSiteInfo(md.getSourceIdentifier()).getId());
+					
+					insertStmt.setLong(4, md.getSourceIdentifier() != null ? ReceiverContext.getSiteInfo(md.getSourceIdentifier()).getId() : null);
+					
 					insertStmt.setBoolean(5, md.getSnapshot());
 					insertStmt.setString(6, md.getMessageUuid());
 					insertStmt.setObject(7, md.getDateSent());
