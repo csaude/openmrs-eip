@@ -27,7 +27,7 @@ public class ReceiverRetryTask extends BaseDelegatingQueueTask<ReceiverRetryQueu
 	
 	private static final Set<String> FAILED_ENTITIES = Collections.synchronizedSet(new HashSet<>());
 	
-	protected static final int BATCH_SIZE = 200;
+	protected static final int BATCH_SIZE = 10000;
 	
 	public ReceiverRetryTask(ReceiverRetryProcessor processor) {
 		super(processor);
