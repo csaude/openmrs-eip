@@ -154,7 +154,7 @@ public class ReceiverCamelListenerTest {
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverRetryTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
-		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverSyncJmsMessageTask.class), eq(testInitialDelay),
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverJmsMessageTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
@@ -217,7 +217,7 @@ public class ReceiverCamelListenerTest {
 		
 		Mockito.verify(mockSiteExecutor, times(2)).scheduleWithFixedDelay(any(SiteParentTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
-		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverSyncJmsMessageTask.class), eq(testInitialDelay),
+		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverJmsMessageTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
@@ -274,7 +274,7 @@ public class ReceiverCamelListenerTest {
 		
 		listener.applicationStarted();
 		
-		Mockito.verify(mockSiteExecutor, never()).scheduleWithFixedDelay(any(ReceiverSyncJmsMessageTask.class), anyLong(),
+		Mockito.verify(mockSiteExecutor, never()).scheduleWithFixedDelay(any(ReceiverJmsMessageTask.class), anyLong(),
 		    anyLong(), any());
 		Mockito.verify(mockSiteExecutor).scheduleWithFixedDelay(any(ReceiverReconcileTask.class), eq(testInitialDelay),
 		    eq(testDelay), eq(TimeUnit.MILLISECONDS));
