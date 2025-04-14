@@ -43,7 +43,7 @@ public class SyncStatusProcessorIntegrationTest extends BaseReceiverTest {
 		final String siteIdentifier = "bad-identifier";
 		assertEquals(0, statusRepo.count());
 		
-		processor.process(siteIdentifier);
+		processor.process(siteIdentifier, getDbsyncVersion());
 		
 		assertEquals(0, statusRepo.count());
 		assertMessageLogged(Level.ERROR, "No site info found with identifier: " + siteIdentifier
@@ -56,7 +56,7 @@ public class SyncStatusProcessorIntegrationTest extends BaseReceiverTest {
 		SiteInfo siteInfo = siteRepo.findById(1L).get();
 		Date timestamp = new Date();
 		
-		processor.process(siteInfo.getIdentifier());
+		processor.process(siteInfo.getIdentifier(), getDbsyncVersion());
 		
 		List<ReceiverSyncStatus> statuses = statusRepo.findAll();
 		assertEquals(1, statuses.size());
@@ -74,7 +74,7 @@ public class SyncStatusProcessorIntegrationTest extends BaseReceiverTest {
 		Date existingLastSyncDate = syncStatus.getLastSyncDate();
 		Date dateCreated = syncStatus.getDateCreated();
 		
-		processor.process(siteInfo.getIdentifier());
+		processor.process(siteInfo.getIdentifier(), getDbsyncVersion());
 		
 		assertEquals(2, statusRepo.findAll().size());
 		syncStatus = statusRepo.findById(syncStatus.getId()).get();
@@ -89,7 +89,7 @@ public class SyncStatusProcessorIntegrationTest extends BaseReceiverTest {
 		SiteInfo siteInfo = siteRepo.findById(1L).get();
 		Date timestamp = new Date();
 		
-		processor.process(siteInfo.getIdentifier());
+		processor.process(siteInfo.getIdentifier(), getDbsyncVersion());
 		
 		List<ReceiverSyncStatus> statuses = statusRepo.findAll();
 		assertEquals(1, statuses.size());

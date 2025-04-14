@@ -500,5 +500,15 @@
             <column name="model_class_name"/>
         </createIndex>
     </changeSet>
-
+	<changeSet author="jpboane" id="20250414-1038" labels="1.9.0">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="dbsync_version" tableName="receiver_sync_status"/>
+            </not>
+        </preConditions>
+        <comment>Add dbsync_version column to receiver_sync_status table</comment>
+        <addColumn tableName="receiver_sync_status">
+            <column name="dbsync_version" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

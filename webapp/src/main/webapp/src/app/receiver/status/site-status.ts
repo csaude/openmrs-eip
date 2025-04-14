@@ -6,5 +6,7 @@ export class SiteStatus extends BaseEntity {
 	siteInfo?: Site;
 
 	lastSyncDate?: string;
+	
+	dbsyncVersion?: string;
 
 }
