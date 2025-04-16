@@ -95,7 +95,7 @@ public class ReceiverMessageListener implements MessageListener {
 					msgUid = message.getStringProperty(SyncConstants.JMS_HEADER_MSG_ID);
 				}
 				
-				dbsyncVersion = metadata.get("syncVersion").toString();
+				dbsyncVersion = metadata.get("syncVersion") != null ? metadata.get("syncVersion").toString() : null;
 				
 				JmsMessage jmsMsg = createJmsMessage(msgUid, body, siteId, version, type);
 				if (jmsMsg != null) {
