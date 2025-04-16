@@ -890,5 +890,11 @@
 				<target>Nenhum problema encontrado</target>
 			</segment>
 		</unit>
+		<unit id="dbsync-version">
+			<segment>
+				<source>Dbsync Version</source>
+				<target>Versao do Dbsync</target>
+			</segment>
+		</unit>
 	</file>
 </xliff>

@@ -65,7 +65,7 @@ public class SyncStatusProcessorTest {
 		status.setId(1L);
 		when(mockStatusRepo.findBySiteInfo(mockSite)).thenReturn(status);
 		
-		processor.process(SITE_IDENTIFIER);
+		processor.process(SITE_IDENTIFIER, getDbsyncVersion());
 		
 		Mockito.verify(mockStatusRepo).save(status);
 		Map<String, ReceiverSyncStatus> cache = getInternalState(SyncStatusProcessor.class, "siteIdAndStatusMap");
@@ -82,7 +82,7 @@ public class SyncStatusProcessorTest {
 		setInternalState(SyncStatusProcessor.class, "siteIdAndStatusMap", singletonMap(SITE_IDENTIFIER, status));
 		when(Utils.getMillisElapsed(eq(lastSyncDate), any(Date.class))).thenReturn(FLUSH_INTERVAL - 1);
 		
-		processor.process(SITE_IDENTIFIER);
+		processor.process(SITE_IDENTIFIER, getDbsyncVersion());
 		
 		Mockito.verify(mockStatusRepo, never()).save(status);
 		assertEquals(lastSyncDate, status.getLastSyncDate());
@@ -98,7 +98,7 @@ public class SyncStatusProcessorTest {
 		setInternalState(SyncStatusProcessor.class, "siteIdAndStatusMap", singletonMap(SITE_IDENTIFIER, status));
 		when(Utils.getMillisElapsed(eq(lastSyncDate), any(Date.class))).thenReturn(FLUSH_INTERVAL);
 		
-		processor.process(SITE_IDENTIFIER);
+		processor.process(SITE_IDENTIFIER, getDbsyncVersion());
 		
 		Mockito.verify(mockStatusRepo, never()).save(status);
 		assertEquals(lastSyncDate, status.getLastSyncDate());
@@ -115,10 +115,14 @@ public class SyncStatusProcessorTest {
 		when(Utils.getMillisElapsed(eq(lastSyncDate), any(Date.class))).thenReturn(FLUSH_INTERVAL + 1);
 		Date timestamp = new Date();
 		
-		processor.process(SITE_IDENTIFIER);
+		processor.process(SITE_IDENTIFIER, getDbsyncVersion());
 		
 		Mockito.verify(mockStatusRepo).save(status);
 		assertTrue(status.getLastSyncDate().getTime() >= timestamp.getTime());
+	}
+	
+	public String getDbsyncVersion() {
+		return "openmrs-eip-testing-versin";
 	}
 	
 }

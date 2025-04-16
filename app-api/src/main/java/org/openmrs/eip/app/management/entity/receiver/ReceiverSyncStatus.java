@@ -23,6 +23,9 @@ public class ReceiverSyncStatus extends AbstractEntity {
 	@Column(name = "last_sync_date", nullable = false)
 	private Date lastSyncDate;
 	
+	@Column(name = "dbsync_version", nullable = true)
+	private String dbsyncVersion;
+	
 	public ReceiverSyncStatus() {
 	}
 	
@@ -37,6 +40,19 @@ public class ReceiverSyncStatus extends AbstractEntity {
 	
 	public void setSiteInfo(SiteInfo siteInfo) {
 		this.siteInfo = siteInfo;
+	}
+	
+	/**
+	 * Gets the Version of Remote Dbsync
+	 * 
+	 * @return the dbsync version running in the remote site
+	 */
+	public String getDbsyncVersion() {
+		return dbsyncVersion;
+	}
+	
+	public void setDbsyncVersion(String dbsyncVersion) {
+		this.dbsyncVersion = dbsyncVersion;
 	}
 	
 	/**

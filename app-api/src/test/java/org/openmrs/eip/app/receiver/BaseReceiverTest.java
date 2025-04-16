@@ -11,4 +11,9 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = "openmrs.baseUrl=test")
 @TestPropertySource(properties = "openmrs.username=")
 @TestPropertySource(properties = "openmrs.password=test")
-public abstract class BaseReceiverTest extends BaseDbBackedCamelTest {}
+public abstract class BaseReceiverTest extends BaseDbBackedCamelTest {
+	
+	public String getDbsyncVersion() {
+		return "openmrs-eip-testing-version";
+	}
+}

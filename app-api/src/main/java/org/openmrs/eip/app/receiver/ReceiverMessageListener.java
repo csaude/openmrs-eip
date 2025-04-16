@@ -83,6 +83,8 @@ public class ReceiverMessageListener implements MessageListener {
 			}
 			
 			boolean duplicate = false;
+			String dbsyncVersion = null;
+			
 			if (batchSizeStr == null) {
 				String msgUid;
 				Map metadata = null;
@@ -92,6 +94,8 @@ public class ReceiverMessageListener implements MessageListener {
 				} else {
 					msgUid = message.getStringProperty(SyncConstants.JMS_HEADER_MSG_ID);
 				}
+				
+				dbsyncVersion = metadata.get("syncVersion") != null ? metadata.get("syncVersion").toString() : null;
 				
 				JmsMessage jmsMsg = createJmsMessage(msgUid, body, siteId, version, type);
 				if (jmsMsg != null) {
@@ -116,6 +120,10 @@ public class ReceiverMessageListener implements MessageListener {
 				List<JmsMessage> msgs = new ArrayList<>(items.size());
 				for (Map entry : items) {
 					String msgUid = ((Map) (entry).get("metadata")).get("messageUuid").toString();
+					
+					dbsyncVersion = dbsyncVersion == null ? ((Map) (entry).get("metadata")).get("syncVersion").toString()
+					        : dbsyncVersion;
+					
 					JmsMessage msg = createJmsMessage(msgUid, JsonUtils.marshalToBytes(entry), siteId, version, type);
 					if (msg != null) {
 						msgs.add(msg);
@@ -127,7 +135,7 @@ public class ReceiverMessageListener implements MessageListener {
 			
 			if (!duplicate) {
 				try {
-					statusProcessor.process(siteId);
+					statusProcessor.process(siteId, dbsyncVersion);
 				}
 				catch (Throwable t) {
 					Throwable cause = ExceptionUtils.getRootCause(t);

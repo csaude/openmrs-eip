@@ -5,6 +5,7 @@
 	<tr>
 		<th i18n="@@common-name">Name</th>
 		<th i18n="@@common-identifier">Identifier</th>
+		<th i18n="@@dbsync-version">Dbsync Version</th>
 		<th i18n="@@last-sync-date">Last Sync Date</th>
 	</tr>
 	</thead>
@@ -12,6 +13,7 @@
 	<tr *ngFor="let e of statuses">
 		<td>{{e.siteInfo?.name}}</td>
 		<td>{{e.siteInfo?.identifier}}</td>
+		<td>{{e.dbsyncVersion}}</td>
 		<td>{{e.lastSyncDate | date:'EEEE, MMMM d, y, HH:mm:ss'}}</td>
 	</tr>
 	</tbody>

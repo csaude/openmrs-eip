@@ -15,12 +15,16 @@ import static org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageT
 import static org.openmrs.eip.component.model.SyncModel.builder;
 import static org.openmrs.eip.component.utils.JsonUtils.marshall;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -98,7 +102,7 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		assertEquals(messageUuid, msg.getMessageId());
 		assertEquals(siteId, msg.getSiteId());
 		assertEquals(SYNC, msg.getType());
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId), getDbsyncVersion());
 	}
 	
 	@Test
@@ -186,7 +190,7 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		assertEquals("msg-uuid-3", msg.getMessageId());
 		assertEquals(siteId, msg.getSiteId());
 		assertEquals(SYNC, msg.getType());
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId), getDbsyncVersion());
 	}
 	
 	@Test
@@ -209,7 +213,7 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		List<JmsMessage> msgs = repo.findAll();
 		assertEquals(1, msgs.size());
 		assertTrue(Arrays.equals(body.getBytes(), msgs.get(0).getBody()));
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId), getDbsyncVersion());
 	}
 	
 	@Test
@@ -234,7 +238,7 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		List<JmsMessage> msgs = repo.findAll();
 		assertEquals(1, msgs.size());
 		assertTrue(Arrays.equals(body.getBytes(), msgs.get(0).getBody()));
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId), getDbsyncVersion());
 	}
 	
 	@Test
@@ -258,7 +262,7 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		List<JmsMessage> msgs = repo.findAll();
 		assertEquals(1, msgs.size());
 		assertTrue(Arrays.equals(body.getBytes(), msgs.get(0).getBody()));
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId), getDbsyncVersion());
 	}
 	
 	@Test
@@ -282,7 +286,6 @@ public class ReceiverMessageListenerTest extends BaseReceiverTest {
 		assertEquals(msgId, msg.getMessageId());
 		assertEquals(siteId, msg.getSiteId());
 		assertEquals(RECONCILE, msg.getType());
-		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId));
+		Mockito.verify(mockStatusProcessor).process(ArgumentMatchers.eq(siteId), getDbsyncVersion());
 	}
-	
 }

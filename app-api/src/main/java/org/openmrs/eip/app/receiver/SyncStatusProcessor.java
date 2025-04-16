@@ -30,7 +30,8 @@ public class SyncStatusProcessor {
 		this.statusRepo = statusRepo;
 	}
 	
-	public void process(String siteId) {
+	public void process(String siteId, String dbsyncVersion) {
+		
 		Date dateReceived = new Date();
 		SiteInfo site = null;
 		try {
@@ -60,7 +61,9 @@ public class SyncStatusProcessor {
 			if (status == null) {
 				status = new ReceiverSyncStatus(site, dateReceived);
 				status.setDateCreated(dateReceived);
+				status.setDbsyncVersion(dbsyncVersion);
 				saveChanges = true;
+				
 				if (logger.isTraceEnabled()) {
 					logger.trace("Inserting site sync status -> " + status);
 				}
@@ -69,6 +72,7 @@ public class SyncStatusProcessor {
 				//ensures that if we get multiple messages from the same site within a short negligible time interval, 
 				//this acts as a throttle to avoid multiple database updates
 				status.setLastSyncDate(dateReceived);
+				status.setDbsyncVersion(dbsyncVersion);
 				saveChanges = true;
 				if (logger.isTraceEnabled()) {
 					logger.trace("Updating site last sync date to -> " + status);
