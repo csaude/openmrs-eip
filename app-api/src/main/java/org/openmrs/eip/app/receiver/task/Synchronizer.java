@@ -47,7 +47,7 @@ public class Synchronizer extends BaseQueueSiteTask<SyncMessage, SyncMessageProc
 	}
 	
 	private List<SyncMessage> tryToSquashItems(List<SyncMessage> items) {
-		if (items == null) {
+		if (items == null || items.isEmpty()) {
 			return null;
 		} else {
 			Map<String, SyncMessage> uniqueMap = new LinkedHashMap<>();
