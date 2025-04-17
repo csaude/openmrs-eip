@@ -1,6 +1,8 @@
 package org.openmrs.eip.app.receiver.task;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.management.entity.receiver.SyncMessage;
@@ -37,10 +39,20 @@ public class Synchronizer extends BaseQueueSiteTask<SyncMessage, SyncMessageProc
 	@Override
 	public List<SyncMessage> getNextBatch(Pageable page) {
 		if (orderById) {
-			return repo.getSyncMessageBySite(site, page);
+			return tryToSquashItems(repo.getSyncMessageBySite(site, page));
 		} else {
-			return repo.getSyncMessageBySiteOrderByDateReceived(site, page);
+			return tryToSquashItems(repo.getSyncMessageBySiteOrderByDateReceived(site, page));
 		}
+	}
+	
+	private List<SyncMessage> tryToSquashItems(List<SyncMessage> items) {
+		Map<String, SyncMessage> uniqueMap = new LinkedHashMap<>();
+		
+		for (SyncMessage item : items) {
+			uniqueMap.put(item.getIdentifier(), item);
+		}
+		
+		return items;
 	}
 	
 	@Override
