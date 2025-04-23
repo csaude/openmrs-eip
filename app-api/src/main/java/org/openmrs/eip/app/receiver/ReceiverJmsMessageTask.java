@@ -14,6 +14,7 @@ import org.openmrs.eip.app.AppUtils;
 import org.openmrs.eip.app.BaseDelegatingQueueTask;
 import org.openmrs.eip.app.SyncConstants;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage;
+import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.management.entity.receiver.JmsMessage.MessageType;
 import org.openmrs.eip.app.management.repository.JmsMessageRepository;
 import org.openmrs.eip.component.SyncContext;
@@ -82,7 +83,18 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 					insertStmt.setString(1, syncModel.getTableToSyncModelClass().getName());
 					insertStmt.setString(2, syncModel.getModel().getUuid());
 					insertStmt.setString(3, body);
-					insertStmt.setLong(4, ReceiverContext.getSiteInfo(md.getSourceIdentifier()).getId());
+					
+					if (md.getSourceIdentifier() != null) {
+						SiteInfo siteInfo = ReceiverContext.getSiteInfo(md.getSourceIdentifier());
+						
+						if (siteInfo != null) {
+							insertStmt.setLong(4, siteInfo.getId());
+						} else {
+							log.error("The site " + md.getSourceIdentifier() + " is not registered!");
+							throw new RuntimeException("The site " + md.getSourceIdentifier() + " is not registered!");
+						}
+					}
+					
 					insertStmt.setBoolean(5, md.getSnapshot());
 					insertStmt.setString(6, md.getMessageUuid());
 					insertStmt.setObject(7, md.getDateSent());
