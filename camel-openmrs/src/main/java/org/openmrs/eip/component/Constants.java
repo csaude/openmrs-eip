@@ -19,6 +19,10 @@ public class Constants {
 	
 	public static final String PROP_OPENMRS_DB_HOST = "openmrs.db.host";
 	
+	public static final String PROP_OPENMRS_DB_NAME = "openmrs.db.name";
+	
+	public static final String PROP_DEBEZIUM_OFFSET_FILE_NAME = "debezium.offsetFilename";
+	
 	public static final String PROP_OPENMRS_DB_PORT = "openmrs.db.port";
 	
 	public static final String PROP_IGNORE_MISSING_HASH = "receiver.ignore.missing.hash.for.existing.entity";
