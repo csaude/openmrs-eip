@@ -378,12 +378,9 @@ public class CustomHistoryFileStore extends AbstractFileBasedSchemaHistory {
 				if (!isCharacterType(sqlType)) {
 					charsetName = null;
 				}
-				// Do not set length for DATETIME, DATE, TIME, or TIMESTAMP
-				if ((sqlType == Types.DATE || sqlType == Types.TIME || sqlType == Types.TIMESTAMP)
-				        && (columnName.equals("date_created") || columnName.equals("encounter_datetime")
-				                || columnName.equals("obs_datetime"))) {
-					length = 0;
-					defaultValue = "0000-00-00 00:00:00";
+				
+				if (sqlType == Types.TIMESTAMP && typeName.equals("TIMESTAMP")) {
+					sqlType = Types.TIMESTAMP_WITH_TIMEZONE;
 				}
 				
 				// Handle TINYINT default value to avoid Short type issue
@@ -481,9 +478,10 @@ public class CustomHistoryFileStore extends AbstractFileBasedSchemaHistory {
 			colDoc.set("autoIncremented", column.isAutoIncremented());
 			colDoc.set("generated", column.isAutoIncremented());
 			colDoc.set("comment", column.comment() == null ? null : column.comment());
-			colDoc.set("hasDefaultValue", !column.isAutoIncremented());
+			colDoc.set("hasDefaultValue", false);
 			column.defaultValueExpression().ifPresent(value -> {
 				colDoc.setString("defaultValueExpression", value);
+				colDoc.set("hasDefaultValue", true);
 			});
 			colDoc.set("enumValues", Array.create(column.enumValues()));
 			
