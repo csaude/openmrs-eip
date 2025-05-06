@@ -27,7 +27,7 @@ public class BinlogUtils {
 	
 	private static final Logger log = LoggerFactory.getLogger(BinlogUtils.class);
 	
-	protected static final String URL_QUERY = "?autoReconnect=true&sessionVariables=default_storage_engine=InnoDB&useUnicode=true&characterEncoding=UTF-8";
+	public static final String URL_QUERY = "?autoReconnect=true&sessionVariables=default_storage_engine=InnoDB&useUnicode=true&characterEncoding=UTF-8";
 	
 	protected static final String QUERY_SHOW_BIN_LOGS = "SHOW BINARY LOGS";
 	
