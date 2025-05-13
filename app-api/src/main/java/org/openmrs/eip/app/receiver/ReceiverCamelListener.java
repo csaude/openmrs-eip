@@ -42,6 +42,7 @@ import org.openmrs.eip.app.management.entity.receiver.SiteInfo;
 import org.openmrs.eip.app.receiver.reconcile.ReceiverReconcileMsgTask;
 import org.openmrs.eip.app.receiver.reconcile.ReceiverReconcileTask;
 import org.openmrs.eip.app.receiver.task.ReceiverRetryTask;
+import org.openmrs.eip.app.receiver.task.Synchronizer;
 import org.openmrs.eip.component.Constants;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.SyncProfiles;
@@ -245,11 +246,15 @@ public class ReceiverCamelListener extends BaseCamelListener {
 		
 		siteTasks = new ArrayList(sites.size());
 		
-		sites.stream().forEach(site -> {
-			SiteParentTask t = new SiteParentTask(site, disabledTaskClasses, !"-".equals(fullIndexerCron));
-			siteExecutor.scheduleWithFixedDelay(t, siteTaskInitialDelay, siteTaskDelay, MILLISECONDS);
-			siteTasks.add(t);
-		});
+		if (hasAtLeastOneEnabledTask(disabledTaskClasses, !"-".equals(fullIndexerCron))) {
+			sites.stream().forEach(site -> {
+				SiteParentTask t = new SiteParentTask(site, disabledTaskClasses, !"-".equals(fullIndexerCron));
+				siteExecutor.scheduleWithFixedDelay(t, siteTaskInitialDelay, siteTaskDelay, MILLISECONDS);
+				siteTasks.add(t);
+			});
+		} else {
+			log.warn("All tasks are disabled. No siteTask will be created");
+		}
 	}
 	
 	private void startTasks() {
@@ -277,4 +282,24 @@ public class ReceiverCamelListener extends BaseCamelListener {
 		siteExecutor.scheduleWithFixedDelay(pruner, initialDelayPruner, delayPruner, MILLISECONDS);
 	}
 	
+	private boolean hasAtLeastOneEnabledTask(List<Class<? extends Runnable>> disabledTaskClasses, boolean fullIndexEnabled) {
+		if (!disabledTaskClasses.contains(Synchronizer.class)) {
+			return true;
+		}
+		if (!fullIndexEnabled) {
+			if (!disabledTaskClasses.contains(CacheEvictor.class)) {
+				return true;
+			}
+			if (!disabledTaskClasses.contains(SearchIndexUpdater.class)) {
+				return true;
+			}
+		}
+		if (!disabledTaskClasses.contains(SyncResponseSender.class)) {
+			return true;
+		}
+		if (!disabledTaskClasses.contains(SyncedMessageDeleter.class)) {
+			return true;
+		}
+		return false;
+	}
 }
