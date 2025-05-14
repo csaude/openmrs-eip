@@ -93,6 +93,8 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 							log.error("The site " + md.getSourceIdentifier() + " is not registered!");
 							throw new RuntimeException("The site " + md.getSourceIdentifier() + " is not registered!");
 						}
+					} else {
+						insertStmt.setObject(4, null);
 					}
 					
 					insertStmt.setBoolean(5, md.getSnapshot());
