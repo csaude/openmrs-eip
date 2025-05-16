@@ -79,7 +79,7 @@ public abstract class BaseSyncProcessor<T extends AbstractEntity> extends BaseQu
 			}
 			
 			Throwable cause = ExceptionUtils.getRootCause(t);
-			if (cause == null) {
+			if (cause == null || cause.getMessage() == null) {
 				cause = t;
 			}
 			
