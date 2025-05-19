@@ -84,15 +84,19 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 					insertStmt.setString(2, syncModel.getModel().getUuid());
 					insertStmt.setString(3, body);
 					
-					if (md.getSourceIdentifier() != null) {
-						SiteInfo siteInfo = ReceiverContext.getSiteInfo(md.getSourceIdentifier());
-						
-						if (siteInfo != null) {
-							insertStmt.setLong(4, siteInfo.getId());
-						} else {
-							log.error("The site " + md.getSourceIdentifier() + " is not registered!");
-							throw new RuntimeException("The site " + md.getSourceIdentifier() + " is not registered!");
-						}
+					String siteId = md.getSourceIdentifier() != null ? md.getSourceIdentifier() : jmsMessage.getSiteId();
+					
+					if (siteId == null) {
+						throw new RuntimeException("There is no siteId on the payload");
+					}
+					
+					SiteInfo siteInfo = ReceiverContext.getSiteInfo(siteId);
+					
+					if (siteInfo != null) {
+						insertStmt.setLong(4, siteInfo.getId());
+					} else {
+						log.error("The site " + md.getSourceIdentifier() + " is not registered!");
+						throw new RuntimeException("The site " + md.getSourceIdentifier() + " is not registered!");
 					}
 					
 					insertStmt.setBoolean(5, md.getSnapshot());
