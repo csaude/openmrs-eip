@@ -87,7 +87,7 @@ public class ReceiverJmsMessageTask extends BaseDelegatingQueueTask<JmsMessage, 
 					String siteId = md.getSourceIdentifier() != null ? md.getSourceIdentifier() : jmsMessage.getSiteId();
 					
 					if (siteId == null) {
-						throw new RuntimeException("There is no siteId on the paylod");
+						throw new RuntimeException("There is no siteId on the payload");
 					}
 					
 					SiteInfo siteInfo = ReceiverContext.getSiteInfo(siteId);
