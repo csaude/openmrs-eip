@@ -1,6 +1,17 @@
 package org.openmrs.eip.component.utils;
 
 import org.json.JSONObject;
+import org.openmrs.eip.component.entity.light.ConceptLight;
+import org.openmrs.eip.component.entity.light.EncounterTypeLight;
+import org.openmrs.eip.component.entity.light.LightEntity;
+import org.openmrs.eip.component.entity.light.LocationLight;
+import org.openmrs.eip.component.entity.light.OrderTypeLight;
+import org.openmrs.eip.component.entity.light.PatientIdentifierTypeLight;
+import org.openmrs.eip.component.entity.light.PersonAttributeTypeLight;
+import org.openmrs.eip.component.entity.light.ProviderAttributeTypeLight;
+import org.openmrs.eip.component.entity.light.RelationshipTypeLight;
+import org.openmrs.eip.component.entity.light.VisitAttributeTypeLight;
+import org.openmrs.eip.component.entity.light.VisitTypeLight;
 import org.openmrs.eip.component.mapper.operations.DecomposedUuid;
 
 import java.util.Optional;
@@ -42,4 +53,17 @@ public final class ModelUtils {
 		
 		return decomposedUuid.map(DecomposedUuid::getUuid).orElse(null);
 	}
+	
+	public static boolean isMetadataEntity(LightEntity entity) {
+		
+		if (entity instanceof PatientIdentifierTypeLight || entity instanceof ConceptLight || entity instanceof LocationLight
+		        || entity instanceof EncounterTypeLight || entity instanceof OrderTypeLight
+		        || entity instanceof ProviderAttributeTypeLight || entity instanceof PersonAttributeTypeLight
+		        || entity instanceof RelationshipTypeLight || entity instanceof VisitAttributeTypeLight
+		        || entity instanceof VisitTypeLight) {
+			return true;
+		}
+		return false;
+	}
+	
 }
