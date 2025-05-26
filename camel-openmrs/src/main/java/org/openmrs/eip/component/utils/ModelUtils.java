@@ -15,8 +15,13 @@ import org.openmrs.eip.component.entity.light.VisitTypeLight;
 import org.openmrs.eip.component.mapper.operations.DecomposedUuid;
 
 import java.util.Optional;
+import java.util.Set;
 
 public final class ModelUtils {
+	
+	private static final Set<Class<?>> METADATA_TYPES = Set.of(PatientIdentifierTypeLight.class, ConceptLight.class,
+	    LocationLight.class, EncounterTypeLight.class, OrderTypeLight.class, ProviderAttributeTypeLight.class,
+	    PersonAttributeTypeLight.class, RelationshipTypeLight.class, VisitAttributeTypeLight.class, VisitTypeLight.class);
 	
 	private ModelUtils() {
 	}
@@ -55,15 +60,9 @@ public final class ModelUtils {
 	}
 	
 	public static boolean isMetadataEntity(LightEntity entity) {
-		
-		if (entity instanceof PatientIdentifierTypeLight || entity instanceof ConceptLight || entity instanceof LocationLight
-		        || entity instanceof EncounterTypeLight || entity instanceof OrderTypeLight
-		        || entity instanceof ProviderAttributeTypeLight || entity instanceof PersonAttributeTypeLight
-		        || entity instanceof RelationshipTypeLight || entity instanceof VisitAttributeTypeLight
-		        || entity instanceof VisitTypeLight) {
-			return true;
+		if (entity != null) {
+			return METADATA_TYPES.contains(entity.getClass());
 		}
 		return false;
 	}
-	
 }
