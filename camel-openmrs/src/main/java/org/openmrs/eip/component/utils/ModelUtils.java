@@ -1,11 +1,27 @@
 package org.openmrs.eip.component.utils;
 
 import org.json.JSONObject;
+import org.openmrs.eip.component.entity.light.ConceptLight;
+import org.openmrs.eip.component.entity.light.EncounterTypeLight;
+import org.openmrs.eip.component.entity.light.LightEntity;
+import org.openmrs.eip.component.entity.light.LocationLight;
+import org.openmrs.eip.component.entity.light.OrderTypeLight;
+import org.openmrs.eip.component.entity.light.PatientIdentifierTypeLight;
+import org.openmrs.eip.component.entity.light.PersonAttributeTypeLight;
+import org.openmrs.eip.component.entity.light.ProviderAttributeTypeLight;
+import org.openmrs.eip.component.entity.light.RelationshipTypeLight;
+import org.openmrs.eip.component.entity.light.VisitAttributeTypeLight;
+import org.openmrs.eip.component.entity.light.VisitTypeLight;
 import org.openmrs.eip.component.mapper.operations.DecomposedUuid;
 
 import java.util.Optional;
+import java.util.Set;
 
 public final class ModelUtils {
+	
+	private static final Set<Class<?>> METADATA_TYPES = Set.of(PatientIdentifierTypeLight.class, ConceptLight.class,
+	    LocationLight.class, EncounterTypeLight.class, OrderTypeLight.class, ProviderAttributeTypeLight.class,
+	    PersonAttributeTypeLight.class, RelationshipTypeLight.class, VisitAttributeTypeLight.class, VisitTypeLight.class);
 	
 	private ModelUtils() {
 	}
@@ -41,5 +57,12 @@ public final class ModelUtils {
 		    new JSONObject(body).getJSONObject("model").getString(uuidPropertyName));
 		
 		return decomposedUuid.map(DecomposedUuid::getUuid).orElse(null);
+	}
+	
+	public static boolean isMetadataEntity(LightEntity entity) {
+		if (entity != null) {
+			return METADATA_TYPES.contains(entity.getClass());
+		}
+		return false;
 	}
 }

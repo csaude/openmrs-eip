@@ -13,6 +13,7 @@ import org.openmrs.eip.app.management.entity.AbstractEntity;
 import org.openmrs.eip.app.receiver.ReceiverUtils;
 import org.openmrs.eip.app.receiver.SyncHelper;
 import org.openmrs.eip.component.exception.ConflictsFoundException;
+import org.openmrs.eip.component.exception.MissingMetadataException;
 import org.openmrs.eip.component.utils.JsonUtils;
 import org.openmrs.eip.component.utils.Utils;
 import org.slf4j.Logger;
@@ -68,6 +69,11 @@ public abstract class BaseSyncProcessor<T extends AbstractEntity> extends BaseQu
 			beforeSync(item);
 			sync(item);
 			afterSync(item);
+			
+		}
+		catch (MissingMetadataException e) {
+			removeId = false;
+			throw e;
 		}
 		catch (ConflictsFoundException e) {
 			onConflict(item);
