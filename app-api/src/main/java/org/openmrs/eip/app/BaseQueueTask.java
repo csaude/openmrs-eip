@@ -14,7 +14,7 @@ public abstract class BaseQueueTask<T extends AbstractEntity> extends BaseTask {
 	@Override
 	public boolean doRun() throws Exception {
 		List<T> items = getNextBatch();
-		if (items.isEmpty()) {
+		if (items == null || items.isEmpty()) {
 			if (log.isTraceEnabled()) {
 				log.trace("No items found to process");
 			}
