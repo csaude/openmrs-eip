@@ -41,7 +41,7 @@ public abstract class BaseQueueSiteTask<T extends AbstractEntity, P extends Base
 		}
 		
 		List<T> items = getNextBatch(page);
-		if (items.isEmpty()) {
+		if (items == null || items.isEmpty()) {
 			if (log.isTraceEnabled()) {
 				log.trace("No items found");
 			}
