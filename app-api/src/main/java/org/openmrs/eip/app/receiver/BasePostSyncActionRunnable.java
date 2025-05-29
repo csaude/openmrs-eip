@@ -26,7 +26,7 @@ public abstract class BasePostSyncActionRunnable extends BaseSiteRunnable {
 	@Override
 	public boolean doRun() throws Exception {
 		List<SyncedMessage> messages = getNextBatch();
-		if (messages.isEmpty()) {
+		if (messages == null || messages.isEmpty()) {
 			if (log.isTraceEnabled()) {
 				log.trace("No messages found by " + getTaskName() + " for site: " + site);
 			}

@@ -73,7 +73,8 @@ public abstract class BaseSyncProcessor<T extends AbstractEntity> extends BaseQu
 		}
 		catch (MissingMetadataException e) {
 			removeId = false;
-			throw e;
+			AppUtils.shutdown();
+			LOG.error("Fatal metadata integrity violation - Stopping the application : ", e);
 		}
 		catch (ConflictsFoundException e) {
 			onConflict(item);

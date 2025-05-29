@@ -45,7 +45,7 @@ public abstract class BaseQueueProcessor<T extends AbstractEntity> extends BaseP
 	
 	@Override
 	public void processWork(List<T> items) throws Exception {
-		if (items.isEmpty()) {
+		if ( items == null || items.isEmpty()) {
 			if (log.isTraceEnabled()) {
 				log.trace("No items in the list to process");
 			}
