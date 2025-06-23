@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.openmrs.eip</groupId>
         <artifactId>openmrs-eip</artifactId>
-        <version>1.10.0_SNAPSHOT</version>
+        <version>1.9.1_SNAPSHOT</version>
     </parent>
     <artifactId>openmrs-eip-app</artifactId>
     <packaging>jar</packaging>
