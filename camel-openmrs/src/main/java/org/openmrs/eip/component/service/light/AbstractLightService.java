@@ -83,8 +83,7 @@ public abstract class AbstractLightService<E extends LightEntity> implements Lig
 		if (entity == null) {
 			entity = createPlaceholderEntity(uuid);
 			
-			if (ModelUtils.isMetadataEntity(entity)
-			        && (entity.getUuid() != null && !entity.getUuid().startsWith(ModelUtils.PLACEHOLDER_DESCRIPTION))) {
+			if (ModelUtils.isMetadataEntity(entity) && !uuid.startsWith(ModelUtils.PLACEHOLDER_DESCRIPTION)) {
 				throw new MissingMetadataException("The metadata uuid " + uuid + "  for class " + entity.getClass().getName()
 				        + " cannot be created as a placeholder entity ");
 			}
