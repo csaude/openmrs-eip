@@ -22,7 +22,7 @@ public final class ModelUtils {
 	private static final Set<Class<?>> METADATA_TYPES = Set.of(PatientIdentifierTypeLight.class, ConceptLight.class,
 	    LocationLight.class, EncounterTypeLight.class, OrderTypeLight.class, ProviderAttributeTypeLight.class,
 	    PersonAttributeTypeLight.class, RelationshipTypeLight.class, VisitAttributeTypeLight.class, VisitTypeLight.class);
-
+	
 	public static final String PLACEHOLDER_DESCRIPTION = "PLACEHOLDER";
 	
 	private ModelUtils() {
