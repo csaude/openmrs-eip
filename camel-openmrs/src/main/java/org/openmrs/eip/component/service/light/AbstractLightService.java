@@ -35,9 +35,9 @@ public abstract class AbstractLightService<E extends LightEntity> implements Lig
 	}
 	
 	/**
-	 * Creates a placeholder entity with only mandatory attributes which will be unique for all
-	 * entities with the same type. After a round of synchronization no placeholder entity should be
-	 * left in the db
+	 * Creates a placeholder entity with only mandatory attributes which will be unique for all entities
+	 * with the same type. After a round of synchronization no placeholder entity should be left in the
+	 * db
 	 * 
 	 * @return the entity
 	 */
@@ -66,9 +66,9 @@ public abstract class AbstractLightService<E extends LightEntity> implements Lig
 	}
 	
 	/**
-	 * This method is marked as synchronized because we want to avoid duplicating a record when the
-	 * same new record is being referenced by multiple other entities being synced in parallel e.g.
-	 * 2 person name rows belonging to the same person
+	 * This method is marked as synchronized because we want to avoid duplicating a record when the same
+	 * new record is being referenced by multiple other entities being synced in parallel e.g. 2 person
+	 * name rows belonging to the same person
 	 * 
 	 * @param uuid
 	 * @return
