@@ -762,7 +762,7 @@
                 <tableExists tableName="location_hash"/>
             </not>
         </preConditions>
-        <comment>Adding person_hash table</comment>
+        <comment>Adding location_hash table</comment>
 
         <createTable tableName="location_hash">
             <column autoIncrement="true" name="id" type="BIGINT">
