@@ -46,6 +46,7 @@ import org.openmrs.eip.component.management.hash.entity.DrugOrderHash;
 import org.openmrs.eip.component.management.hash.entity.EncounterDiagnosisHash;
 import org.openmrs.eip.component.management.hash.entity.EncounterHash;
 import org.openmrs.eip.component.management.hash.entity.EncounterProviderHash;
+import org.openmrs.eip.component.management.hash.entity.LocationHash;
 import org.openmrs.eip.component.management.hash.entity.GaacFamilyHash;
 import org.openmrs.eip.component.management.hash.entity.GaacFamilyMemberHash;
 import org.openmrs.eip.component.management.hash.entity.GaacHash;
@@ -129,7 +130,7 @@ public enum TableToSyncEnum {
 	
 	CONCEPT(Concept.class, ConceptModel.class, null),
 	
-	LOCATION(Location.class, LocationModel.class, null),
+	LOCATION(Location.class, LocationModel.class, LocationHash.class),
 	
 	ENCOUNTER_DIAGNOSIS(EncounterDiagnosis.class, EncounterDiagnosisModel.class, EncounterDiagnosisHash.class),
 	
