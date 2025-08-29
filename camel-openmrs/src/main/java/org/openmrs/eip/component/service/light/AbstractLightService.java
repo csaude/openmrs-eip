@@ -7,7 +7,6 @@ import java.time.Month;
 import org.openmrs.eip.component.SyncContext;
 import org.openmrs.eip.component.entity.Person;
 import org.openmrs.eip.component.entity.light.LightEntity;
-import org.openmrs.eip.component.entity.light.LocationLight;
 import org.openmrs.eip.component.entity.light.PatientLight;
 import org.openmrs.eip.component.exception.MissingMetadataException;
 import org.openmrs.eip.component.repository.OpenmrsRepository;
@@ -84,8 +83,7 @@ public abstract class AbstractLightService<E extends LightEntity> implements Lig
 		if (entity == null) {
 			entity = createPlaceholderEntity(uuid);
 			
-			if (ModelUtils.isMetadataEntity(entity) && !uuid.startsWith(ModelUtils.PLACEHOLDER_DESCRIPTION)
-			        && !(entity instanceof LocationLight)) {
+			if (ModelUtils.isMetadataEntity(entity) && !uuid.startsWith(ModelUtils.PLACEHOLDER_DESCRIPTION)) {
 				throw new MissingMetadataException("The metadata uuid " + uuid + "  for class " + entity.getClass().getName()
 				        + " cannot be created as a placeholder entity ");
 			}
