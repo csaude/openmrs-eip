@@ -4,6 +4,7 @@ import org.json.JSONObject;
 import org.openmrs.eip.component.entity.light.ConceptLight;
 import org.openmrs.eip.component.entity.light.EncounterTypeLight;
 import org.openmrs.eip.component.entity.light.LightEntity;
+import org.openmrs.eip.component.entity.light.LocationLight;
 import org.openmrs.eip.component.entity.light.OrderTypeLight;
 import org.openmrs.eip.component.entity.light.PatientIdentifierTypeLight;
 import org.openmrs.eip.component.entity.light.PersonAttributeTypeLight;
@@ -19,8 +20,8 @@ import java.util.Set;
 public final class ModelUtils {
 	
 	private static final Set<Class<?>> METADATA_TYPES = Set.of(PatientIdentifierTypeLight.class, ConceptLight.class,
-	    EncounterTypeLight.class, OrderTypeLight.class, ProviderAttributeTypeLight.class, PersonAttributeTypeLight.class,
-	    RelationshipTypeLight.class, VisitAttributeTypeLight.class, VisitTypeLight.class);
+	    LocationLight.class, EncounterTypeLight.class, OrderTypeLight.class, ProviderAttributeTypeLight.class,
+	    PersonAttributeTypeLight.class, RelationshipTypeLight.class, VisitAttributeTypeLight.class, VisitTypeLight.class);
 	
 	public static final String PLACEHOLDER_DESCRIPTION = "PLACEHOLDER";
 	
@@ -28,8 +29,8 @@ public final class ModelUtils {
 	}
 	
 	/**
-	 * Takes a uuid as a parameter formatted as follows: org.openmrs.package.classname(uuid) and
-	 * returns an Optional of DecomposedUuid as a result
+	 * Takes a uuid as a parameter formatted as follows: org.openmrs.package.classname(uuid) and returns
+	 * an Optional of DecomposedUuid as a result
 	 * 
 	 * @param fullUuid the uuid as a string
 	 * @return a decomposedUuid
